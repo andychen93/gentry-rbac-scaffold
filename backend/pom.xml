@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.5</version>
+        <relativePath/>
+    </parent>
+
+    <groupId>com.precision</groupId>
+    <artifactId>precision-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+    <name>Precision RBAC Scaffold</name>
+    <description>多租户 RBAC 权限脚手架（Spring Boot 3 + MyBatis-Flex + Sa-Token + PostgreSQL）</description>
+
+    <modules>
+        <module>precision-core</module>
+        <module>precision-business</module>
+        <module>precision-monitor</module>
+        <module>precision-start</module>
+    </modules>
+
+    <properties>
+        <java.version>21</java.version>
+        <mybatis-flex.version>1.11.6</mybatis-flex.version>
+        <sa-token.version>1.38.0</sa-token.version>
+        <postgresql.version>42.7.3</postgresql.version>
+        <jacoco.version>0.8.15</jacoco.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>com.precision</groupId>
+                <artifactId>precision-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.precision</groupId>
+                <artifactId>precision-business</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.precision</groupId>
+                <artifactId>precision-monitor</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <plugins>
+            <!--
+              JaCoCo 覆盖率：每个子模块 mvn test 后在 target/site/jacoco/index.html 生成报告。
+              此处只产出报告，不设置 90% 强制门禁，避免阻断构建；
+              覆盖率达标核查见 AGENTS.md（Service ≥90%、分支 ≥80%）。
+            -->
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-prepare-agent</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

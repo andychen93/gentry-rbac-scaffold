@@ -1,0 +1,39 @@
+---
+inclusion: fileMatch
+fileMatchPattern: 'backend/**/*.java'
+---
+
+# 后端编码约定（改 Java 时生效）
+
+权威约定在 [AGENTS.md](../../AGENTS.md) 第三、四章，这里只列改代码时最容易漏的点。
+
+## 分层
+
+`Controller → Service → Manager → Mapper`。Controller 只做参数校验和结果封装，
+禁止直接调 Mapper，禁止循环依赖。Service 一律接口 + `impl` 实现类。
+
+新业务域在 `precision-business` 下加包，**不要**新建 Maven 模块。
+最小完整样例：`com.precision.rbac.dept`（树形 + 数据权限 + 操作日志）。
+
+## 必须做
+
+- 实体继承 `TenantEntity`（租户表）或 `BaseEntity`（全局表）；日志表不继承
+- 公共字段交给 `AutoFillHandler`，**不要手动 set** create_by / create_time / tenantId
+- 取租户用 `UserContext.getTenantId()`，**不硬编码 `tenant_id = 1`**
+- 抛异常用 `throw new BizException(ErrorCode.XXX)`，禁止 `RuntimeException`，
+  禁止 Controller 里 `return R.fail`
+- 参数校验用 `@Valid` + DTO 上的约束注解
+- 写接口按 `/api/v1/{module}` 的 REST 形状，返回 `R<T>`
+- 权限注解 `@SaCheckPermission("xxx:yyy:zzz")` 的串必须与 `sys_menu.permission` 完全一致，
+  加了注解就要配一条 Flyway 迁移插菜单和 `sys_role_menu`
+- 登录类和关键写入接口加 `@RateLimit(RateLimitKeyType.IP, ...)`
+- 异步任务用 `TraceUtils.wrap(...)` 包住，否则 traceId 丢失
+- 新增 Redis Key 登记到 `RedisKeyDefines`，且必须有 TTL
+
+## 测试
+
+Service impl 行覆盖 ≥ 90%、分支 ≥ 80%；AOP 切面每个分支至少一个用例；
+Controller 至少一个集成测试。命名 `方法_场景_预期`。
+
+改动 `precision-core` 前先跑 `mvn -pl precision-core test` 拿绿色基线（60 个测试）；
+改动 RBAC 跑 `mvn -pl precision-business test`（49 个测试）。

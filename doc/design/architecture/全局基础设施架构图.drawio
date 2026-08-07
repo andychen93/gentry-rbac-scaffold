@@ -1,0 +1,420 @@
+<mxfile host="app.diagrams.net" modified="2026-04-12T00:00:00.000Z" agent="Claude" version="24.0.0" type="device">
+  <diagram id="global-infra" name="Global Infrastructure Architecture">
+    <mxGraphModel dx="1800" dy="2400" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="0" pageScale="1" pageWidth="2400" pageHeight="3200" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ==================== TITLE ==================== -->
+        <mxCell id="title" value="Precision IoV Platform - Global Infrastructure Architecture" style="text;html=1;fontSize=22;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="80" y="20" width="900" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="subtitle" value="HTTP Request Processing Pipeline — Request Flow (Top to Bottom)" style="text;html=1;fontSize=13;fontStyle=0;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="80" y="58" width="900" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== LEGEND ==================== -->
+        <mxCell id="legend-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#DEE2E6;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="780" y="90" width="200" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" value="Legend" style="text;html=1;fontSize=13;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="780" y="95" width="200" height="24" as="geometry" />
+        </mxCell>
+        <!-- P0 -->
+        <mxCell id="legend-p0-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4A90D9;strokeColor=#3A7BC8;fontColor=#FFFFFF;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="795" y="125" width="24" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-p0-text" value="P0 - Core Infrastructure" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="826" y="122" width="150" height="24" as="geometry" />
+        </mxCell>
+        <!-- P1 -->
+        <mxCell id="legend-p1-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5CB85C;strokeColor=#4CAE4C;fontColor=#FFFFFF;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="795" y="155" width="24" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-p1-text" value="P1 - Essential Features" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="826" y="152" width="150" height="24" as="geometry" />
+        </mxCell>
+        <!-- P2 -->
+        <mxCell id="legend-p2-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0AD4E;strokeColor=#EC971F;fontColor=#FFFFFF;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="795" y="185" width="24" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-p2-text" value="P2 - Enhanced Security" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="826" y="182" width="150" height="24" as="geometry" />
+        </mxCell>
+        <!-- Existing -->
+        <mxCell id="legend-ex-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#888888;fontColor=#FFFFFF;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="795" y="215" width="24" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-ex-text" value="Existing Components" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="826" y="212" width="150" height="24" as="geometry" />
+        </mxCell>
+        <!-- Core -->
+        <mxCell id="legend-core-box" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C3E50;strokeColor=#1A252F;fontColor=#FFFFFF;arcSize=12;" vertex="1" parent="1">
+          <mxGeometry x="795" y="245" width="24" height="18" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-core-text" value="Core Business Logic" style="text;html=1;fontSize=11;align=left;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#333333;" vertex="1" parent="1">
+          <mxGeometry x="826" y="242" width="150" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== REQUEST FLOW SECTION LABEL ==================== -->
+        <mxCell id="req-label" value="REQUEST FLOW" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="80" y="90" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== PHASE LABELS (Left side) ==================== -->
+        <mxCell id="phase-filter" value="Filter&#xa;Phase" style="text;html=1;fontSize=10;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#AAAAAA;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="30" y="190" width="50" height="100" as="geometry" />
+        </mxCell>
+        <mxCell id="phase-aop" value="AOP&#xa;Phase" style="text;html=1;fontSize=10;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#AAAAAA;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="30" y="420" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="phase-auth" value="Auth&#xa;Phase" style="text;html=1;fontSize=10;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#AAAAAA;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="30" y="530" width="50" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="phase-orm" value="ORM&#xa;Phase" style="text;html=1;fontSize=10;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#AAAAAA;rotation=-90;" vertex="1" parent="1">
+          <mxGeometry x="30" y="660" width="50" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== HTTP REQUEST ENTRY ==================== -->
+        <mxCell id="http-req" value="HTTP Request" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;fillColor=#F8F9FA;strokeColor=#ADB5BD;fontColor=#2C3E50;fontSize=13;fontStyle=1;arcSize=10;" vertex="1" parent="1">
+          <mxGeometry x="340" y="120" width="200" height="40" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: HTTP -> CORS -->
+        <mxCell id="a1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="http-req" target="n-cors">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 1: CORS Filter (Existing) ==================== -->
+        <mxCell id="n-cors" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#888888;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="190" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-cors-title" value="CORS Filter" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="193" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-cors-desc" value="SaTokenConfig handles CORS — Cross-Origin Resource Sharing" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#DDDDDD;" vertex="1" parent="1">
+          <mxGeometry x="295" y="216" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-cors-tag" value="Existing" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#777777;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="193" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: CORS -> TraceId -->
+        <mxCell id="a2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F0AD4E;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-cors" target="n-trace">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 2: TraceId Filter (P2) ==================== -->
+        <mxCell id="n-trace" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0AD4E;strokeColor=#EC971F;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="270" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-trace-title" value="TraceId Filter" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="273" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-trace-desc" value="P2-3: Generate TraceId, set MDC for distributed tracing" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="296" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-trace-tag" value="P2" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#D9534F;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="273" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: TraceId -> RequestLog -->
+        <mxCell id="a3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5CB85C;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-trace" target="n-reqlog">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 3: RequestLog Filter (P1) ==================== -->
+        <mxCell id="n-reqlog" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5CB85C;strokeColor=#4CAE4C;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="350" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-reqlog-title" value="RequestLog Filter" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="353" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-reqlog-desc" value="P1-1: Log request method, URI, params, IP, user-agent" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="376" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-reqlog-tag" value="P1" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#3D8B3D;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="353" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: RequestLog -> RateLimit -->
+        <mxCell id="a4" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F0AD4E;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-reqlog" target="n-rate">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 4: RateLimit AOP (P2) ==================== -->
+        <mxCell id="n-rate" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0AD4E;strokeColor=#EC971F;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="430" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rate-title" value="RateLimit AOP" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="433" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rate-desc" value="P2-1: Check rate limit — @RateLimit annotation, Caffeine sliding window" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="456" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-rate-tag" value="P2" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#D9534F;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="433" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: RateLimit -> RepeatSubmit -->
+        <mxCell id="a5" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#F0AD4E;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-rate" target="n-repeat">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 5: RepeatSubmit AOP (P2) ==================== -->
+        <mxCell id="n-repeat" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0AD4E;strokeColor=#EC971F;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="510" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-repeat-title" value="RepeatSubmit AOP" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="513" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-repeat-desc" value="P2-2: Check duplicate submission — @RepeatSubmit annotation, token-based" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="536" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-repeat-tag" value="P2" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#D9534F;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="513" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: RepeatSubmit -> SaToken -->
+        <mxCell id="a6" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#999999;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-repeat" target="n-satoken">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 6: Sa-Token Auth (Existing) ==================== -->
+        <mxCell id="n-satoken" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#999999;strokeColor=#888888;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="590" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-satoken-title" value="Sa-Token Auth" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="593" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-satoken-desc" value="SaTokenConfig interceptor — Sets UserContext ThreadLocal" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#DDDDDD;" vertex="1" parent="1">
+          <mxGeometry x="295" y="616" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-satoken-tag" value="Existing" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#777777;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="593" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: SaToken -> TenantManager -->
+        <mxCell id="a7" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4A90D9;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-satoken" target="n-tenant">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 7: TenantManager (P0) ==================== -->
+        <mxCell id="n-tenant" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4A90D9;strokeColor=#3A7BC8;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="670" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-tenant-title" value="TenantManager (MyBatis-Flex)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="673" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-tenant-desc" value="P0-2: Auto tenant_id filtering — global WHERE condition injection" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="696" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-tenant-tag" value="P0" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2C3E50;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="673" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Tenant -> AutoFill -->
+        <mxCell id="a8" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#4A90D9;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-tenant" target="n-autofill">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 8: AutoFill Handler (P0) ==================== -->
+        <mxCell id="n-autofill" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4A90D9;strokeColor=#3A7BC8;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="750" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-autofill-title" value="AutoFill Handler" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="753" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-autofill-desc" value="P0-3: Auto fill audit fields — create_time, update_time, create_by, update_by" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="776" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-autofill-tag" value="P0" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2C3E50;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="753" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: AutoFill -> DataScope -->
+        <mxCell id="a9" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5CB85C;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-autofill" target="n-datascope">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 9: DataScope Handler (P1) ==================== -->
+        <mxCell id="n-datascope" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5CB85C;strokeColor=#4CAE4C;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="830" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-datascope-title" value="DataScope Handler" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="833" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-datascope-desc" value="P1-3: Row-level data filtering — @DataScope annotation, dept-based" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="856" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-datascope-tag" value="P1" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#3D8B3D;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="833" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: DataScope -> Controller -->
+        <mxCell id="a10" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2C3E50;strokeWidth=2;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-datascope" target="n-ctrl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 10: Controller (Core) ==================== -->
+        <mxCell id="n-ctrl" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2C3E50;strokeColor=#1A252F;arcSize=10;shadow=0;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="240" y="920" width="500" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ctrl-title" value="Controller" style="text;html=1;fontSize=15;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="258" y="925" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ctrl-ann1" value="@SaCheckPermission  @SaCheckRole  @RateLimit  @RepeatSubmit  @DataScope" style="text;html=1;fontSize=10;fontStyle=0;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#88CCFF;" vertex="1" parent="1">
+          <mxGeometry x="258" y="948" width="470" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-ctrl-tag" value="P0-4: StpInterface" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#4A90D9;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="630" y="925" width="90" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== CORE BUSINESS STACK ==================== -->
+        <!-- Arrow: Controller -> Service -->
+        <mxCell id="a11" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2C3E50;strokeWidth=2;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-ctrl" target="n-svc">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n-svc" value="Service Layer" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#34495E;strokeColor=#2C3E50;fontColor=#FFFFFF;fontSize=14;fontStyle=1;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1020" width="300" height="44" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Service -> Mapper -->
+        <mxCell id="a12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2C3E50;strokeWidth=2;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-svc" target="n-mapper">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <mxCell id="n-mapper" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#34495E;strokeColor=#2C3E50;arcSize=10;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1090" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-mapper-title" value="Mapper (MyBatis-Flex)" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1093" width="250" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-mapper-desc" value="Tenant + AutoFill + DataScope intercept at SQL level" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#88CCFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1116" width="390" height="16" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Mapper -> DB -->
+        <mxCell id="a13" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#2C3E50;strokeWidth=2;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-mapper" target="n-db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- Database cylinder -->
+        <mxCell id="n-db" value="PostgreSQL / TimescaleDB" style="shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=10;fillColor=#2C3E50;strokeColor=#1A252F;fontColor=#FFFFFF;fontSize=13;fontStyle=1;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="370" y="1175" width="240" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== DIVIDER LINE ==================== -->
+        <mxCell id="divider" value="" style="endArrow=none;dashed=1;html=1;dashPattern=8 8;strokeColor=#CCCCCC;strokeWidth=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="80" y="1280" as="sourcePoint" />
+            <mxPoint x="780" y="1280" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="div-label" value="RESPONSE FLOW" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1290" width="200" height="30" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== RESPONSE FLOW ==================== -->
+
+        <!-- Response arrow up from DB -->
+        <mxCell id="a14" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E74C3C;strokeWidth=1.5;endArrow=blockThin;endFill=1;dashed=1;" edge="1" parent="1" source="n-db" target="n-exhandler">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="140" y="1205" />
+              <mxPoint x="140" y="1340" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ==================== NODE 11: GlobalExceptionHandler (P0) ==================== -->
+        <mxCell id="n-exhandler" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#4A90D9;strokeColor=#3A7BC8;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1340" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-exhandler-title" value="GlobalExceptionHandler" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1343" width="300" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-exhandler-desc" value="P0-1: Catch all exceptions, convert to unified R&lt;T&gt; response" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1366" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-exhandler-tag" value="P0" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#2C3E50;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1343" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Exception side arrow -->
+        <mxCell id="a-ex" value="Exception" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#E74C3C;strokeWidth=1.5;endArrow=blockThin;endFill=1;dashed=1;fontColor=#E74C3C;fontSize=10;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="730" y="960" as="sourcePoint" />
+            <mxPoint x="730" y="1360" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="730" y="960" />
+              <mxPoint x="730" y="1360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- Arrow: ExceptionHandler -> Jackson -->
+        <mxCell id="a15" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#5CB85C;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-exhandler" target="n-jackson">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 12: Jackson Config (P1) ==================== -->
+        <mxCell id="n-jackson" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#5CB85C;strokeColor=#4CAE4C;arcSize=10;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1420" width="420" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="n-jackson-title" value="Jackson Config" style="text;html=1;fontSize=14;fontStyle=1;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1423" width="200" height="20" as="geometry" />
+        </mxCell>
+        <mxCell id="n-jackson-desc" value="P1-2: JSON serialization — Long to String (JS precision), date format" style="text;html=1;fontSize=10;align=left;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#FFFFFF;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1446" width="390" height="16" as="geometry" />
+        </mxCell>
+        <mxCell id="n-jackson-tag" value="P1" style="text;html=1;fontSize=9;fontStyle=1;align=center;verticalAlign=middle;fillColor=#3D8B3D;strokeColor=none;fontColor=#FFFFFF;rounded=1;arcSize=20;" vertex="1" parent="1">
+          <mxGeometry x="620" y="1423" width="60" height="18" as="geometry" />
+        </mxCell>
+
+        <!-- Arrow: Jackson -> HTTP Response -->
+        <mxCell id="a16" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#AAAAAA;strokeWidth=1.5;endArrow=blockThin;endFill=1;" edge="1" parent="1" source="n-jackson" target="n-resp">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== NODE 13: HTTP Response ==================== -->
+        <mxCell id="n-resp" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F8F9FA;strokeColor=#ADB5BD;arcSize=8;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="280" y="1505" width="420" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="n-resp-title" value="HTTP Response" style="text;html=1;fontSize=14;fontStyle=1;align=center;verticalAlign=top;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="295" y="1510" width="390" height="20" as="geometry" />
+        </mxCell>
+        <!-- JSON block -->
+        <mxCell id="n-resp-json" value='R&lt;T&gt; {&lt;br&gt;&amp;nbsp;&amp;nbsp;code: 0,&lt;br&gt;&amp;nbsp;&amp;nbsp;message: &quot;success&quot;,&lt;br&gt;&amp;nbsp;&amp;nbsp;data: T,&lt;br&gt;&amp;nbsp;&amp;nbsp;traceId: &quot;abc123&quot;,&lt;br&gt;&amp;nbsp;&amp;nbsp;timestamp: 1711708800000&lt;br&gt;}' style="text;html=1;fontSize=11;fontStyle=0;align=left;verticalAlign=top;fillColor=#FFFFFF;strokeColor=#DEE2E6;fontColor=#333333;rounded=1;arcSize=8;spacingLeft=8;spacingTop=4;" vertex="1" parent="1">
+          <mxGeometry x="340" y="1533" width="300" height="55" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== ANNOTATIONS ==================== -->
+        <!-- Left-side annotation: Filter chain -->
+        <mxCell id="anno-filter" value="Servlet Filter&#xa;Chain" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;fillColor=none;strokeColor=#AAAAAA;size=0.5;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="740" y="190" width="20" height="300" as="geometry" />
+        </mxCell>
+
+        <!-- Left-side annotation: AOP chain -->
+        <mxCell id="anno-aop" value="AOP&#xa;Interceptors" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;fillColor=none;strokeColor=#AAAAAA;size=0.5;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="740" y="430" width="20" height="140" as="geometry" />
+        </mxCell>
+
+        <!-- Left-side annotation: ORM interceptors -->
+        <mxCell id="anno-orm" value="MyBatis-Flex&#xa;Interceptors" style="shape=curlyBracket;whiteSpace=wrap;html=1;rounded=1;flipH=1;labelPosition=left;verticalLabelPosition=middle;align=right;verticalAlign=middle;fillColor=none;strokeColor=#AAAAAA;size=0.5;fontColor=#999999;fontSize=10;" vertex="1" parent="1">
+          <mxGeometry x="740" y="670" width="20" height="220" as="geometry" />
+        </mxCell>
+
+        <!-- ==================== COMPONENT COUNT SUMMARY ==================== -->
+        <mxCell id="summary-bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F0F4F8;strokeColor=#DEE2E6;arcSize=8;" vertex="1" parent="1">
+          <mxGeometry x="80" y="1620" width="620" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="summary-text" value="10 Global Infrastructure Components:  3x P0 (Core)  |  3x P1 (Essential)  |  3x P2 (Enhanced)  |  1x Existing (Sa-Token)" style="text;html=1;fontSize=12;fontStyle=1;align=center;verticalAlign=middle;fillColor=none;strokeColor=none;fontColor=#2C3E50;" vertex="1" parent="1">
+          <mxGeometry x="90" y="1630" width="600" height="40" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

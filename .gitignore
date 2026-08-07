@@ -1,0 +1,66 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+
+# IDE / editor local state
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+*.iml
+
+# Java / Maven build outputs
+target/
+**/target/
+
+# Frontend dependencies and build outputs
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+*.tsbuildinfo
+
+# Logs and runtime dumps
+logs/
+**/logs/
+*.log
+*.log.*
+*.pid
+*.pid.lock
+hs_err_pid*
+replay_pid*
+
+# Environment and secret-bearing local config
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Test / E2E runtime artifacts and reports
+playwright-report/
+**/playwright-report/
+test-results/
+**/test-results/
+.playwright-mcp/
+# Playwright 预登录 Token（global-setup 生成）
+frontend/e2e/.auth/
+
+# Assistant local state（.kiro/specs 与 .kiro/steering 需要进版本控制）
+.agents/
+.claude/
+.kiro/*
+!.kiro/specs/
+!.kiro/specs/**
+!.kiro/steering/
+!.kiro/steering/**
+
+# Python cache
+__pycache__/
+
+# 脚手架抽取过程中的一次性脚本
+.scaffold-copy*.sh

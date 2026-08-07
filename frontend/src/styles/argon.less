@@ -1,0 +1,832 @@
+// 颜色/阴影/圆角权威源在 theme/argonColors.ts，本文件为复制品，改色请同步两处
+.ps-stat-card {
+  padding: 16px;
+  border-radius: 6px;
+  color: #fff;
+  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15);
+  &__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.85; }
+  &__value { font-size: 24px; font-weight: 700; margin-top: 2px; }
+  &__progress { height: 3px; background: rgba(255,255,255,0.25); border-radius: 2px; margin-top: 10px; }
+  &__progress-bar { height: 100%; background: #2dce89; border-radius: 2px; }
+  &__hint { font-size: 12px; margin-top: 8px; opacity: 0.9; }
+}
+.ps-stat-card--primary { background: linear-gradient(87deg, #5e72e4 0%, #7b5ce4 100%); }
+.ps-stat-card--info    { background: linear-gradient(87deg, #11cdef 0%, #118def 100%); }
+.ps-stat-card--success { background: linear-gradient(87deg, #2dce89 0%, #2dc7ce 100%); }
+.ps-stat-card--warning { background: linear-gradient(87deg, #fb6340 0%, #fb9840 100%); }
+.ps-stat-card--danger  { background: linear-gradient(87deg, #f5365c 0%, #f56336 100%); }
+.ps-stat-card--default { background: linear-gradient(87deg, #172b4d 0%, #24174d 100%); }
+
+.ps-sidenav {
+  position: fixed;
+  left: 0; top: 0; bottom: 0;
+  width: 62px;
+  background: #fff;
+  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15);
+  transition: width 0.4s ease;
+  z-index: 1050;
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  &.is-pinned { width: 250px; }
+  &.is-hover {
+    width: 250px;
+    z-index: 1060;
+    box-shadow: 0 0 3rem 0 rgba(136, 152, 170, 0.25);
+  }
+
+  &__brand {
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 16px;
+    flex-shrink: 0;
+  }
+  &__logo {
+    width: 30px; height: 30px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #5e72e4, #11cdef);
+    color: #fff;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  &__brand-text {
+    color: #32325d;
+    font-weight: 700;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+  }
+  &.is-mini:not(.is-hover) .ps-sidenav__brand-text { opacity: 0; }
+
+  nav { flex: 1; min-height: 0; }
+  .ant-menu { border-inline-end: none !important; }
+}
+
+.ps-page {
+  margin-left: 62px;
+  min-height: 100vh;
+  background: #f8f9fe;
+  transition: margin-left 0.4s ease;
+  display: flex;
+  flex-direction: column;
+}
+.ps-page[data-pinned="true"] { margin-left: 250px; }
+
+.ps-page__header {
+  padding: 20px 24px 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.ps-page__subtitle { color: #8898aa; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; }
+.ps-page__title { color: #32325d; font-size: 18px; font-weight: 700; margin-top: 2px; }
+.ps-page__extra { flex-shrink: 0; }
+.ps-page__body { padding: 16px 24px 24px; flex: 1; }
+.ps-footer { padding: 16px 24px; color: #8898aa; font-size: 12px; text-align: center; }
+
+// ===== Argon 按钮/表单/卡片 细化（antd token 覆盖不到的部分）=====
+
+// 按钮：600 字重 + letter-spacing + 过渡
+.ant-btn {
+  letter-spacing: .025em;
+  transition: all .15s ease;
+}
+// 按钮 hover：上移 -1px + 阴影递进（Argon 标志性质感）
+.ant-btn:not(.ant-btn-link):not([disabled]):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08) !important;
+}
+
+// 渐变按钮（Argon bg-gradient-* 风格，87deg）
+.ps-btn-gradient-primary { background-image: linear-gradient(87deg, #5e72e4, #7b5ce4) !important; border-color: transparent !important; }
+.ps-btn-gradient-info    { background-image: linear-gradient(87deg, #11cdef, #118def) !important; border-color: transparent !important; }
+.ps-btn-gradient-success { background-image: linear-gradient(87deg, #2dce89, #2dc7ce) !important; border-color: transparent !important; }
+.ps-btn-gradient-warning { background-image: linear-gradient(87deg, #fb6340, #fb9840) !important; border-color: transparent !important; }
+.ps-btn-gradient-danger  { background-image: linear-gradient(87deg, #f5365c, #f56336) !important; border-color: transparent !important; }
+.ps-btn-gradient-default { background-image: linear-gradient(87deg, #172b4d, #24174d) !important; border-color: transparent !important; }
+
+// 中性按钮（白底 + primary 字）
+.ps-btn-neutral { background: #fff !important; color: #5e72e4 !important; border-color: #e9ecef !important; }
+
+// 输入框 focus 柔和阴影（Argon input-group-alternative）
+.ant-input:focus, .ant-input-focused,
+.ant-input-affix-wrapper-focused,
+.ant-select-focused .ant-select-selector {
+  box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08) !important;
+}
+// 输入框 cubic-bezier 过渡（Argon input-transition）
+.ant-input, .ant-input-affix-wrapper, .ant-select .ant-select-selector {
+  transition: all .15s cubic-bezier(.68, -.55, .265, 1.55) !important;
+}
+
+// 卡片 Argon 阴影 + 去边框
+.ant-card {
+  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, .15);
+  border: none;
+}
+
+.ps-app { min-height: 100vh; background: #f8f9fe; }
+
+.ps-header {
+  height: 64px;
+  margin-left: 62px;                            // 让出侧栏宽度，避免 toggle 被固定 sidenav 遮挡
+  background: #fff !important;                  // 浅色顶栏，与白色侧栏统一
+  color: #525f7f;                               // $gray-700 深字
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, 0.15);
+  border-bottom: 1px solid #e9ecef;            // $gray-200 底部分隔线（浅 header 与浅内容区分）
+  transition: margin-left 0.4s ease;           // 与 sidenav 宽度过渡同步
+  z-index: 1040;
+}
+.ps-header.is-pinned { margin-left: 250px; }
+.ps-header .ant-btn-text, .ps-header .ant-typography, .ps-header a { color: #525f7f; }           // $gray-700
+.ps-header .ant-btn-text:hover { background: rgba(94, 114, 228, 0.08); }                        // primary 浅底 hover
+.ps-header .ant-breadcrumb, .ps-header .ant-breadcrumb a, .ps-header .ant-breadcrumb-separator { color: #8898aa; }  // $gray-600
+
+// ===== 阶段三组1：Argon 简单展示组件细化（antd token 触不到的部分）=====
+// 配色权威源在 theme/argonColors.ts；本节按 core/{badges|avatars|alerts|progresses|timeline|collapse|list-groups} 对齐
+
+// ---- Badge：$badge-text-transfom=uppercase + .badge-md/.lg padding（_badge.scss）----
+.ant-badge-count {
+  text-transform: uppercase;
+  letter-spacing: .025em;
+}
+
+// ---- Tag：list-group-content 风格 + 圆角 6px（Argon $border-radius）+ 可关闭 X 浅化 ----
+//   注：默认底色/字色已由 token 处理；此处补圆角与边框
+.ant-tag {
+  border-radius: 6px;
+  border-color: #e9ecef;
+  font-weight: 500;
+}
+
+// ---- Avatar：默认 $gray-500 底 + $font-weight-bold + xs 尺寸（_avatar.scss 缺 token）----
+.ant-avatar:not(.ant-avatar-image) {
+  background: #adb5bd;       // Argon $gray-500（颜色权威在 argonColors.gray500）
+  color: #fff;
+  font-weight: 600;
+}
+// Argon xs 24x24（antd v5 暴露的 token 无 containerSizeXS）
+.ant-avatar.ant-avatar-xs { width: 24px; height: 24px; font-size: 12px; line-height: 24px; }
+// Avatar.Group：Argon 2px 白边 + -1rem 叠加（_avatar-group.scss）
+//   token 已设 groupOverlapping=16 / groupBorderColor=#fff，补强 border + shadow
+.ant-avatar-group .ant-avatar {
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px rgba(136, 152, 170, .15);
+}
+
+// ---- Alert：左 border 强调色 + 标题 600/$h4-font-size + 图标右距 + 关闭按钮色调 ----
+//   _alert.scss / _alert-dismissible.scss
+.ant-alert {
+  padding: 16px 24px !important;       // $alert-padding-y=1rem / $alert-padding-x=1.5rem
+  border-left-width: 4px !important;
+  border-left-style: solid !important;
+  border-top: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+  border-radius: 6px;                  // $alert-border-radius
+  font-size: 14px;                     // $font-size-sm
+}
+.ant-alert-message {
+  font-weight: 600;                    // .alert-heading font-weight-bold
+  font-size: 15px;                     // $h4-font-size = .9375rem
+  color: #32325d;                      // gray800 标题色（强于正文）
+}
+.ant-alert-description { font-size: 14px; color: #525f7f; }
+.ant-alert-icon { font-size: 1.25rem; margin-right: 1.25rem; }  // .alert-icon
+.ant-alert-close-icon { color: rgba(0, 0, 0, .6); top: 50%; transform: translateY(-50%); }
+.ant-alert-close-icon:hover { color: rgba(0, 0, 0, 1); }
+
+// ---- Progress：渐变 bar 87deg（_progress.scss + argonColors.argonGradients）----
+//   默认/成功/异常按色梯度；active 动画由 antd 内置保留
+.ant-progress-line .ant-progress-bg {
+  background-image: linear-gradient(87deg, #5e72e4 0%, #7b5ce4 100%) !important;
+}
+.ant-progress-status-success .ant-progress-bg {
+  background-image: linear-gradient(87deg, #2dce89 0%, #2dc7ce 100%) !important;
+}
+.ant-progress-status-exception .ant-progress-bg {
+  background-image: linear-gradient(87deg, #f5365c 0%, #f56336 100%) !important;
+}
+// 进度条 inset track 阴影（Argon _progress.scss .progress box-shadow inset）
+.ant-progress-outer {
+  background-color: transparent;       // remainingColor 已由 token 处理
+}
+
+// ---- Timeline：轴线 2px solid + 节点 33px 圆/白底/边框（_timeline.scss）----
+//   tailColor/tailWidth/dotBg/dotBorderWidth 已由 token 处理
+//   Argon 节点是 border 圆环 + 白底，antd 默认实心 → 强制覆盖
+.ant-timeline-item-head {
+  background: #fff !important;         // $timeline-step-bg
+  border-width: 2px !important;        // $timeline-step-border-width
+  border-style: solid !important;
+}
+.ant-timeline-item-head-blue   { border-color: #5e72e4; background: #fff !important; }
+.ant-timeline-item-head-green  { border-color: #2dce89; background: #fff !important; }
+.ant-timeline-item-head-red    { border-color: #f5365c; background: #fff !important; }
+.ant-timeline-item-head-gray   { border-color: #e9ecef; background: #f6f9fc !important; }
+// 自定义颜色 dot（antd Timeline color prop）保留 antd 自身配色，不强加
+
+// ---- Collapse：accordion 简洁风 + header 字重 600 + hover/active 标题色 = primary ----
+//   _accordion.scss：card-header 展开后 .heading 变 primary
+.ant-collapse {
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+}
+.ant-collapse > .ant-collapse-item {
+  border-bottom: 1px solid #e9ecef;
+}
+.ant-collapse > .ant-collapse-item:last-child { border-bottom: 0; }
+.ant-collapse-header {
+  font-weight: 600;
+  font-size: 14px;
+  color: #32325d;
+  transition: color .15s ease;
+}
+.ant-collapse-item:hover .ant-collapse-header,
+.ant-collapse-item-active .ant-collapse-header { color: #5e72e4; }
+.ant-collapse-content { background: #fff; }
+
+// ===== 阶段三组2：Argon 交互组件细化（antd token 触不到的部分）=====
+// 配色权威源在 theme/argonColors.ts；本节按 core/{modals|navs|dropdowns|popovers} + bootstrap/_tooltip 对齐
+
+// ---- Modal：强阴影 + 大圆角(border-radius-lg=.4375rem=7) + backdrop .16（_modal.scss + _variables.scss）----
+//   token 已处理：titleFontSize=24/titleLineHeight=1.1/titleColor=gray800/contentBg/headerBg/footerBg
+//   token 不到：modal-content 强阴影 / 大圆角 / border-0 / mask / 标题加粗 / 关闭图标色
+//   注：header/footer 分隔线（antd 默认 1px）保留——Argon _variables.scss 虽 border-width=0，
+//       但 antd 默认分隔更清晰，对现有 Modal 用法（vehicle/driver/CrudFormModal）破坏最小
+.ant-modal-content {
+  border: 0;                              // $modal-content-border-width = 0
+  border-radius: 7px;                     // $modal-content-border-radius = $border-radius-lg = .4375rem
+  box-shadow: 0 15px 35px rgba(50, 50, 93, .2), 0 5px 15px rgba(0, 0, 0, .17);  // $modal-content-box-shadow-xs/sm-up
+  overflow: hidden;
+}
+.ant-modal-title { font-weight: 600; color: #32325d; }  // Argon 标题 gray800 加粗（$headings-color）
+.ant-modal-close-icon { color: #8898aa; }                // $gray-600
+.ant-modal-close-icon:hover { color: #525f7f; }          // $gray-700
+.ant-modal-mask { background: rgba(0, 0, 0, .16); }      // $modal-backdrop-bg + $modal-backdrop-opacity=.16
+
+// ---- Tabs：active 字重 600 + card pill 卡片风（navs/_nav-pills.scss）----
+//   token 已处理：itemColor/itemSelectedColor/itemHoverColor/itemActiveColor/inkBarColor 全 primary, titleFontSize=14
+//   token 不到：active 字重 / card 模式 pill 卡片（白底+1px primary 边框+6px 圆角+active 填充 primary）
+.ant-tabs-tab { font-weight: 500; }                    // _nav-pills.scss .nav-link font-weight
+.ant-tabs-tab-active .ant-tabs-tab-btn,
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn { font-weight: 600; }  // Argon active 强调
+// card 模式：nav-pills 卡片风（_nav-pills.scss 完整复刻）
+.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab {
+  background: #fff;                                    // $nav-pills-bg
+  border: 1px solid #5e72e4;                           // $nav-pills-border-color = primary
+  border-radius: 6px;                                  // $nav-pills-border-radius = $border-radius
+  color: #5e72e4;                                      // $nav-pills-link-color = primary
+  font-weight: 500;                                    // _nav-pills.scss .nav-link font-weight
+  box-shadow: 0 4px 6px rgba(50, 50, 93, .11), 0 1px 3px rgba(0, 0, 0, .08);  // $nav-pills-box-shadow = $btn-box-shadow
+  transition: all .15s ease;
+  padding: 12px 16px;                                  // $nav-pills-padding-y=.75rem / padding-x=1rem
+}
+.ant-tabs-card > .ant-tabs-nav .ant-tabs-tab-active {
+  background: #5e72e4;                                 // $nav-pills-link-active-bg = primary
+  color: #fff;                                         // $nav-pills-link-active-color = color-yiq(primary)
+  border-color: #5e72e4;
+}
+
+// ---- Dropdown：大阴影 + 7px 圆角 + min-width + item hover 浅底（dropdowns/_dropdown.scss）----
+//   Menu hover/selected 通过 .ant-dropdown-menu 限定（不污染 Sider Menu token）
+//   Dropdown ComponentToken 仅 paddingBlock/zIndexPopup（box-shadow/border-radius 需 less）
+.ant-dropdown-menu {
+  min-width: 192px;                                    // .dropdown-menu min-width: 12rem
+  padding: 8px 0;                                      // Bootstrap dropdown 默认上下内边距
+  border: 0;                                           // $dropdown-border-width = 0
+  border-radius: 7px;                                  // $dropdown-border-radius = $border-radius-lg
+  box-shadow: 0 50px 100px rgba(50, 50, 93, .1), 0 15px 35px rgba(50, 50, 93, .15), 0 5px 15px rgba(0, 0, 0, .1);  // $dropdown-box-shadow
+  background: #fff;                                    // $dropdown-bg
+}
+.ant-dropdown-menu-item {
+  font-size: 14px;                                     // $font-size-sm
+  padding: 8px 16px;                                   // $dropdown-item-padding-y=.5rem / padding-x=1rem
+  color: #212529;                                      // $dropdown-link-color = $gray-900
+}
+.ant-dropdown-menu-item:hover,
+.ant-dropdown-menu-item.ant-dropdown-menu-item-active,
+.ant-dropdown-menu-item.ant-dropdown-menu-item-selected {
+  background: #f6f9fc;                                 // $dropdown-link-hover-bg = $gray-100
+  color: #5e72e4;                                      // Argon 风格 hover 文字 primary
+  font-weight: 500;
+}
+.ant-dropdown-menu-title-content { font-weight: 500; }
+
+// ---- Popover：白底 + 7px 圆角 + 中阴影 + 1px 极淡边框（popovers/_popover.scss）----
+//   antd v5 Popover ComponentToken 仅 titleMinWidth/zIndexPopup（bg/shadow 需 less）
+.ant-popover-inner {
+  background: #fff;                                    // $popover-bg
+  border: 1px solid rgba(0, 0, 0, .05);                // $popover-border-color
+  border-radius: 7px;                                  // $popover-border-radius = $border-radius-lg
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, .2);          // $popover-box-shadow: 0px .5rem 2rem 0px rgba($black,.2)
+  padding: 0;                                          // header/body 各自 padding
+}
+.ant-popover-title {
+  background: #fff;                                    // $popover-header-bg = $popover-bg
+  color: #32325d;                                      // $popover-header-color = $headings-color = gray800
+  font-weight: 700;                                    // _popover.scss $font-weight-bold
+  font-size: 14px;                                     // $popover-font-size = $font-size-sm
+  padding: 8px 15.2px;                                 // $popover-header-padding-y=.5rem / padding-x=.95rem
+  border-bottom: 1px solid #e9ecef;                    // header/body 分隔线
+  border-radius: 7px 7px 0 0;
+}
+.ant-popover-inner-content {
+  color: #525f7f;                                      // $popover-body-color = $body-color = gray700
+  font-size: 14px;
+  padding: 8px 15.2px;                                 // $popover-body-padding-y=.5rem / padding-x=.95rem
+}
+// 箭头同步白底（antd v5 用 --antd-arrow-background-color CSS var 驱动伪元素）
+.ant-popover { --antd-arrow-background-color: #fff; }
+
+// ---- Tooltip：深蓝灰底(Argon $default=#172b4d) + 14px 字 + 4px 圆角（bootstrap/_tooltip.scss）----
+//   Argon 无独立 tooltip scss；任务简报指定 Argon $default 深蓝灰（非 Bootstrap 默认 $black）
+//   antd v5 Tooltip ComponentToken 无 bg/color/fontSize（仅 zIndexPopup/arrow），故全部 less
+//   !important：因 cssinjs 注入晚于 vite 静态 css，需提权；项目内未用 Tooltip color prop（无副作用）
+.ant-tooltip-inner {
+  background-color: #172b4d !important;                // Argon $default（任务简报指定）
+  color: #fff;                                         // $tooltip-color
+  font-size: 14px;                                     // $tooltip-font-size = $font-size-sm
+  border-radius: 4px;                                  // Bootstrap 默认 $border-radius-sm（Argon 未 override）
+  padding: 6px 12px;                                   // Bootstrap 默认 $tooltip-padding-y=.25rem / padding-x=.5rem
+  box-shadow: 0 4px 6px rgba(50, 50, 93, .11), 0 1px 3px rgba(0, 0, 0, .08);  // 与 Button 一致软阴影
+  max-width: 220px;                                    // Bootstrap 默认 $tooltip-max-width
+}
+// 箭头同步深底（antd v5 通过 --antd-arrow-background-color 控制 ::before 伪元素）
+.ant-tooltip { --antd-arrow-background-color: #172b4d; }
+.ant-tooltip .ant-tooltip-arrow::before { background-color: #172b4d !important; }
+
+// ===== 阶段三组3：Argon Pagination 精美复刻（圆形页码 / active 实色+box-shadow / 3px 间距）=====
+//   配色权威源 theme/argonColors.ts；本节按 core/paginations/_pagination.scss + _variables.scss :904-920 对齐
+//   token 已处理：itemBg=white / itemSize=36 / itemActiveBg=primary / itemActiveColor=white
+//   token 不到：border-radius:50% / 边框/文字色 / active box-shadow / 3px 间距 / flex 居中
+
+// ---- li 项 3px 间距（Argon _pagination.scss :17 margin: 0 3px）----
+//   !important 压 antd cssinjs 默认 8px（.ant-pagination-item:not(:last-child){margin-inline-end:8px}）
+.ant-pagination-item,
+.ant-pagination-prev,
+.ant-pagination-next,
+.ant-pagination-jump-prev,
+.ant-pagination-jump-next {
+  margin-inline-end: 3px !important;
+}
+// size-changer / quick-jumper 与页码留白（antd 默认 8px，Argon 更宽松）
+.ant-pagination-options { margin-inline-start: 16px; }
+
+// ---- 页码视觉：圆形 + 固定 36×36 + flex 居中（_pagination.scss :11-22）----
+//   覆盖对象：数字页码（.ant-pagination-item）+ prev/next/jump 的 .ant-pagination-item-link
+//   !important：antd v5 cssinjs 运行时注入晚于 vite 静态 css，需提权覆盖 display/border-color
+.ant-pagination-item,
+.ant-pagination-prev > .ant-pagination-item-link,
+.ant-pagination-next > .ant-pagination-item-link,
+.ant-pagination-jump-prev > .ant-pagination-item-link,
+.ant-pagination-jump-next > .ant-pagination-item-link {
+  min-width: 36px !important;
+  width: 36px !important;
+  height: 36px !important;
+  line-height: 34px !important;
+  border-radius: 50% !important;       // Argon 标志性圆形页码
+  display: inline-flex !important;     // 压 antd inline-block 默认
+  align-items: center;
+  justify-content: center;
+  background: #fff !important;         // $pagination-bg
+  border: 1px solid #dee2e6 !important; // $pagination-border-color = $gray-300（压 antd --ant-color-split 透明）
+  color: #8898aa !important;           // $pagination-color = $gray-600
+  font-size: 14px;                     // $font-size-sm = .875rem
+  padding: 0 !important;
+  transition: all .15s ease;
+}
+// 数字页码内 <a> 跟随父级色（覆盖 antd a 默认主题蓝）
+.ant-pagination-item a {
+  color: inherit !important;            // 压 antd cssinjs a 默认色（gray700 → 跟随父级 gray600）
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ---- hover：背景 $gray-100 + 文字加深 $gray-700（任务简报指定 Argon hover 风）----
+.ant-pagination-item:hover,
+.ant-pagination-prev:not(.ant-pagination-disabled) > .ant-pagination-item-link:hover,
+.ant-pagination-next:not(.ant-pagination-disabled) > .ant-pagination-item-link:hover,
+.ant-pagination-jump-prev > .ant-pagination-item-link:hover,
+.ant-pagination-jump-next > .ant-pagination-item-link:hover {
+  background: #f6f9fc !important;      // $gray-100（任务简报核对值，Argon 整体 hover 风）
+  border-color: #dee2e6 !important;
+  color: #525f7f !important;           // $gray-700（颜色加深）
+}
+.ant-pagination-item:hover a { color: inherit; }
+
+// ---- active：实色 primary + 白字 + Argon box-shadow（_pagination.scss :7-9 + _variables.scss :913-916）----
+//   token 已处理 itemActiveBg/itemActiveColor；less 补 box-shadow + 边框同色 + hover 不退色
+.ant-pagination-item-active,
+.ant-pagination-item-active:hover {
+  background: #5e72e4 !important;      // $pagination-active-bg = $component-active-bg = primary
+  border-color: #5e72e4 !important;    // $pagination-active-border-color = primary
+  color: #fff !important;              // $pagination-active-color = $component-active-color
+  box-shadow: 0 7px 14px rgba(50, 50, 93, .1), 0 3px 6px rgba(0, 0, 0, .08);  // $pagination-active-box-shadow = $btn-hover-box-shadow
+}
+.ant-pagination-item-active a,
+.ant-pagination-item-active a:hover { color: #fff !important; }
+
+// ---- disabled：白底 + 浅字（_variables.scss :918-920）----
+.ant-pagination-disabled > .ant-pagination-item-link,
+.ant-pagination-disabled > .ant-pagination-item-link:hover,
+.ant-pagination-disabled.ant-pagination-item-active {
+  background: #fff !important;         // $pagination-disabled-bg
+  border-color: #dee2e6 !important;    // $pagination-disabled-border-color
+  color: rgba(0, 0, 0, .25) !important; // antd 默认 disabled 色（Argon $gray-600 在 disabled 太重）
+  box-shadow: none !important;         // disabled 无 active 阴影
+  cursor: not-allowed;
+}
+
+// ===== 阶段三组4：Argon 表单类细化（antd token 触不到的部分）=====
+// 配色权威源 theme/argonColors.ts；本节按 core/custom-forms + plugins/_plugin-{nouislider,dropzone} 对齐
+
+// ---- Checkbox/Radio：hover 边框 $gray-300 + cubic-bezier 过渡（_custom-control.scss + _variables.scss :602-603）----
+//   token 已处理 colorPrimary=primary（checked 实色 $component-active-bg = primary）
+//   antd 默认 hover 边框=colorPrimary，Argon 习惯 hover 仅边框灰化（非上 primary，降低视觉噪音）
+.ant-checkbox:hover .ant-checkbox-inner,
+.ant-checkbox-input:focus + .ant-checkbox-inner,
+.ant-radio:hover .ant-radio-inner,
+.ant-radio-input:focus + .ant-radio-inner,
+.ant-radio-button-wrapper:not(.ant-radio-button-wrapper-checked):hover {
+  border-color: #dee2e6 !important;            // $custom-control-indicator-hover-border-color = $gray-300
+}
+.ant-checkbox-inner,
+.ant-radio-inner {
+  transition: all .15s cubic-bezier(.68, -.55, .265, 1.55) !important;  // $input-transition = $transition-cubic-bezier
+}
+.ant-radio-button-wrapper { transition: all .15s ease; }
+// Argon custom-control 文字标签随 hover 文字色不变（与 antd 默认一致，无需补）
+
+// ---- InputNumber：focus 柔和阴影 + cubic-bezier 过渡（与 Input 同款 Argon 风格）----
+//   Argon 无独立 InputNumber，按已对齐的 Input 同款处理（共用 $input-* 变量）
+.ant-input-number:focus,
+.ant-input-number-focused,
+.ant-input-number-affix-wrapper-focused {
+  box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08) !important;  // $input-focus-box-shadow
+}
+.ant-input-number,
+.ant-input-number-affix-wrapper {
+  transition: all .15s cubic-bezier(.68, -.55, .265, 1.55) !important;  // $input-transition
+}
+
+// ---- DatePicker / RangePicker / TimePicker：focus 柔和阴影 + cubic-bezier 过渡（与 Input 同款 Argon 风格）----
+//   Argon 无独立 picker，按已对齐的 Input 同款处理；picker 容器 .ant-picker，聚焦态 .ant-picker-focused
+//   （RangePicker/TimePicker 共用 .ant-picker 类名，故一处覆盖全站）
+.ant-picker-focused {
+  box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08) !important;  // $input-focus-box-shadow
+}
+.ant-picker {
+  transition: all .15s cubic-bezier(.68, -.55, .265, 1.55) !important;  // $input-transition
+}
+
+// ---- Slider：Argon noUi 复刻（_plugin-nouislider.scss + $noui-* 变量）----
+//   token 已处理 railSize=5/handleSize=15/handleColor/trackBg
+//   less 补：1) target inset 阴影 2) track 渐变 87deg 3) handle hover 放大（.noUi-handle.noUi-active）
+.ant-slider-rail {
+  background: #e9ecef;                          // Argon $noui-target-bg=#eceeef（取 $gray-200 更统一）
+  box-shadow: inset 0 1px 2px rgba(90, 97, 105, .1);  // $noui-target-box-shadow
+  border-radius: 5px;                           // $noui-target-border-radius
+}
+.ant-slider-track {
+  background-image: linear-gradient(87deg, #5e72e4 0%, #7b5ce4 100%) !important;  // Argon 标志性 87deg 渐变（.noUi-connect）
+}
+.ant-slider-handle {
+  border: 0 !important;                         // $noui-handle-border = 0
+  background: #5e72e4 !important;               // $noui-handle-bg = primary
+  box-shadow: 0 4px 6px rgba(50,50,93,.11), 0 1px 3px rgba(0,0,0,.08);  // Argon 软阴影
+  transition: box-shadow .15s, transform .15s !important;  // _plugin-nouislider.scss :354
+}
+.ant-slider-handle:hover,
+.ant-slider-handle:focus,
+.ant-slider-handle.ant-tooltip-open,
+.ant-slider-handle-dragging {
+  transform: scale(1.2);                        // .noUi-handle.noUi-active transform:scale(1.2)
+  box-shadow: 0 7px 14px rgba(50,50,93,.1), 0 3px 6px rgba(0,0,0,.08) !important;
+}
+.ant-slider-dot {
+  border-color: #e9ecef;                        // .noUi-marker background: #CCC → 浅灰（与 Argon 灰阶统一）
+  background: transparent;
+}
+.ant-slider-dot-active {
+  border-color: #5e72e4;                        // active marker 取 primary
+  background: #5e72e4;
+}
+
+// ---- Upload.Dragger：Argon dropzone 虚线 + hover 强调（_dropzone.scss + _plugin-dropzone.scss）----
+//   antd v5 Upload ComponentToken 无 Dragger 风格（actionsColor 已由 token），全部 less 处理
+.ant-upload-drag {
+  background: #fff;                             // $input-bg
+  border: 1px dashed #dee2e6 !important;        // $input-border-width dashed $input-border-color = $gray-300
+  border-radius: 4px;                           // $border-radius（.dz-message border-radius）
+  transition: all .15s ease;                    // $transition-base
+}
+.ant-upload-drag:hover {
+  border-color: #adb5bd !important;             // .dz-message:hover border-color: $text-muted = $gray-500
+  color: #525f7f;                               // .dz-message:hover color: $body-color = $gray-700
+}
+.ant-upload-drag.ant-upload-drag-hover {
+  border-color: #5e72e4 !important;             // .dz-drag-hover .dz-message border-color: primary
+  color: #5e72e4;                               // .dz-drag-hover .dz-message color: primary
+  background: #f6f9fc;                          // 浅底 hover 强调（Argon hover 风 $gray-100）
+}
+.ant-upload-text {
+  color: #525f7f;                               // $body-color = $gray-700（_plugin-dropzone .dz-button color）
+  font-weight: 500;
+}
+.ant-upload-hint {
+  color: #8898aa;                               // $text-muted = $gray-600
+}
+
+// ===== 阶段三组5：Table/Breadcrumb/Statistic/Steps 细化（antd token 触不到的部分）=====
+// 配色权威源 theme/argonColors.ts；本节按 core/{tables|breadcrumbs|timeline} + Argon 数据卡风格 对齐
+
+// ---- Table：thead uppercase + 1px letter-spacing + .65rem 字号 + 600 字重（_table.scss + _variables.scss :467-477）----
+//   token 已处理：headerBg=gray100 / headerColor=gray600 / borderColor=gray200 / rowHoverBg / cellPadding / cellFontSize=13
+//   token 不到：thead text-transform / letter-spacing / 字号 .65rem / 字重 600
+//   !important：压 antd cssinjs 默认值；项目内 Table 已统一用 Argon 风（无副作用）
+.ant-table-thead > tr > th {
+  text-transform: uppercase !important;        // $table-head-text-transform
+  letter-spacing: 1px !important;              // $table-head-letter-spacing
+  font-size: 11px !important;                  // $table-head-font-size = .65rem ≈ 10.4px，取 11px 更可读
+  font-weight: 600 !important;                 // $table-head-font-weight = $font-weight-bold = 600
+}
+// ProTable 内置 Table 在 Card 中，去除 Card 内 Table 底部多余空白（Argon card-table 包裹风）
+.ant-card > .ant-card-body > .ant-table-wrapper > .ant-table {
+  margin-bottom: 0;
+}
+// 表行 hover 0.15s 过渡（_table.scss .table-hover tr transition）
+.ant-table-tbody > tr {
+  transition: background-color .15s ease;
+}
+
+// ---- Breadcrumb：$font-size-sm 字号 + 透明背景 + 当前页字重（_breadcrumb.scss）----
+//   token 已处理：itemColor/linkColor/lastItemColor/linkHoverColor/separatorColor
+//   token 不到：font-size .875rem / padding:0 / background:transparent / 当前页字重
+.ant-breadcrumb {
+  font-size: 14px;                             // $font-size-sm = .875rem
+  padding: 0;                                  // Argon .breadcrumb-links: padding:0
+  background: transparent;                     // Argon .breadcrumb-links: background:transparent
+}
+// 链接字重 500（Argon 标准），最后一项字重 600 强调当前页
+.ant-breadcrumb-link a { font-weight: 500; }
+.ant-breadcrumb > span:last-child .ant-breadcrumb-link { font-weight: 600; }
+
+// ---- Statistic：title uppercase + content-value 字重 700 + gray800 数字色（Argon 数据卡风格）----
+//   token 已处理：titleFontSize=11 / contentFontSize=30
+//   token 不到：title text-transform/letter-spacing/color + content-value font-weight/color
+.ant-statistic-title {
+  text-transform: uppercase;                   // Argon 数据卡标签风格（.ps-stat-card__label）
+  letter-spacing: 0.04em;                      // $ps-stat-card__label letter-spacing
+  color: #8898aa;                              // $gray-600 标签色
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.ant-statistic-content-value {
+  color: #32325d;                              // $gray-800 数字色（Argon heading color）
+  font-weight: 700;                            // $font-weight-bold = 600 → 取 700 更强数据视觉
+  letter-spacing: -0.02em;                     // 紧凑字距（Argon 数据卡数字质感）
+}
+.ant-statistic-content-suffix {
+  font-size: 0.5em;                            // 单位半小（Argon 数据卡单位惯例）
+  font-weight: 600;
+  margin-left: 4px;
+}
+
+// ---- Steps：tail 色 + 节点边框 + 标题/描述色（Argon timeline 风格 _timeline.scss）----
+//   token 已处理：iconSize=32 / titleLineHeight=1.5 / descriptionMaxWidth=200
+//   antd v5 公开 token 不到 finish/wait icon border color / tail color / title color，全部 less 处理
+//   antd 默认 process/finish icon 已用 colorPrimary=primary 渲染（自动 Argon 风），此处仅补边框/轴线/字色
+.ant-steps-item-icon {
+  border-radius: 50%;                          // $timeline-step border-radius: 50%
+}
+// wait 节点：白底 + gray-300 边框（Argon 节点灰化）
+.ant-steps-item-wait .ant-steps-item-icon {
+  border-color: #dee2e6;                       // $gray-300（Argon 灰阶更柔和）
+  background: #fff;                            // $timeline-step-bg = $white
+}
+.ant-steps-item-wait .ant-steps-icon {
+  color: #adb5bd;                              // $gray-500 待办数字色
+}
+// 标题色：已完成/进行中 gray-800 / 待办 gray-600
+.ant-steps-item-title {
+  color: #32325d !important;                    // $gray-800
+}
+.ant-steps-item-wait > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title {
+  color: #8898aa !important;                    // $gray-600 待办标题色（弱化）
+}
+.ant-steps-item-description {
+  color: #8898aa !important;                    // $gray-600 描述色
+}
+// tail：待办段 gray-200 / 完成段 primary（_timeline.scss border-right: 2px solid $border-color）
+.ant-steps-item:not(.ant-steps-item-finish) .ant-steps-item-tail::after {
+  background-color: #e9ecef;                    // $gray-200 axis color
+}
+.ant-steps-item-finish .ant-steps-item-tail::after {
+  background-color: #5e72e4;                    // $primary（完成段轴线 primary）
+}
+
+// ===== 阶段三组6：Drawer/Result/Empty/Spin 细化（Argon 无直接 scss，按 Argon 视觉语言映射）=====
+// 配色权威源 theme/argonColors.ts；本节按已对齐的 Modal + SweetAlert + 文字简洁风 + CSS loader 对齐
+// 视觉常量：圆角 7（Modal 风阴影 $modal-content-box-shadow-xs/sm-up）/ 圆角 6 / 字重 600-700 /
+//           过渡 cubic-bezier(.68,-.55,.265,1.55)（Argon $input-transition）/ 阴影 $argon-shadow / mask .16
+
+// ---- Drawer：参考 Modal（圆角 7 + Modal 浮层阴影 + mask .16 + gray800 标题 + 关闭 gray-600）----
+//   token 已处理：footerPaddingBlock=12 / footerPaddingInline=16
+//   antd Drawer ComponentToken 无 bg/shadow/radius，全部 less 处理
+//   .ant-drawer-content 是右/左/上/下侧滑面板容器；header 同 Modal header（白底 + 标题 gray800 700）
+.ant-drawer-content {
+  background: #fff;                              // $modal-content-bg = $white
+  border-radius: 7px;                            // $modal-content-border-radius-lg
+  box-shadow: 0 15px 35px rgba(50, 50, 93, .2), 0 5px 15px rgba(0, 0, 0, .17);  // 同 Modal
+}
+// 右侧抽屉（最常用）：左侧圆角 7px，右侧贴边不圆角
+.ant-drawer-right .ant-drawer-content-wrapper { box-shadow: 0 15px 35px rgba(50, 50, 93, .2), 0 5px 15px rgba(0, 0, 0, .17); }
+.ant-drawer-right .ant-drawer-content { border-radius: 7px 0 0 7px; }
+.ant-drawer-left .ant-drawer-content { border-radius: 0 7px 7px 0; }
+.ant-drawer-top .ant-drawer-content { border-radius: 0 0 7px 7px; }
+.ant-drawer-bottom .ant-drawer-content { border-radius: 7px 7px 0 0; }
+// header：白底 + 标题 gray800 700（与 Modal 一致）
+.ant-drawer-header {
+  background: #fff;                              // $modal-header-bg = $white
+  padding: 16px 24px;                            // $modal-header-padding-y=1rem / padding-x=1.5rem
+  border-bottom: 1px solid #e9ecef;              // $modal-header-border-color = $gray-200
+}
+.ant-drawer-title {
+  color: #32325d;                                // $headings-color = gray800
+  font-weight: 700;                              // $headings-font-weight = 600 → 700 更强标题视觉
+  font-size: 18px;                               // $h4-font-size ≈ 1.125rem（Drawer 标题略小于 Modal 24）
+}
+.ant-drawer-close-icon {
+  color: #8898aa;                                // $gray-600
+  transition: color .15s ease;
+}
+.ant-drawer-close-icon:hover { color: #525f7f; } // $gray-700
+.ant-drawer-body {
+  padding: 24px;                                 // $modal-inner-padding = 1.5rem
+  font-size: 14px;                               // $font-size-sm
+  color: #525f7f;                                // $body-color = gray700
+}
+.ant-drawer-footer {
+  background: #fff;                              // $modal-footer-bg = $white
+  padding: 12px 16px;                            // footerPaddingBlock/Inline（token 已设）
+  border-top: 1px solid #e9ecef;                 // $modal-footer-border-color
+}
+.ant-drawer-mask { background: rgba(0, 0, 0, .16); }  // 同 Modal mask
+
+// ---- Result：参考 SweetAlert（中央大圆 + 渐变背景 + 白图标 + gray800 标题 700 + gray-700 副标题）----
+//   token 已处理：iconFontSize=64 / titleFontSize=22 / subtitleFontSize=14 / extraMargin='24px 0 0'
+//   antd Result 图标用 colorSuccess/Error/Warning（=Argon success/danger/warning，已自动 Argon 化）
+//   less 触：把 antd 默认"超大字体图标"换成 SweetAlert 风格（80px 渐变圆 + 白图标）
+.ant-result {
+  padding: 32px 24px;                            // SweetAlert Modal 内 padding
+}
+// 图标容器：内嵌 80px 渐变圆（参考 SweetAlert: width 80 height 80 borderRadius 50% argonGradients[type]）
+.ant-result-icon {
+  margin-bottom: 16px;                           // SweetAlert icon marginBottom
+  line-height: 0;                                // 容器无基线影响
+}
+.ant-result-icon > span {
+  width: 80px;                                   // SweetAlert 圆尺寸
+  height: 80px;
+  border-radius: 50%;                            // 标志性圆形（Argon SweetAlert 大圆）
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 2rem 0 rgba(136, 152, 170, .3);  // SweetAlert icon 阴影
+  color: #fff !important;                        // 图标白色（在渐变圆上）
+  font-size: 40px !important;                    // SweetAlert 图标 40px（压 token 默认 64）
+  line-height: 0;
+}
+// success/error/warning/info 四态渐变背景（argonGradients 公式：87deg C → adjust-hue(C,+25deg)）
+.ant-result-success .ant-result-icon > span { background-image: linear-gradient(87deg, #2dce89 0%, #2dc7ce 100%); }
+.ant-result-error   .ant-result-icon > span { background-image: linear-gradient(87deg, #f5365c 0%, #f56336 100%); }
+.ant-result-warning .ant-result-icon > span { background-image: linear-gradient(87deg, #fb6340 0%, #fb9840 100%); }
+.ant-result-info    .ant-result-icon > span { background-image: linear-gradient(87deg, #5e72e4 0%, #7b5ce4 100%); }
+// 标题：gray800 700 22（SweetAlert h3 风格）
+.ant-result-title {
+  color: #32325d;                                // $headings-color = gray800
+  font-weight: 700;
+  font-size: 22px !important;                    // 压 token 注入（保持 SweetAlert h3 一致）
+  line-height: 1.5;
+}
+// 副标题：gray700 14（SweetAlert content）
+.ant-result-subtitle {
+  color: #525f7f;                                // $body-color = gray-700
+  font-size: 14px;
+  line-height: 1.6;
+  margin-top: 8px;
+}
+// extra 区上间距（token 已设 extraMargin）
+
+// ---- Empty：Argon 简洁文字风（大图标 gray-400 + gray-600 描述，紧凑）----
+//   antd v5 Empty ComponentToken 无暴露字段，全部 less 处理
+//   Argon 无独立组件，按 Argon 灰阶 + 紧凑 padding 风
+.ant-empty-image {
+  margin-bottom: 12px;                            // 紧凑（antd 默认 32px 太松散，Argon 简洁风）
+  height: 50px;                                  // 控制图标垂直占位
+  svg { color: #ced4da; }                        // $gray-400（Argon 灰阶 placeholder 色）
+}
+.ant-empty-description {
+  color: #8898aa;                                // $gray-600
+  font-size: 13px;                               // $font-size-sm ≈ .8125rem
+  font-weight: 500;
+}
+// Argon Empty 紧凑内距（默认 padding 32 40 → 16 24 更紧凑）
+.ant-empty-normal {
+  margin: 16px 0;
+  padding: 16px 24px;
+}
+
+// ---- Spin：Argon loader（primary 色由全局 colorPrimary 已自动 + 简洁 size lg/sm）----
+//   token 已处理：dotSize=20 / dotSizeSM=14 / dotSizeLG=32
+//   antd Spin dot color 已 = colorPrimary = Argon primary（无需 less 覆盖色）
+//   less 仅补：indicator padding 微调 + tip 文字风格
+.ant-spin-dot-item {
+  border-radius: 50%;                            // Argon loader 圆点风
+}
+// tip 文字色（Spin 带 tip 时）
+.ant-spin-text {
+  color: #525f7f;                                // $gray-700
+  font-size: 13px;                               // $font-size-sm
+  margin-top: 12px;                              // icon-tip 间距（Argon 紧凑风）
+  font-weight: 500;
+}
+// 嵌入式 loading（Spin tip 大型 loading-card 风格）
+.ant-spin-nested-loading > .ant-spin-loading-block {
+  background: rgba(255, 255, 255, .65);          // 半透明覆盖（Argon 卡片加载风）
+  border-radius: 6px;                            // $border-radius
+}
+
+// ===== 阶段三收尾：Descriptions/List 细化（antd token 触不到的部分）=====
+// 配色权威源 theme/argonColors.ts；本节按 Argon 视觉语言（list-groups + 数据卡 + table thead 风）对齐
+//
+// ---- Descriptions：label uppercase gray-600 + 标题 gray-800 700（参考 Argon 数据卡 label + table thead）----
+//   token 已处理：labelBg=gray100 / labelColor=gray600 / titleColor=gray800 / contentColor=gray700 / extraColor=gray600
+//   token 不到：label text-transform / letter-spacing / 字重 600；title 字重 700
+//   Argon 无独立 Descriptions，按数据卡 label 风格（.ps-stat-card__label uppercase）+ Table thead 风映射
+.ant-descriptions-item-label {
+  font-weight: 600;                              // 数据卡 label 字重（与 Statistic title 一致）
+  font-size: 13px;                               // $font-size-sm = .8125rem（label 略小，让内容更突出）
+  text-transform: uppercase;                     // Argon 数据卡 label 风格
+  letter-spacing: 0.04em;                        // Argon $ps-stat-card__label letter-spacing
+}
+.ant-descriptions-title {
+  font-weight: 700;                              // $headings-font-weight = 600 → 700 更强标题视觉（与 Drawer/Modal 一致）
+  font-size: 16px;                               // Descriptions 标题略小（介于 14 默认与 18 Drawer 之间）
+  color: #32325d;                                // $headings-color = gray800（双重锁定，token 已设）
+}
+// 内容文字色（双重锁定，token 已设 contentColor=gray700；压 antd 默认 colorText）
+.ant-descriptions-item-content { color: #525f7f; }
+
+// ---- List：list-group-item padding/hover/border 复刻（_list-group.scss + _variables.scss :1018-1039）----
+//   token 已处理：itemPadding=12/20 / itemPaddingSM=8/16 / itemPaddingLG=16/24 / headerBg/footerBg transparent
+//   token 不到：item hover $gray-100 / 底边 $gray-200 / 文字色 $gray-700 / header gray-800 uppercase
+//   Argon list-group-item 视觉：白底 + 底 1px solid $gray-200 + hover $gray-100 + 内容 gray-700
+//   注：基础 list（split=false）保留 antd 默认无边框；仅 .ant-list-split 启用 Argon 分割线
+.ant-list-header {
+  color: #32325d;                                // $headings-color = gray-800
+  font-weight: 700;                              // 标题字重（与 List header 视觉量级一致）
+  font-size: 16px;
+}
+.ant-list-item {
+  color: #525f7f;                                // $list-group-action-color = $gray-700
+  transition: background-color .15s ease;        // Argon 标准 .15s 过渡
+}
+// split 变体：底边 1px solid $gray-200（压 antd colorSplit 内边框色，对齐 Argon $list-group-border-color）
+.ant-list-split .ant-list-item {
+  border-block-end-color: #e9ecef;               // $list-group-border-color = $gray-200
+}
+// hover：背景 $gray-100（Argon list-group hover 风，与 Table rowHoverBg/Pagination hover 一致）
+.ant-list-item:hover {
+  background: #f6f9fc;                           // $list-group-hover-bg = $gray-100
+}
+// List.Item Meta 标题/描述：标题 gray-800 + 描述 gray-600（参考 Argon list-group-heading + content）
+.ant-list-item-meta-title {
+  color: #32325d;                                // $gray-800
+  font-weight: 600;                              // Argon $font-weight-bold
+}
+.ant-list-item-meta-description {
+  color: #8898aa;                                // $gray-600
+  font-size: 13px;                               // $font-size-sm
+}
+// bordered 变体：边框 $gray-200 + 圆角 6（压 antd 默认 colorBorder=gray200 已一致，圆角降一档对齐 Argon $border-radius）
+.ant-list-bordered {
+  border-color: #e9ecef;                         // $list-group-border-color = $gray-200
+  border-radius: 6px;                            // $border-radius
+}

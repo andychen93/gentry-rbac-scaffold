@@ -1,0 +1,195 @@
+package com.precision.rbac.dict.service.impl;
+
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.precision.core.common.ErrorCode;
+import com.precision.core.common.PageResult;
+import com.precision.core.exception.BizException;
+import com.precision.core.security.UserContext;
+import com.precision.rbac.dict.dto.*;
+import com.precision.rbac.dict.entity.DictData;
+import com.precision.rbac.dict.entity.DictType;
+import com.precision.rbac.dict.mapper.DictDataMapper;
+import com.precision.rbac.dict.mapper.DictTypeMapper;
+import com.precision.rbac.dict.service.DictService;
+import com.precision.rbac.dict.vo.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
+
+@Service
+public class DictServiceImpl implements DictService {
+
+    private static final Logger log = LoggerFactory.getLogger(DictServiceImpl.class);
+    private final Cache<String, List<DictDataVO>> cache = Caffeine.newBuilder()
+            .maximumSize(500)
+            .expireAfterWrite(30, TimeUnit.MINUTES)
+            .build();
+
+    private final DictTypeMapper dictTypeMapper;
+    private final DictDataMapper dictDataMapper;
+
+    public DictServiceImpl(DictTypeMapper dictTypeMapper, DictDataMapper dictDataMapper) {
+        this.dictTypeMapper = dictTypeMapper;
+        this.dictDataMapper = dictDataMapper;
+    }
+
+    @Override
+    public PageResult<DictTypeListVO> listTypes(DictTypeQueryDTO query) {
+        Long tenantId = UserContext.getTenantId();
+        long total = dictTypeMapper.selectCount(query, tenantId);
+        List<DictTypeListVO> list = total > 0 ? dictTypeMapper.selectList(query, tenantId) : List.of();
+        return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
+    }
+
+    @Override
+    @Transactional
+    public DictTypeVO createType(DictTypeCreateDTO dto) {
+        Long tenantId = UserContext.getTenantId();
+        if (dictTypeMapper.countByDictType(tenantId, dto.getDictType()) > 0) {
+            throw new BizException(ErrorCode.DICT_TYPE_EXISTS);
+        }
+        DictType entity = new DictType();
+        entity.setDictName(dto.getDictName());
+        entity.setDictType(dto.getDictType());
+        entity.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        entity.setRemark(dto.getRemark());
+        dictTypeMapper.insert(entity);
+        return toTypeVO(entity);
+    }
+
+    @Override
+    @Transactional
+    public void updateType(Long id, DictTypeUpdateDTO dto) {
+        DictType existing = dictTypeMapper.selectOneById(id);
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+        DictType entity = new DictType();
+        entity.setId(id);
+        entity.setDictName(dto.getDictName());
+        entity.setStatus(dto.getStatus());
+        entity.setRemark(dto.getRemark());
+        dictTypeMapper.update(entity);
+    }
+
+    @Override
+    @Transactional
+    public void removeType(Long id) {
+        DictType existing = dictTypeMapper.selectOneById(id);
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+        Long tenantId = UserContext.getTenantId();
+        dictTypeMapper.logicDeleteById(id);
+        dictDataMapper.logicDeleteByDictType(tenantId, existing.getDictType());
+        invalidateCache(tenantId, existing.getDictType());
+    }
+
+    @Override
+    public List<DictDataVO> listDataByType(String dictType) {
+        Long tenantId = UserContext.getTenantId();
+        String cacheKey = "dict:" + tenantId + ":" + dictType;
+        List<DictDataVO> cached = cache.getIfPresent(cacheKey);
+        if (cached != null) return cached;
+
+        List<DictData> dataList = dictDataMapper.selectByDictType(tenantId, dictType);
+        List<DictDataVO> voList = dataList.stream().map(this::toDataVO).collect(Collectors.toList());
+        cache.put(cacheKey, voList);
+        return voList;
+    }
+
+    @Override
+    @Transactional
+    public DictDataVO createData(String dictType, DictDataCreateDTO dto) {
+        Long tenantId = UserContext.getTenantId();
+        // 校验字典类型存在且启用
+        DictType typeEntity = dictTypeMapper.selectByDictType(tenantId, dictType);
+        if (typeEntity == null) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+        }
+        if (typeEntity.getStatus() != null && typeEntity.getStatus() != 1) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "字典类型已禁用，不能新增数据");
+        }
+        if (dictDataMapper.countByDictValue(tenantId, dictType, dto.getDictValue()) > 0) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "字典键值已存在");
+        }
+        DictData entity = new DictData();
+        entity.setDictType(dictType);
+        entity.setDictLabel(dto.getDictLabel());
+        entity.setDictValue(dto.getDictValue());
+        entity.setCssClass(dto.getCssClass());
+        entity.setListClass(dto.getListClass());
+        entity.setIsDefault(dto.getIsDefault() != null ? dto.getIsDefault() : 0);
+        entity.setSort(dto.getSort() != null ? dto.getSort() : 0);
+        entity.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        entity.setRemark(dto.getRemark());
+        dictDataMapper.insert(entity);
+        invalidateCache(tenantId, dictType);
+        return toDataVO(entity);
+    }
+
+    @Override
+    @Transactional
+    public void updateData(Long id, DictDataUpdateDTO dto) {
+        DictData existing = dictDataMapper.selectOneById(id);
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典数据不存在");
+        DictData entity = new DictData();
+        entity.setId(id);
+        entity.setDictLabel(dto.getDictLabel());
+        entity.setCssClass(dto.getCssClass());
+        entity.setListClass(dto.getListClass());
+        entity.setIsDefault(dto.getIsDefault());
+        entity.setSort(dto.getSort());
+        entity.setStatus(dto.getStatus());
+        entity.setRemark(dto.getRemark());
+        dictDataMapper.update(entity);
+        invalidateCache(UserContext.getTenantId(), existing.getDictType());
+    }
+
+    @Override
+    @Transactional
+    public void removeData(Long id) {
+        DictData existing = dictDataMapper.selectOneById(id);
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典数据不存在");
+        dictDataMapper.logicDeleteById(id);
+        invalidateCache(UserContext.getTenantId(), existing.getDictType());
+    }
+
+    @Override
+    public void refreshCache() {
+        cache.invalidateAll();
+        log.info("Dict cache refreshed");
+    }
+
+    private void invalidateCache(Long tenantId, String dictType) {
+        cache.invalidate("dict:" + tenantId + ":" + dictType);
+    }
+
+    private DictTypeVO toTypeVO(DictType entity) {
+        DictTypeVO vo = new DictTypeVO();
+        vo.setId(entity.getId());
+        vo.setDictName(entity.getDictName());
+        vo.setDictType(entity.getDictType());
+        vo.setStatus(entity.getStatus());
+        vo.setRemark(entity.getRemark());
+        vo.setCreateTime(entity.getCreateTime());
+        return vo;
+    }
+
+    private DictDataVO toDataVO(DictData entity) {
+        DictDataVO vo = new DictDataVO();
+        vo.setId(entity.getId());
+        vo.setDictType(entity.getDictType());
+        vo.setDictLabel(entity.getDictLabel());
+        vo.setDictValue(entity.getDictValue());
+        vo.setCssClass(entity.getCssClass());
+        vo.setListClass(entity.getListClass());
+        vo.setIsDefault(entity.getIsDefault());
+        vo.setSort(entity.getSort());
+        vo.setStatus(entity.getStatus());
+        vo.setRemark(entity.getRemark());
+        return vo;
+    }
+}
