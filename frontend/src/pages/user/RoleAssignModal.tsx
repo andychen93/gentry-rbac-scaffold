@@ -38,7 +38,10 @@ export default function RoleAssignModal({ open, userId, currentRoleIds, onSucces
   const handleOk = async () => {
     setLoading(true);
     try {
-      await userApi.assignRoles(userId, { roleIds: targetKeys.map(Number) });
+      // roleIds 是雪花 ID，超过 JS Number 安全整数范围（2^53-1），
+      // 不能 map(Number) —— 会精度丢失变成一个不存在的 ID。
+      // 后端 Long 字段能正确反序列化数字型字符串，原样传字符串即可。
+      await userApi.assignRoles(userId, { roleIds: targetKeys });
       message.success('角色分配成功');
       onSuccess();
     } catch {

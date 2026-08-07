@@ -116,14 +116,14 @@ export const tenantMgmtApi = {
     request.put(`/api/v1/tenants/${id}`, data),
 
   /** TENANT-005 删除租户 */
-  remove: (id: number) =>
+  remove: (id: number | string) =>
     request.delete(`/api/v1/tenants/${id}`),
 
   /** TENANT-006 租户配置 */
-  updateConfig: (id: number, data: TenantConfigDTO) =>
+  updateConfig: (id: number | string, data: TenantConfigDTO) =>
     request.put(`/api/v1/tenants/${id}/config`, data),
 
   /** TENANT-007 切换租户状态 */
-  updateStatus: (id: number, data: TenantStatusDTO) =>
+  updateStatus: (id: number | string, data: TenantStatusDTO) =>
     request.put(`/api/v1/tenants/${id}/status`, data),
 };

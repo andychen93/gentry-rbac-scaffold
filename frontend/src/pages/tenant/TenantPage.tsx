@@ -27,7 +27,8 @@ export default function TenantPage() {
 
   const handleStatus = async (id: string | number, checked: boolean) => {
     try {
-      await tenantMgmtApi.updateStatus(Number(id), { status: checked ? 1 : 0 });
+      // id 是雪花 ID，超过 JS Number 安全整数范围就不能 Number(id)（会精度丢失变成别的 ID）
+      await tenantMgmtApi.updateStatus(id, { status: checked ? 1 : 0 });
       message.success('状态更新成功');
       refresh();
     } catch {

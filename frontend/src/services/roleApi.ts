@@ -22,8 +22,10 @@ export interface RoleDetailVO {
   sort: number;
   status: number;
   remark: string | null;
-  menuIds: number[];
-  deptIds: number[];
+  // 运行时是字符串数组（后端 Long 序列化成字符串防 JS 精度丢失），
+  // 用 (number|string)[] 提醒调用方不要 Number()/map(Number) 这两个字段
+  menuIds: (number | string)[];
+  deptIds: (number | string)[];
   createTime: string;
   updateTime: string;
 }
@@ -67,12 +69,12 @@ export interface RoleUpdateDTO {
 }
 
 export interface RoleMenuAssignDTO {
-  menuIds: number[];
+  menuIds: (number | string)[];
 }
 
 export interface RoleDataScopeDTO {
   dataScope: number;
-  deptIds: number[];
+  deptIds: (number | string)[];
 }
 
 export interface RoleStatusDTO {
@@ -97,7 +99,7 @@ export const roleApi = {
     request.get<any, { code: number; data: PageResult<RoleListVO> }>('/api/v1/roles', { params }),
 
   /** ROLE-002 角色详情 */
-  detail: (id: number) =>
+  detail: (id: number | string) =>
     request.get<any, { code: number; data: RoleDetailVO }>(`/api/v1/roles/${id}`),
 
   /** ROLE-003 新增角色 */
@@ -105,22 +107,22 @@ export const roleApi = {
     request.post<any, { code: number; data: RoleVO }>('/api/v1/roles', data),
 
   /** ROLE-004 编辑角色 */
-  update: (id: number, data: RoleUpdateDTO) =>
+  update: (id: number | string, data: RoleUpdateDTO) =>
     request.put(`/api/v1/roles/${id}`, data),
 
   /** ROLE-005 删除角色 */
-  remove: (id: number) =>
+  remove: (id: number | string) =>
     request.delete(`/api/v1/roles/${id}`),
 
   /** ROLE-006 分配菜单权限 */
-  assignMenus: (id: number, data: RoleMenuAssignDTO) =>
+  assignMenus: (id: number | string, data: RoleMenuAssignDTO) =>
     request.put(`/api/v1/roles/${id}/menus`, data),
 
   /** ROLE-007 设置数据权限 */
-  updateDataScope: (id: number, data: RoleDataScopeDTO) =>
+  updateDataScope: (id: number | string, data: RoleDataScopeDTO) =>
     request.put(`/api/v1/roles/${id}/data-scope`, data),
 
   /** ROLE-009 切换角色状态 */
-  updateStatus: (id: number, data: RoleStatusDTO) =>
+  updateStatus: (id: number | string, data: RoleStatusDTO) =>
     request.put(`/api/v1/roles/${id}/status`, data),
 };

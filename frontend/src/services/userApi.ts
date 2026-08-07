@@ -136,10 +136,12 @@ export const userApi = {
   resetPassword: (id: number, data: { newPassword: string }) =>
     request.put(`/api/v1/users/${id}/password/reset`, data),
 
-  assignRoles: (id: number, data: { roleIds: number[] }) =>
+  // roleIds 用 (number | string)[] 是因为雪花 ID 超过 JS Number 安全整数范围（2^53-1），
+  // 调用方必须原样传字符串，不能 map(Number)
+  assignRoles: (id: number | string, data: { roleIds: (number | string)[] }) =>
     request.put(`/api/v1/users/${id}/roles`, data),
 
-  updateStatus: (id: number, data: { status: number }) =>
+  updateStatus: (id: number | string, data: { status: number }) =>
     request.put(`/api/v1/users/${id}/status`, data),
 };
 
