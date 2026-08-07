@@ -1,7 +1,7 @@
 # RBAC 权限脚手架
 
 多租户 RBAC 权限脚手架，后期新项目直接基于它开发。
-后端 Spring Boot 3.2 + MyBatis-Flex + Sa-Token(JWT) + PostgreSQL，
+后端 Spring Boot 3.2 + MyBatis-Flex + Sa-Token(JWT)，支持 MySQL（默认）/ PostgreSQL / SQLite 三种数据库，
 前端 React 18 + TypeScript + Vite + Ant Design 5。
 
 开箱即用的意思是：clone 下来跑两条命令，就有一个能登录、有菜单、有权限、有租户隔离、
@@ -11,10 +11,12 @@
 
 ## 1. 五分钟跑起来
 
-前置：JDK 21、Maven 3.9+、Node 18+、Docker（或本机已装 PostgreSQL 16 + Redis 7）。
+前置：JDK 21、Maven 3.9+、Node 18+、Docker（或本机已装对应数据库 + Redis 7）。
+
+默认用 MySQL：
 
 ```bash
-bash scripts/deps_up.sh     # Docker 起 PostgreSQL(5432) + Redis(6379)，等健康
+bash scripts/deps_up.sh     # Docker 起 MySQL(3306) + Redis(6379)，等健康
 bash scripts/dev_up.sh      # 编译后端 → 起后端(9090) → 起前端(3030)
 ```
 
@@ -35,6 +37,20 @@ bash scripts/dev_up.sh --uuid       # 不想装 Redis？用 UUID Token 模式（
 ```
 
 数据库结构和初始数据由 Flyway 在后端启动时自动建，不需要手工执行 SQL。
+
+### 切换数据库
+
+```bash
+bash scripts/deps_up.sh --db=postgresql   # 起 PostgreSQL 而不是 MySQL
+bash scripts/dev_up.sh --db=postgresql    # 后端跟着切到 PostgreSQL profile
+
+bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
+                                           # 数据文件落在 backend/precision-start/precision.db
+```
+
+三种数据库跑的是同一套业务代码，区别只在 Flyway 迁移的建表方言和 `application-{db}.yml`
+的连接配置。想固定用一种、把另外两种删掉，看 `.kiro/steering/database-migration.md`
+最后一节。SQLite 只建议用于本地体验 / demo，文件级锁，写并发能力弱于 MySQL/PostgreSQL。
 
 ---
 
@@ -67,7 +83,12 @@ bash scripts/dev_up.sh --uuid       # 不想装 Redis？用 UUID Token 模式（
 │   ├── precision-core/       # 横切基础设施（无业务依赖）
 │   ├── precision-business/   # 业务模块，现有 rbac 包，新业务平级新增
 │   ├── precision-monitor/    # 运维监控（Redis 监控）
-│   └── precision-start/      # 启动入口 + Flyway 迁移 + application.yml
+│   └── precision-start/      # 启动入口 + application-{mysql,postgresql,sqlite}.yml
+│       └── src/main/resources/db/migration/
+│           ├── common/       # 三库通用迁移（99% 的新迁移放这里）
+│           ├── mysql/        # MySQL 方言迁移（目前只有 V1 建表）
+│           ├── postgresql/   # PostgreSQL 方言迁移
+│           └── sqlite/       # SQLite 方言迁移
 ├── frontend/
 │   ├── src/components/       # common（通用）/ layout（双 Layout）/ pro（表格表单）
 │   ├── src/config/app.ts     # 应用名 / Logo 缩写（改品牌只动这里 + index.html）
@@ -94,15 +115,27 @@ bash scripts/dev_up.sh --uuid       # 不想装 Redis？用 UUID Token 模式（
 `controller / service / service/impl / mapper / entity / dto / vo`。
 实体继承 `TenantEntity`，Controller 加 `@SaCheckPermission("biz:order:add")`。
 
-**② 数据库** —— 新增 `backend/precision-start/src/main/resources/db/migration/V6__create_order.sql`，
-建表 + 插菜单和权限点：
+**② 数据库** —— 新增 `backend/precision-start/src/main/resources/db/migration/common/V6__create_order.sql`
+（放 `common/` 不是三个厂商目录，建表 + 插菜单是纯 DML/标准 DDL，三库通用）：
 
 ```sql
+CREATE TABLE IF NOT EXISTS biz_order (
+    id BIGINT NOT NULL PRIMARY KEY,
+    tenant_id BIGINT NOT NULL,
+    -- ...业务字段...
+    create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted SMALLINT NOT NULL DEFAULT 0
+);
+
 INSERT INTO sys_menu (id, parent_id, name, type, sort, path, component, permission)
 VALUES (501, 0, '订单管理', 2, 10, '/order', 'pages/order/OrderPage', 'biz:order');
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, NOW() FROM sys_menu WHERE id = 501;
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id = 501;
 ```
+
+用 `CURRENT_TIMESTAMP` 不要用 `NOW()`（SQLite 不认）。如果表结构涉及局部唯一索引这类
+三库语法有差异的地方，才需要分别写到 `common/` 之外的 `mysql/` `postgresql/` `sqlite/`
+三个目录，判断标准见 `.kiro/steering/database-migration.md`。
 
 **③ 前端页面** —— `frontend/src/pages/order/OrderPage.tsx`，用 `ProTable` + `CrudFormModal`
 （`frontend/src/pages/dept/` 是最简样例）。
@@ -130,6 +163,7 @@ Service 单测覆盖 ≥ 90%。
 1. `backend/**/pom.xml` 的 `groupId` / `artifactId` / `name`
 2. Java 包名 `com.precision` → `com.yourcompany`（IDE 的 Rename Package 一次到位）
 3. `application.yml` 里 `logging.level.com.precision`、`mybatis-flex` 扫描路径
+   （`application-{mysql,postgresql,sqlite}.yml` 三个数据库连接配置不含包名，不用动）
 4. `PrecisionApplication` 类名与 `@MapperScan("com.precision.**.mapper")`
 5. 前端 `package.json` 的 `name`，`localStorage` 的 token key（`userStore.ts` 里 `precision_token`）
 6. `doc/` 里的示例包路径
@@ -147,7 +181,7 @@ Service 单测覆盖 ≥ 90%。
 |----|------|
 | 内置账号 | 改掉 `chenli` / `admin` / `zhangsan` 的密码，或直接删除测试账号 |
 | JWT 密钥 | 环境变量 `SA_TOKEN_JWT_SECRET_KEY` 外置，别用 `application.yml` 里的默认值 |
-| 数据库口令 | `spring.datasource.password` 走环境变量，别提交明文 |
+| 数据库口令 | `application-{mysql,postgresql}.yml` 里的 `spring.datasource.password` 走环境变量外置，别提交明文 |
 | Redis | 开启密码认证，`spring.data.redis.password` 外置 |
 | Actuator | `/actuator/prometheus` 等端点当前无认证，需限制为内网访问或加认证 |
 | CORS / HTTPS | 按部署形态配置反向代理 |

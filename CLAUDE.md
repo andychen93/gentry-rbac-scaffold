@@ -12,9 +12,10 @@
 | 用横切组件（限流/数据权限/日志…） | `doc/guide/Core组件开发指南.md` |
 | 加一个页面（前端） | `frontend/src/pages/dept/` 是最简样例；页面必须在 `utils/menuMapper.ts` 登记 |
 | 加权限点 | 写 Flyway 迁移插 `sys_menu` + `sys_role_menu`，权限串与 `@SaCheckPermission` 一致 |
-| 改数据库 | 只能新增 `backend/precision-start/src/main/resources/db/migration/V{n}__xxx.sql` |
+| 改数据库结构 | 只能新增 `backend/precision-start/src/main/resources/db/migration/common/V{n}__xxx.sql`（三库通用），方言差异才分 `mysql/postgresql/sqlite` 子目录 |
+| 换用的数据库（mysql/postgresql/sqlite） | `bash scripts/dev_up.sh --db=postgresql`，见 `.kiro/steering/database-migration.md` |
 | 改配色 / 主题 | `frontend/src/theme/argonColors.ts`，对照页 `/dev/style` |
-| 起本地环境 | `bash scripts/deps_up.sh && bash scripts/dev_up.sh` |
+| 起本地环境 | `bash scripts/deps_up.sh && bash scripts/dev_up.sh`（默认 MySQL） |
 
 ## 硬约束（违反即 Review 打回）
 

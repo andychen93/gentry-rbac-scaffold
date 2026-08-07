@@ -16,7 +16,7 @@ INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
 
 -- SUPER_ADMIN(-1) 与 ADMIN(1) 均可见
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, NOW() FROM sys_menu WHERE id IN (4, 41);
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id IN (4, 41);
 
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (60000 + id), 1, id, NOW() FROM sys_menu WHERE id IN (4, 41);
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id IN (4, 41);

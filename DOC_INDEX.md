@@ -83,7 +83,7 @@
 | 目录 | 说明 |
 |------|------|
 | `doc/reference/前端详细设计参考/` | 其他业务域的前端详细设计样板（设备、车辆、报警、报表、轨迹…），写新模块前端设计时当写作参考，不是本脚手架的功能 |
-| [sql/README.md](./sql/README.md) | 数据库脚本说明：权威在 Flyway，`sql/reference/` 只是全量快照 |
+| [sql/README.md](./sql/README.md) | 数据库脚本说明：权威在 Flyway（`common/` + 三个厂商目录），`sql/reference/` 只是全量快照 |
 
 ---
 

@@ -10,7 +10,7 @@
         INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.roleId}, #{item.menuId}, NOW())
+            (#{item.id}, #{item.roleId}, #{item.menuId}, CURRENT_TIMESTAMP)
         </foreach>
     </insert>
 
@@ -18,7 +18,7 @@
         INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.roleId}, #{item.menuId}, NOW())
+            (#{item.id}, #{item.roleId}, #{item.menuId}, CURRENT_TIMESTAMP)
         </foreach>
     </insert>
 

@@ -34,7 +34,7 @@ public class Tenant extends BaseEntity {
     private Integer deviceLimit;
     private Integer status;
     private String remark;
-    /** JSONB config stored as String, parsed in Service layer */
+    /** 租户扩展配置，JSON 字符串，Service 层自行解析。列类型是 TEXT（三库通用），不是 JSONB */
     private String config;
     // createBy, createTime, updateBy, updateTime, deleted 由 BaseEntity 基类提供
 }

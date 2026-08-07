@@ -2,23 +2,26 @@ server:
   port: 9090
 
 spring:
+  # 数据库切换开关：mysql（默认） | postgresql | sqlite
+  # 命令行覆盖： java -jar app.jar --spring.profiles.active=postgresql
+  # 环境变量覆盖： SPRING_PROFILES_ACTIVE=sqlite
+  # 各 profile 的连接串 / 驱动 / Flyway 目录见同目录下 application-{profile}.yml
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
+
   messages:
     basename: i18n/messages
     encoding: UTF-8
 
   flyway:
     enabled: true
-    locations: classpath:db/migration
     baseline-on-migrate: true
     baseline-version: 0
+    # locations 由各 application-{profile}.yml 覆盖，格式固定为：
+    #   classpath:db/migration/common,classpath:db/migration/{profile}
+    # common/ 是三库通用迁移，{profile}/ 是该厂商的方言迁移（目前只有 V1 建表）
 
-  datasource:
-    url: jdbc:postgresql://localhost:5432/precision
-    username: postgres
-    password: 123456
-    driver-class-name: org.postgresql.Driver
-
-  # Redis（Sa-Token JWT 模式依赖 Redis 存储 Session 与 Token 黑名单）
+  # Redis（Sa-Token JWT 模式依赖 Redis 存储 Session 与 Token 黑名单，与选哪个数据库无关）
   data:
     redis:
       host: 127.0.0.1

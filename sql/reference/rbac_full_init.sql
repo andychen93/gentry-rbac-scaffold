@@ -1,6 +1,10 @@
 -- =============================================
--- RBAC 权限脚手架 - 完整初始化脚本（手动执行用）
--- 使用: psql -h localhost -U postgres -d precision -f full_init.sql
+-- RBAC 权限脚手架 - 完整初始化脚本（手动执行用，PostgreSQL 方言）
+-- 使用: psql -h localhost -U postgres -d precision -f rbac_full_init.sql
+--
+-- 这是 postgresql/V1__create_schema.sql + common/V2~V5 拼接的快照，仅用于
+-- "不想跑应用、只想手动灌一个库看看" 的场景，不参与构建、不被 Flyway 读取。
+-- MySQL/SQLite 用户请直接跑应用，Flyway 会按 profile 自动建表初始化。
 --
 -- 账号:
 --   chenli   / Chenli@2026  → SUPER_ADMIN（平台超管）
@@ -9,12 +13,8 @@
 -- =============================================
 
 -- =============================================
--- RBAC 权限脚手架 - 建表
+-- RBAC 权限脚手架 - 建表（PostgreSQL 14+）
 -- =============================================
-
--- 扩展
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- =============================================
 -- 1. 租户表
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS sys_tenant (
     device_limit    INT          NOT NULL DEFAULT 1000,
     status          SMALLINT     NOT NULL DEFAULT 1,
     remark          VARCHAR(500),
-    config          JSONB,
+    config          TEXT,
     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT     NOT NULL DEFAULT 0,
@@ -362,9 +362,9 @@ INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
 -- 3. 部门（默认租户下）
 -- =============================================
 INSERT INTO sys_dept (id, tenant_id, parent_id, ancestors, name, sort, status, create_by, create_time, update_time, deleted) VALUES
-    (100, 1, 0,   '0',     '总公司', 1, 1, 1, NOW(), NOW(), 0),
-    (101, 1, 100, '0,100', '技术部', 1, 1, 1, NOW(), NOW(), 0),
-    (102, 1, 100, '0,100', '运营部', 2, 1, 1, NOW(), NOW(), 0);
+    (100, 1, 0,   '0',     '总公司', 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    (101, 1, 100, '0,100', '技术部', 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    (102, 1, 100, '0,100', '运营部', 2, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- =============================================
 -- 4. 角色
@@ -372,16 +372,16 @@ INSERT INTO sys_dept (id, tenant_id, parent_id, ancestors, name, sort, status, c
 --    ADMIN(id=1): 租户管理员，除租户管理外全部菜单
 -- =============================================
 INSERT INTO sys_role (id, tenant_id, role_code, role_name, data_scope, status, sort, create_time, update_time, deleted) VALUES
-    (-1, 1, 'SUPER_ADMIN', '超级管理员', 1, 1, 0, NOW(), NOW(), 0),
-    ( 1, 1, 'ADMIN',       '管理员',     1, 1, 1, NOW(), NOW(), 0);
+    (-1, 1, 'SUPER_ADMIN', '超级管理员', 1, 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    ( 1, 1, 'ADMIN',       '管理员',     1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- SUPER_ADMIN → 全部菜单
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, NOW() FROM sys_menu WHERE deleted = 0;
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE deleted = 0;
 
 -- ADMIN → 除租户管理(101,1011~1015)外的全部菜单
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (60000 + id), 1, id, NOW() FROM sys_menu WHERE deleted = 0 AND id NOT IN (101, 1011, 1012, 1013, 1014, 1015);
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE deleted = 0 AND id NOT IN (101, 1011, 1012, 1013, 1014, 1015);
 
 -- =============================================
 -- 5. 用户
@@ -392,19 +392,19 @@ SELECT (60000 + id), 1, id, NOW() FROM sys_menu WHERE deleted = 0 AND id NOT IN 
 INSERT INTO sys_user (id, tenant_id, username, password, nickname, gender, dept_id, post_name, status, create_time, update_time, deleted) VALUES
     (1, 1, 'chenli',
      '$2a$10$iN9f/DCndYzcik7gWYjmwOkHCH0Y6xAuhMOwjrCFlnJJ5IqLLsSVu',
-     '陈立', 1, 100, '总架构师', 1, NOW(), NOW(), 0),
+     '陈立', 1, 100, '总架构师', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (2, 1, 'admin',
      '$2a$10$/YTPKYX8uxAqSyH4XUqY3euW2S/ZWPTF2LdxDy9KQCP.ypHgSRkP.',
-     '管理员', 1, 100, '经理', 1, NOW(), NOW(), 0),
+     '管理员', 1, 100, '经理', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (3, 1, 'zhangsan',
      '$2a$10$/YTPKYX8uxAqSyH4XUqY3euW2S/ZWPTF2LdxDy9KQCP.ypHgSRkP.',
-     '张三', 1, 101, '工程师', 1, NOW(), NOW(), 0);
+     '张三', 1, 101, '工程师', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- 用户角色关联
 INSERT INTO sys_user_role (id, tenant_id, user_id, role_id, create_time) VALUES
-    (1, 1, 1, -1, NOW()),   -- chenli   → SUPER_ADMIN
-    (2, 1, 2,  1, NOW()),   -- admin    → ADMIN
-    (3, 1, 3,  1, NOW());   -- zhangsan → ADMIN
+    (1, 1, 1, -1, CURRENT_TIMESTAMP),   -- chenli   → SUPER_ADMIN
+    (2, 1, 2,  1, CURRENT_TIMESTAMP),   -- admin    → ADMIN
+    (3, 1, 3,  1, CURRENT_TIMESTAMP);   -- zhangsan → ADMIN
 
 -- =============================================
 -- 6. 字典数据
@@ -438,3 +438,67 @@ INSERT INTO sys_dict_data (id, tenant_id, dict_type, dict_label, dict_value, css
     (52, 1, 'sys_data_scope', '本部门数据',       '3', 'warning', 3, 0, 1),
     (53, 1, 'sys_data_scope', '仅本人数据',       '4', 'danger',  4, 0, 1),
     (54, 1, 'sys_data_scope', '自定义',           '5', 'default', 5, 0, 1);
+
+-- =============================================
+-- RBAC 权限脚手架 - 监控模块初始化（Redis 监控）
+-- 说明: 新增监控相关菜单与权限
+-- =============================================
+
+-- 一级目录：监控中心（独立于"系统监控"之外，用于未来接入 Redis/JVM/Prometheus 等各类监控）
+INSERT INTO sys_menu (id, parent_id, name, icon, type, sort, path) VALUES
+    (3, 0, '监控中心', 'DashboardOutlined', 1, 3, '/monitor-center');
+
+-- 二级菜单：Redis 监控
+INSERT INTO sys_menu (id, parent_id, name, type, sort, path, component, permission) VALUES
+    (301, 3, 'Redis 监控', 2, 1, '/monitor-center/redis', 'pages/monitor/RedisMonitorPage', 'monitor:redis:info');
+
+-- 三级按钮：Redis Key CRUD 权限
+INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
+    (3011, 301, 'Key 列表',  3, 1, 'monitor:redis:key:list'),
+    (3012, 301, 'Key 详情',  3, 2, 'monitor:redis:key:query'),
+    (3013, 301, 'Key 删除',  3, 3, 'monitor:redis:key:delete');
+
+-- 关联：SUPER_ADMIN(-1) 拥有监控中心 + Redis 监控全部权限
+INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP
+FROM sys_menu
+WHERE id IN (3, 301, 3011, 3012, 3013);
+
+-- 关联：ADMIN(1) 仅拥有查询类权限（不可删除 Key）
+INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP
+FROM sys_menu
+WHERE id IN (3, 301, 3011, 3012);
+
+-- =============================================
+-- RBAC 权限脚手架 - Redis 监控增强：慢查询日志权限
+-- =============================================
+
+-- 新增按钮权限：慢查询清空（仅超管可操作）
+INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
+    (3014, 301, '慢日志清空', 3, 4, 'monitor:redis:slowlog:reset');
+
+-- 关联：SUPER_ADMIN 可清空慢日志
+INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
+SELECT 53014, -1, 3014, CURRENT_TIMESTAMP
+WHERE EXISTS (SELECT 1 FROM sys_menu WHERE id = 3014);
+
+-- =============================================
+-- 脚手架首页（工作台）
+-- 说明: 登录后默认落地页。菜单 sort=0 保证排在最前，App.tsx 的 firstRoute 会取到它。
+-- =============================================
+
+-- 一级菜单：工作台（type=2 直接作为页面，无子菜单）
+INSERT INTO sys_menu (id, parent_id, name, icon, type, sort, path, component, permission) VALUES
+    (4, 0, '工作台', 'HomeOutlined', 2, 0, '/home', 'pages/home/HomePage', 'system:home');
+
+-- 查询按钮权限（占位，便于后续细分首页卡片权限）
+INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
+    (41, 4, '查看', 3, 1, 'system:home:view');
+
+-- SUPER_ADMIN(-1) 与 ADMIN(1) 均可见
+INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id IN (4, 41);
+
+INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id IN (4, 41);

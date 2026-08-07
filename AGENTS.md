@@ -14,6 +14,7 @@
 
 | 域 | 能力 |
 |----|------|
+| 数据库 | MySQL（默认）/ PostgreSQL / SQLite 三选一，Spring Profile 切换，同一套业务代码 |
 | 多租户 | `tenant_id` 全局自动隔离，三层跳过机制 |
 | 认证 | Sa-Token JWT + Redis Session + Token 黑名单（单点登出/强制下线） |
 | 授权 | 菜单/按钮权限点 + `@SaCheckPermission`，前端按 permissions 渲染 |
@@ -52,8 +53,9 @@ doc/test/{module}/{功能}/{功能}-测试执行报告.md
 
 ## 二、技术选型（不要擅自替换）
 
-**后端**：Spring Boot 3.2.5 / JDK 21 / MyBatis-Flex 1.11.6 / PostgreSQL 16+ /
-Sa-Token 1.38 (JWT + Redis) / Caffeine / Flyway 10.x
+**后端**：Spring Boot 3.2.5 / JDK 21 / MyBatis-Flex 1.11.6 /
+MySQL 8.0+（默认）｜ PostgreSQL 14+ ｜ SQLite 3.35+（三选一，见第七章）/
+Sa-Token 1.38 (JWT + Redis) / Caffeine / Flyway 9.22
 
 **前端**：React 18 / TypeScript 5.6 / Vite 6 / Ant Design 5 / Zustand 4 /
 TanStack Query 5 / Less
@@ -73,7 +75,7 @@ TanStack Query 5 / Less
 | `precision-core` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单） | 无 |
 | `precision-business` | 业务逻辑，按业务域分包（现有 `rbac`，新业务平级新增） | core |
 | `precision-monitor` | 运维监控（Redis 监控） | core |
-| `precision-start` | 启动入口 + Flyway 迁移 + 配置 | 全部 |
+| `precision-start` | 启动入口 + Flyway 迁移（3 种数据库方言）+ 配置 | 全部 |
 
 新业务域**不要**新建 Maven 模块，在 `precision-business` 下加包即可；
 只有独立部署诉求出现时才拆模块。
@@ -182,7 +184,7 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 ### 多租户规则
 
 - 默认单租户形态：所有用户 `tenant_id=1`
-- `DEFAULT_TENANT_ID = 1L` 是平台基座，由 `V2__init_data.sql` 创建，**不可删除**
+- `DEFAULT_TENANT_ID = 1L` 是平台基座，由 `common/V2__init_data.sql` 创建（三种数据库通用），**不可删除**
 - 业务租户 id 用雪花算法
 - `SUPER_ADMIN(role_id=-1)` 平台级（可见租户管理）；`ADMIN(role_id=1)` 租户级
 - **不硬编码 `tenant_id=1`**，一律 `UserContext.getTenantId()`
@@ -242,12 +244,32 @@ DictType → DictData                 （按 dict_type 字符串关联）
 
 ---
 
-## 七、数据库规范
+## 七、数据库规范（三库支持）
+
+本脚手架同一套业务代码支持 MySQL（默认）/ PostgreSQL / SQLite，通过 Spring Profile 切换：
+
+```bash
+bash scripts/dev_up.sh                 # 默认 db=mysql
+bash scripts/dev_up.sh --db=postgresql
+bash scripts/dev_up.sh --db=sqlite     # 文件型库，不需要起容器
+```
+
+连接配置在 `application-{mysql,postgresql,sqlite}.yml`；Flyway 迁移目录分
+`common/`（三库通用，绝大多数迁移放这里）+ `mysql/` `postgresql/` `sqlite/`（各自方言，
+目前只有 V1 建表）。详细的兼容写法表、何时需要分方言，见
+`.kiro/steering/database-migration.md`。
 
 - 表命名：`{module}_{entity}`（业务）｜ `sys_{entity}`（系统）｜ `{e1}_{e2}_rel`（关联）｜ `{entity}_log`（日志）
 - 必填字段：`id`(BIGINT 雪花) ｜ `tenant_id`(非全局表) ｜ `create_time` ｜ `update_time` ｜ `deleted`(SMALLINT)
-- 逻辑删除：`deleted=0/1`，唯一索引要带 `WHERE deleted = 0` 或把 `deleted` 纳入索引列
+- 当前时间用 `CURRENT_TIMESTAMP`，**不要用 `NOW()`**（SQLite 不认这个函数名）
+- 逻辑删除：`deleted=0/1`；唯一索引在 PostgreSQL/SQLite 用 `WHERE deleted = 0` 局部索引，
+  MySQL 不支持局部索引，把 `deleted` 纳入组合唯一键
 - 变更**只能追加** Flyway 迁移 `V{n}__xxx.sql`，已发布的迁移文件不可修改
+- JSON 类型的列：Java 侧是裸 `String` 就用 `TEXT`，不要用 `JSONB`/`JSON` 原生类型
+  （三库语法和函数都不一样，没有跨库收益就不引入方言依赖）
+
+只想固定用一种数据库？删掉不用的两个厂商目录，`application.yml` 的
+`spring.profiles.active` 写死，`precision-start/pom.xml` 删掉不需要的驱动依赖。
 
 ---
 
@@ -315,7 +337,7 @@ IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**
 | 40001-40099 | 安全控制 |
 | 50001+ | 业务自行分配 |
 
-### 内置账号（V2__init_data.sql）
+### 内置账号（common/V2__init_data.sql）
 
 | 账号 | 密码 | 角色 |
 |------|------|------|

@@ -8,5 +8,5 @@ INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
 
 -- 关联：SUPER_ADMIN 可清空慢日志
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT 53014, -1, 3014, NOW()
+SELECT 53014, -1, 3014, CURRENT_TIMESTAMP
 WHERE EXISTS (SELECT 1 FROM sys_menu WHERE id = 3014);

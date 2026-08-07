@@ -1,15 +1,46 @@
-# 本地开发依赖：PostgreSQL + Redis
-# 起停：bash scripts/deps_up.sh / bash scripts/deps_down.sh
-#      或 docker compose -f docker/docker-compose.yml up -d
+# 本地开发依赖：MySQL / PostgreSQL（二选一，用 profile 隔离）+ Redis（两种数据库都要）
+# SQLite 不需要容器，是文件型库，见 backend/precision-start/src/main/resources/application-sqlite.yml
+#
+# 起停：
+#   bash scripts/deps_up.sh              # 默认起 MySQL + Redis
+#   bash scripts/deps_up.sh --db=postgresql
+#   bash scripts/deps_down.sh [--purge]
+# 或直接用 docker compose：
+#   docker compose -f docker/docker-compose.yml --profile mysql up -d
+#   docker compose -f docker/docker-compose.yml --profile postgresql up -d
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: rbac-mysql
+    profiles: ["mysql"]
+    environment:
+      MYSQL_DATABASE: precision
+      MYSQL_ROOT_PASSWORD: "123456"
+      TZ: Asia/Shanghai
+    command:
+      # 与 application-mysql.yml 的 datasource 保持一致；生产环境务必换掉口令
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --default-authentication-plugin=mysql_native_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysqldata:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p123456"]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+
   postgres:
     image: postgres:16-alpine
     container_name: rbac-postgres
+    profiles: ["postgresql"]
     environment:
       POSTGRES_DB: precision
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "123456"
-      # 与 application.yml 的 datasource 保持一致；生产环境务必换掉
+      # 与 application-postgresql.yml 的 datasource 保持一致；生产环境务必换掉
       TZ: Asia/Shanghai
     ports:
       - "5432:5432"
@@ -36,5 +67,6 @@ services:
       retries: 20
 
 volumes:
+  mysqldata:
   pgdata:
   redisdata:

@@ -19,7 +19,7 @@ public interface DeptMapper extends BaseMapper<Dept> {
     /**
      * 逻辑删除部门
      */
-    @Update("UPDATE sys_dept SET deleted = 1, update_time = NOW() WHERE id = #{id}")
+    @Update("UPDATE sys_dept SET deleted = 1, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int logicDeleteById(@Param("id") Long id);
 
     /**
@@ -57,6 +57,6 @@ public interface DeptMapper extends BaseMapper<Dept> {
     /**
      * 更新子孙部门的 ancestors
      */
-    @Update("UPDATE sys_dept SET ancestors = REPLACE(ancestors, #{oldAncestors}, #{newAncestors}), update_time = NOW() WHERE ancestors LIKE CONCAT(#{oldAncestors}, '%') AND deleted = 0")
+    @Update("UPDATE sys_dept SET ancestors = REPLACE(ancestors, #{oldAncestors}, #{newAncestors}), update_time = CURRENT_TIMESTAMP WHERE ancestors LIKE CONCAT(#{oldAncestors}, '%') AND deleted = 0")
     int updateChildrenAncestors(@Param("oldAncestors") String oldAncestors, @Param("newAncestors") String newAncestors);
 }

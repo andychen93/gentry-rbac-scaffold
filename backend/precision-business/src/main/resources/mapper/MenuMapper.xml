@@ -45,7 +45,7 @@
 
 
     <update id="batchLogicDelete">
-        UPDATE sys_menu SET deleted = 1, update_time = NOW()
+        UPDATE sys_menu SET deleted = 1, update_time = CURRENT_TIMESTAMP
         WHERE id IN
         <foreach collection="ids" item="id" open="(" separator="," close=")">
             #{id}

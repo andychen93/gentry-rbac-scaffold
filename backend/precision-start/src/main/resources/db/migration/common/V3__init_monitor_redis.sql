@@ -19,12 +19,12 @@ INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
 
 -- 关联：SUPER_ADMIN(-1) 拥有监控中心 + Redis 监控全部权限
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, NOW()
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP
 FROM sys_menu
 WHERE id IN (3, 301, 3011, 3012, 3013);
 
 -- 关联：ADMIN(1) 仅拥有查询类权限（不可删除 Key）
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (60000 + id), 1, id, NOW()
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP
 FROM sys_menu
 WHERE id IN (3, 301, 3011, 3012);

@@ -1,10 +1,15 @@
 -- =============================================
--- RBAC 权限脚手架 - 建表
+-- RBAC 权限脚手架 - 建表（SQLite 3.35+）
 -- =============================================
-
--- 扩展
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+-- 本文件与 mysql/V1、postgresql/V1 是同一份表结构的三份方言实现，
+-- 字段和索引语义必须保持一致。改了这份记得同步另外两份，
+-- 或者看 .kiro/steering/database-migration.md 里"何时需要分厂商目录"的判断标准。
+--
+-- SQLite 是动态类型（type affinity），下面的类型声明只影响存储亲和性，不做强校验；
+-- 局部唯一索引（WHERE deleted = 0）SQLite 原生支持，写法与 PostgreSQL 一致。
+--
+-- 定位：SQLite 只用于本地体验 / 单元测试 / demo，不建议在多进程并发写场景下用于生产
+-- （见 application-sqlite.yml 里 hikari 连接池被限制为 1 的说明）。
 
 -- =============================================
 -- 1. 租户表
@@ -25,7 +30,8 @@ CREATE TABLE IF NOT EXISTS sys_tenant (
     device_limit    INT          NOT NULL DEFAULT 1000,
     status          SMALLINT     NOT NULL DEFAULT 1,
     remark          VARCHAR(500),
-    config          JSONB,
+    -- 租户扩展配置：Java 侧是裸 String（Service 层自行 JSON 解析）
+    config          TEXT,
     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT     NOT NULL DEFAULT 0,

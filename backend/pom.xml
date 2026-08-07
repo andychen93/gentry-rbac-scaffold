@@ -29,7 +29,11 @@
         <java.version>21</java.version>
         <mybatis-flex.version>1.11.6</mybatis-flex.version>
         <sa-token.version>1.38.0</sa-token.version>
+        <flyway.version>9.22.3</flyway.version>
+        <!-- 三种数据库驱动版本统一在这里管理，见 doc/guide/多数据库支持指南.md -->
         <postgresql.version>42.7.3</postgresql.version>
+        <mysql.version>8.4.0</mysql.version>
+        <sqlite-jdbc.version>3.45.1.0</sqlite-jdbc.version>
         <jacoco.version>0.8.15</jacoco.version>
     </properties>
 

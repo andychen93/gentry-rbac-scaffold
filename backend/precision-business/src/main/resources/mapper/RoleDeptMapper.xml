@@ -6,7 +6,7 @@
         INSERT INTO sys_role_dept (id, role_id, dept_id, create_time)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.roleId}, #{item.deptId}, NOW())
+            (#{item.id}, #{item.roleId}, #{item.deptId}, CURRENT_TIMESTAMP)
         </foreach>
     </insert>
 

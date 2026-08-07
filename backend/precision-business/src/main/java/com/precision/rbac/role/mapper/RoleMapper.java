@@ -40,19 +40,19 @@ public interface RoleMapper extends BaseMapper<Role> {
     /**
      * 逻辑删除角色
      */
-    @Update("UPDATE sys_role SET deleted = 1, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_role SET deleted = 1, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int logicDeleteById(@Param("id") Long id);
 
     /**
      * 更新数据权限范围
      */
-    @Update("UPDATE sys_role SET data_scope = #{dataScope}, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_role SET data_scope = #{dataScope}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateDataScope(@Param("id") Long id, @Param("dataScope") Integer dataScope);
 
     /**
      * 更新角色状态
      */
-    @Update("UPDATE sys_role SET status = #{status}, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_role SET status = #{status}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
     /**

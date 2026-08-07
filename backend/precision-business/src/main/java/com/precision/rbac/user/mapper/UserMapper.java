@@ -23,16 +23,16 @@ public interface UserMapper extends BaseMapper<User> {
         "</script>"})
     int countByPhone(@Param("tenantId") Long tenantId, @Param("phone") String phone, @Param("excludeId") Long excludeId);
 
-    @Update("UPDATE sys_user SET deleted = 1, update_time = NOW() WHERE id = #{id}")
+    @Update("UPDATE sys_user SET deleted = 1, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int logicDeleteById(@Param("id") Long id);
 
-    @Update("UPDATE sys_user SET password = #{password}, pwd_update_time = #{pwdUpdateTime}, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_user SET password = #{password}, pwd_update_time = #{pwdUpdateTime}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updatePassword(@Param("id") Long id, @Param("password") String password, @Param("pwdUpdateTime") LocalDateTime pwdUpdateTime);
 
-    @Update("UPDATE sys_user SET status = #{status}, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_user SET status = #{status}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
-    @Update("UPDATE sys_user SET login_ip = #{loginIp}, login_date = #{loginDate}, update_time = NOW() WHERE id = #{id}")
+    @Update("UPDATE sys_user SET login_ip = #{loginIp}, login_date = #{loginDate}, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int updateLoginInfo(@Param("id") Long id, @Param("loginIp") String loginIp, @Param("loginDate") LocalDateTime loginDate);
 
     /**

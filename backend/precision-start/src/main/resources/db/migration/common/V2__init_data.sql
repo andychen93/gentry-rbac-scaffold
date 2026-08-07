@@ -103,9 +103,9 @@ INSERT INTO sys_menu (id, parent_id, name, type, sort, permission) VALUES
 -- 3. 部门（默认租户下）
 -- =============================================
 INSERT INTO sys_dept (id, tenant_id, parent_id, ancestors, name, sort, status, create_by, create_time, update_time, deleted) VALUES
-    (100, 1, 0,   '0',     '总公司', 1, 1, 1, NOW(), NOW(), 0),
-    (101, 1, 100, '0,100', '技术部', 1, 1, 1, NOW(), NOW(), 0),
-    (102, 1, 100, '0,100', '运营部', 2, 1, 1, NOW(), NOW(), 0);
+    (100, 1, 0,   '0',     '总公司', 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    (101, 1, 100, '0,100', '技术部', 1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    (102, 1, 100, '0,100', '运营部', 2, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- =============================================
 -- 4. 角色
@@ -113,16 +113,16 @@ INSERT INTO sys_dept (id, tenant_id, parent_id, ancestors, name, sort, status, c
 --    ADMIN(id=1): 租户管理员，除租户管理外全部菜单
 -- =============================================
 INSERT INTO sys_role (id, tenant_id, role_code, role_name, data_scope, status, sort, create_time, update_time, deleted) VALUES
-    (-1, 1, 'SUPER_ADMIN', '超级管理员', 1, 1, 0, NOW(), NOW(), 0),
-    ( 1, 1, 'ADMIN',       '管理员',     1, 1, 1, NOW(), NOW(), 0);
+    (-1, 1, 'SUPER_ADMIN', '超级管理员', 1, 1, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
+    ( 1, 1, 'ADMIN',       '管理员',     1, 1, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- SUPER_ADMIN → 全部菜单
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, NOW() FROM sys_menu WHERE deleted = 0;
+SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE deleted = 0;
 
 -- ADMIN → 除租户管理(101,1011~1015)外的全部菜单
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (60000 + id), 1, id, NOW() FROM sys_menu WHERE deleted = 0 AND id NOT IN (101, 1011, 1012, 1013, 1014, 1015);
+SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE deleted = 0 AND id NOT IN (101, 1011, 1012, 1013, 1014, 1015);
 
 -- =============================================
 -- 5. 用户
@@ -133,19 +133,19 @@ SELECT (60000 + id), 1, id, NOW() FROM sys_menu WHERE deleted = 0 AND id NOT IN 
 INSERT INTO sys_user (id, tenant_id, username, password, nickname, gender, dept_id, post_name, status, create_time, update_time, deleted) VALUES
     (1, 1, 'chenli',
      '$2a$10$iN9f/DCndYzcik7gWYjmwOkHCH0Y6xAuhMOwjrCFlnJJ5IqLLsSVu',
-     '陈立', 1, 100, '总架构师', 1, NOW(), NOW(), 0),
+     '陈立', 1, 100, '总架构师', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (2, 1, 'admin',
      '$2a$10$/YTPKYX8uxAqSyH4XUqY3euW2S/ZWPTF2LdxDy9KQCP.ypHgSRkP.',
-     '管理员', 1, 100, '经理', 1, NOW(), NOW(), 0),
+     '管理员', 1, 100, '经理', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0),
     (3, 1, 'zhangsan',
      '$2a$10$/YTPKYX8uxAqSyH4XUqY3euW2S/ZWPTF2LdxDy9KQCP.ypHgSRkP.',
-     '张三', 1, 101, '工程师', 1, NOW(), NOW(), 0);
+     '张三', 1, 101, '工程师', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0);
 
 -- 用户角色关联
 INSERT INTO sys_user_role (id, tenant_id, user_id, role_id, create_time) VALUES
-    (1, 1, 1, -1, NOW()),   -- chenli   → SUPER_ADMIN
-    (2, 1, 2,  1, NOW()),   -- admin    → ADMIN
-    (3, 1, 3,  1, NOW());   -- zhangsan → ADMIN
+    (1, 1, 1, -1, CURRENT_TIMESTAMP),   -- chenli   → SUPER_ADMIN
+    (2, 1, 2,  1, CURRENT_TIMESTAMP),   -- admin    → ADMIN
+    (3, 1, 3,  1, CURRENT_TIMESTAMP);   -- zhangsan → ADMIN
 
 -- =============================================
 -- 6. 字典数据

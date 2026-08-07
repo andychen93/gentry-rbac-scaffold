@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
-# 查看前后端 + 依赖服务状态
+# 查看前后端 + 依赖服务状态（自动探测 MySQL/PostgreSQL 哪个端口通，不要求提前知道用的是哪个）
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 LOG_DIR="$ROOT_DIR/logs/dev"
 
 DB_NAME="${DB_NAME:-precision}"
-DB_USER="${DB_USER:-postgres}"
-DB_PASSWORD="${DB_PASSWORD:-123456}"
+MYSQL_USER="${MYSQL_USER:-root}"
+MYSQL_PASSWORD="${MYSQL_PASSWORD:-123456}"
+PG_USER="${PG_USER:-postgres}"
+PG_PASSWORD="${PG_PASSWORD:-123456}"
 
 GREEN='\033[0;32m'; RED='\033[0;31m'; NC='\033[0m'
 row() {
@@ -19,14 +21,31 @@ row() {
 
 echo "==================== 状态 ===================="
 
+# MySQL
+if command -v mysql >/dev/null 2>&1 \
+   && mysql -h127.0.0.1 -P3306 -u"$MYSQL_USER" -p"$MYSQL_PASSWORD" -e 'SELECT 1' >/dev/null 2>&1; then
+  row "MySQL" "UP" "localhost:3306/$DB_NAME (mysql 已验证)"
+elif nc -z localhost 3306 2>/dev/null; then
+  row "MySQL" "UP" "localhost:3306 (端口通，未做 SQL 校验)"
+else
+  row "MySQL" "DOWN" "localhost:3306"
+fi
+
 # PostgreSQL
 if command -v psql >/dev/null 2>&1 \
-   && PGPASSWORD="$DB_PASSWORD" psql -h localhost -U "$DB_USER" -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1; then
+   && PGPASSWORD="$PG_PASSWORD" psql -h localhost -U "$PG_USER" -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1; then
   row "PostgreSQL" "UP" "localhost:5432/$DB_NAME (psql 已验证)"
 elif nc -z localhost 5432 2>/dev/null; then
   row "PostgreSQL" "UP" "localhost:5432 (端口通，未做 SQL 校验)"
 else
   row "PostgreSQL" "DOWN" "localhost:5432"
+fi
+
+# SQLite（文件型库，检查后端工作目录下有没有落盘文件）
+if [[ -f "$ROOT_DIR/backend/precision-start/precision.db" ]]; then
+  row "SQLite" "UP" "backend/precision-start/precision.db"
+else
+  row "SQLite" "DOWN" "未找到 precision.db（尚未用 --db=sqlite 启动过）"
 fi
 
 # Redis

@@ -16,16 +16,17 @@ public interface TenantMapper extends BaseMapper<Tenant> {
     @Select("SELECT * FROM sys_tenant WHERE code = #{code} AND deleted = 0")
     Tenant selectByCode(String code);
 
-    @Select("SELECT code, name FROM sys_tenant WHERE status = 1 AND deleted = 0 AND (expire_time IS NULL OR expire_time > NOW()) ORDER BY id")
+    @Select("SELECT code, name FROM sys_tenant WHERE status = 1 AND deleted = 0 AND (expire_time IS NULL OR expire_time > CURRENT_TIMESTAMP) ORDER BY id")
     List<TenantOptionVO> selectOptions();
 
-    @Update("UPDATE sys_tenant SET deleted = 1, update_time = NOW() WHERE id = #{id}")
+    @Update("UPDATE sys_tenant SET deleted = 1, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int logicDeleteById(Long id);
 
-    @Update("UPDATE sys_tenant SET status = #{status}, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    @Update("UPDATE sys_tenant SET status = #{status}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
-    @Update("UPDATE sys_tenant SET config = #{config}::jsonb, update_time = NOW() WHERE id = #{id} AND deleted = 0")
+    // config 列是 TEXT（三库通用，Java 侧就是裸 String），不做 ::jsonb 转型——那是 Postgres 专属语法
+    @Update("UPDATE sys_tenant SET config = #{config}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateConfig(@Param("id") Long id, @Param("config") String config);
 
     /** 分页列表查询（含 userCount 统计） */

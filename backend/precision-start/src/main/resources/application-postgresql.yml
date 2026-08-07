@@ -1,0 +1,11 @@
+# PostgreSQL 14+ 连接配置
+# 本地起库： bash scripts/deps_up.sh --db=postgresql   （docker-compose 里的 postgres 服务，5432 端口）
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/precision
+    username: postgres
+    password: 123456
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    locations: classpath:db/migration/common,classpath:db/migration/postgresql

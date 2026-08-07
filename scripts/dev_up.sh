@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # RBAC 脚手架一键启动
-# - 检查 PostgreSQL / Redis 依赖
+# - 检查数据库 / Redis 依赖
 # - 编译后端（可跳过）
 # - 后台启动后端 + 前端
 # - 等待健康检查
 #
 # 用法:
-#   bash scripts/dev_up.sh              # 默认启动（JWT 模式，需要 Redis）
-#   bash scripts/dev_up.sh --skip-build # 跳过后端编译（直接用已有 jar）
-#   bash scripts/dev_up.sh --uuid       # 用 UUID Token 模式启动（不依赖 Redis）
+#   bash scripts/dev_up.sh                 # 默认启动（db=mysql，JWT 模式，需要 Redis）
+#   bash scripts/dev_up.sh --db=postgresql # 切到 PostgreSQL（对应 bash scripts/deps_up.sh --db=postgresql）
+#   bash scripts/dev_up.sh --db=sqlite     # 切到 SQLite（文件型库，不需要 deps_up.sh）
+#   bash scripts/dev_up.sh --skip-build    # 跳过后端编译（直接用已有 jar）
+#   bash scripts/dev_up.sh --uuid          # 用 UUID Token 模式启动（不依赖 Redis）
 #   bash scripts/dev_up.sh --only-backend
 #   bash scripts/dev_up.sh --only-frontend
 
@@ -25,15 +27,12 @@ FRONTEND_PID_FILE="$LOG_DIR/frontend.pid"
 BACKEND_LOG="$LOG_DIR/backend.log"
 FRONTEND_LOG="$LOG_DIR/frontend.log"
 
-DB_NAME="${DB_NAME:-precision}"
-DB_USER="${DB_USER:-postgres}"
-DB_PASSWORD="${DB_PASSWORD:-123456}"
-
 # ============ 参数 ============
 SKIP_BUILD=0
 TOKEN_STYLE="jwt-simple"
 ONLY_BACKEND=0
 ONLY_FRONTEND=0
+DB_PROFILE="mysql"
 
 for arg in "$@"; do
   case "$arg" in
@@ -41,6 +40,7 @@ for arg in "$@"; do
     --uuid)          TOKEN_STYLE="uuid" ;;
     --only-backend)  ONLY_BACKEND=1 ;;
     --only-frontend) ONLY_FRONTEND=1 ;;
+    --db=*)          DB_PROFILE="${arg#--db=}" ;;
     -h|--help)
       grep -E '^# ' "$0" | sed 's/^# \{0,1\}//'
       exit 0
@@ -49,6 +49,18 @@ for arg in "$@"; do
       echo "未知参数: $arg（-h 查看帮助）"; exit 1 ;;
   esac
 done
+
+case "$DB_PROFILE" in
+  mysql|postgresql|sqlite) ;;
+  *) echo "--db 只支持 mysql | postgresql | sqlite（当前: $DB_PROFILE）"; exit 1 ;;
+esac
+
+# 按 profile 定连接检查用的默认账号/端口，可用环境变量覆盖
+if [[ "$DB_PROFILE" == "mysql" ]]; then
+  DB_PORT="${DB_PORT:-3306}"; DB_NAME="${DB_NAME:-precision}"; DB_USER="${DB_USER:-root}"; DB_PASSWORD="${DB_PASSWORD:-123456}"
+elif [[ "$DB_PROFILE" == "postgresql" ]]; then
+  DB_PORT="${DB_PORT:-5432}"; DB_NAME="${DB_NAME:-precision}"; DB_USER="${DB_USER:-postgres}"; DB_PASSWORD="${DB_PASSWORD:-123456}"
+fi
 
 mkdir -p "$LOG_DIR"
 
@@ -60,21 +72,30 @@ warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
 error() { echo -e "${RED}[ERR ]${NC} $*"; }
 
 # ============ 依赖检查 ============
-check_postgres() {
-  info "检查 PostgreSQL (localhost:5432, db=$DB_NAME)"
-  if command -v psql >/dev/null 2>&1 \
-     && PGPASSWORD="$DB_PASSWORD" psql -h localhost -U "$DB_USER" -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1; then
+check_database() {
+  if [[ "$DB_PROFILE" == "sqlite" ]]; then
+    info "SQLite 是文件型库，无需连通性检查（首次启动 Flyway 自动建 precision.db）"
+    return 0
+  fi
+
+  info "检查 ${DB_PROFILE} (localhost:$DB_PORT, db=$DB_NAME)"
+  if [[ "$DB_PROFILE" == "mysql" ]] && command -v mysql >/dev/null 2>&1 \
+     && mysql -h127.0.0.1 -P"$DB_PORT" -u"$DB_USER" -p"$DB_PASSWORD" -e 'SELECT 1' >/dev/null 2>&1; then
+    ok "MySQL 连接成功"
+    return 0
+  fi
+  if [[ "$DB_PROFILE" == "postgresql" ]] && command -v psql >/dev/null 2>&1 \
+     && PGPASSWORD="$DB_PASSWORD" psql -h localhost -p "$DB_PORT" -U "$DB_USER" -d "$DB_NAME" -c 'SELECT 1' >/dev/null 2>&1; then
     ok "PostgreSQL 连接成功"
     return 0
   fi
-  # psql 不可用时退回端口探测
-  if command -v nc >/dev/null 2>&1 && nc -z localhost 5432 2>/dev/null; then
-    ok "PostgreSQL 端口 5432 连通（未做 SQL 校验，依赖后端启动时报错暴露）"
+  # 客户端不可用时退回端口探测
+  if command -v nc >/dev/null 2>&1 && nc -z localhost "$DB_PORT" 2>/dev/null; then
+    ok "端口 $DB_PORT 连通（未做 SQL 校验，依赖后端启动时报错暴露）"
     return 0
   fi
-  error "无法连接到 PostgreSQL (localhost:5432)"
-  error "最快的办法： bash scripts/deps_up.sh   （用 Docker 起 PostgreSQL + Redis）"
-  error "或手动创建库： createdb -U $DB_USER $DB_NAME"
+  error "无法连接到 $DB_PROFILE (localhost:$DB_PORT)"
+  error "最快的办法： bash scripts/deps_up.sh --db=$DB_PROFILE   （用 Docker 起数据库 + Redis）"
   return 1
 }
 
@@ -124,10 +145,11 @@ build_backend() {
 }
 
 start_backend() {
-  info "启动后端 token-style=$TOKEN_STYLE"
+  info "启动后端 db=$DB_PROFILE token-style=$TOKEN_STYLE"
   check_port 9090 "HTTP API" || return 1
 
   nohup java \
+    "-Dspring.profiles.active=$DB_PROFILE" \
     "-Dsa-token.token-style=$TOKEN_STYLE" \
     -jar "$BACKEND_JAR" \
     > "$BACKEND_LOG" 2>&1 &
@@ -190,12 +212,13 @@ start_frontend() {
 # ============ 流程 ============
 echo -e "${BLUE}==================== RBAC 脚手架 Dev Up ====================${NC}"
 info "工作目录：$ROOT_DIR"
+info "数据库：  $DB_PROFILE"
 info "Token 模式：$TOKEN_STYLE"
 info "日志目录：$LOG_DIR"
 echo ""
 
 if [[ $ONLY_FRONTEND -eq 0 ]]; then
-  check_postgres || exit 1
+  check_database || exit 1
   check_redis    || exit 1
   build_backend  || exit 1
   start_backend  || exit 1
