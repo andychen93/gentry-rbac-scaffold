@@ -24,6 +24,7 @@ import com.precision.rbac.user.vo.LoginVO;
 import com.precision.rbac.user.vo.UserInfoVO;
 import com.precision.rbac.log.service.LogService;
 import com.precision.core.security.TokenBlacklistService;
+import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -166,24 +167,27 @@ public class AuthServiceImpl implements AuthService {
         String token = StpUtil.getTokenValue();
 
         // 存储完整用户信息到 Session（供在线用户查询使用）
-        StpUtil.getSession().set("tenantId", tenantId);
-        StpUtil.getSession().set("userId", user.getId());
-        StpUtil.getSession().set("username", user.getUsername());
-        StpUtil.getSession().set("nickname", user.getNickname());
-        StpUtil.getSession().set("deptId", user.getDeptId());
-        StpUtil.getSession().set("loginIp", loginIp);
-        StpUtil.getSession().set("loginTime", LocalDateTime.now());
-        StpUtil.getSession().set("location", IpUtil.getLocation(loginIp));
+        // 注意：SaSession 底层是 ConcurrentHashMap，value 不能为 null，否则抛 NPE。
+        //       因此可空字段（deptId/loginIp/location/nickname/...）走 putSession 跳过 null。
+        SaSession session = StpUtil.getSession();
+        session.set("tenantId", tenantId);
+        session.set("userId", user.getId());
+        putSession(session, "username", user.getUsername());
+        putSession(session, "nickname", user.getNickname());
+        putSession(session, "deptId", user.getDeptId());
+        putSession(session, "loginIp", loginIp);
+        session.set("loginTime", LocalDateTime.now());
+        putSession(session, "location", IpUtil.getLocation(loginIp));
 
         // 解析 User-Agent 存入 Session（供在线用户查询使用）
-        StpUtil.getSession().set("browser", parseSimpleBrowser(userAgent));
-        StpUtil.getSession().set("os", parseSimpleOs(userAgent));
+        putSession(session, "browser", parseSimpleBrowser(userAgent));
+        putSession(session, "os", parseSimpleOs(userAgent));
 
         // 查询部门名称存入 Session
         if (user.getDeptId() != null) {
             Dept dept = deptMapper.selectOneById(user.getDeptId());
             if (dept != null) {
-                StpUtil.getSession().set("deptName", dept.getName());
+                putSession(session, "deptName", dept.getName());
             }
         }
 
@@ -212,6 +216,13 @@ public class AuthServiceImpl implements AuthService {
 
         UserInfoVO userInfo = buildUserInfo(user);
         return new LoginVO(token, userInfo);
+    }
+
+    /** SaSession 底层是 ConcurrentHashMap，value 不能为 null；null 时跳过，避免登录 NPE。 */
+    private static void putSession(SaSession session, String key, Object value) {
+        if (value != null) {
+            session.set(key, value);
+        }
     }
 
     private UserInfoVO buildUserInfo(User user) {

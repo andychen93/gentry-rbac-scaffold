@@ -31,7 +31,11 @@ public class Menu {
     private Integer status;
     private Integer isExternal;
     private Integer isCache;
+    // active / query 是历史遗留字段，sys_menu 表无对应列（见建表迁移），忽略持久化，
+    // 否则 MyBatis-Flex 的 insert/update 会带上这两列导致 "Unknown column 'active'"。
+    @Column(ignore = true)
     private String active;
+    @Column(ignore = true)
     private String query;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

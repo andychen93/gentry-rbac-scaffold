@@ -77,6 +77,10 @@ public class MenuServiceImpl implements MenuService {
         menu.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
         menu.setIsExternal(dto.getIsExternal() != null ? dto.getIsExternal() : 0);
         menu.setIsCache(dto.getIsCache() != null ? dto.getIsCache() : 0);
+        // Menu 不继承 BaseEntity、不纳入 AutoFillHandler，需显式设置时间，否则 INSERT 违反 NOT NULL
+        java.time.LocalDateTime now = java.time.LocalDateTime.now();
+        menu.setCreateTime(now);
+        menu.setUpdateTime(now);
         menuMapper.insert(menu);
 
         log.info("Created menu: id={}, name={}, type={}", menu.getId(), menu.getName(), menu.getType());
