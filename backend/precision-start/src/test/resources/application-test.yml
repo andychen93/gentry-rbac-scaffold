@@ -1,0 +1,6 @@
+# API 集成测试专用覆盖（与 mysql profile 叠加使用：@ActiveProfiles({"mysql","test"})）
+# Redis 用独立 DB 15，避免污染运行中后端 db 0 的在线会话 / Token 黑名单。
+spring:
+  data:
+    redis:
+      database: 15
