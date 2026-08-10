@@ -8,9 +8,14 @@ import com.precision.rbac.log.annotation.Log;
 import com.precision.rbac.user.dto.*;
 import com.precision.rbac.user.service.UserService;
 import com.precision.rbac.user.vo.UserDetailVO;
+import com.precision.rbac.user.vo.UserImportResultVO;
 import com.precision.rbac.user.vo.UserListVO;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -88,5 +93,29 @@ public class UserController {
     public R<Void> updateStatus(@PathVariable Long id, @Valid @RequestBody UserStatusDTO dto) {
         userService.updateStatus(id, dto);
         return R.ok();
+    }
+
+    /** USER-009 导出用户（Excel，按当前查询条件） */
+    @GetMapping("/export")
+    @SaCheckPermission("system:user:export")
+    @Log(module = "用户管理", type = "EXPORT", title = "导出用户")
+    public void export(@Valid UserQueryDTO query, HttpServletResponse response) throws IOException {
+        userService.exportUsers(query, response);
+    }
+
+    /** USER-010 导入用户（Excel） */
+    @PostMapping("/import")
+    @SaCheckPermission("system:user:import")
+    @RepeatSubmit(interval = 5)
+    @Log(module = "用户管理", type = "IMPORT", title = "导入用户")
+    public R<UserImportResultVO> importUsers(@RequestParam("file") MultipartFile file) {
+        return R.ok(userService.importUsers(file));
+    }
+
+    /** USER-011 下载导入模板 */
+    @GetMapping("/import/template")
+    @SaCheckPermission("system:user:import")
+    public void importTemplate(HttpServletResponse response) throws IOException {
+        userService.downloadUserTemplate(response);
     }
 }

@@ -3,7 +3,12 @@ package com.precision.rbac.user.service;
 import com.precision.core.common.PageResult;
 import com.precision.rbac.user.dto.*;
 import com.precision.rbac.user.vo.UserDetailVO;
+import com.precision.rbac.user.vo.UserImportResultVO;
 import com.precision.rbac.user.vo.UserListVO;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 public interface UserService {
 
@@ -21,7 +26,19 @@ public interface UserService {
 
     void updatePassword(UserPasswordUpdateDTO dto);
 
+    /** 修改当前登录用户的个人资料 */
+    void updateProfile(UserProfileUpdateDTO dto);
+
     void assignRoles(Long id, UserRoleAssignDTO dto);
 
     void updateStatus(Long id, UserStatusDTO dto);
+
+    /** 导出当前查询条件的用户为 Excel */
+    void exportUsers(UserQueryDTO query, HttpServletResponse response) throws IOException;
+
+    /** 导入用户（Excel），返回成功/失败统计与错误明细 */
+    UserImportResultVO importUsers(MultipartFile file);
+
+    /** 下载用户导入模板 */
+    void downloadUserTemplate(HttpServletResponse response) throws IOException;
 }

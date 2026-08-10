@@ -4,6 +4,7 @@ import com.precision.core.common.PageResult;
 import com.precision.rbac.role.dto.*;
 import com.precision.rbac.role.vo.RoleDetailVO;
 import com.precision.rbac.role.vo.RoleListVO;
+import com.precision.rbac.role.vo.RoleOptionVO;
 import com.precision.rbac.role.vo.RoleVO;
 
 import java.util.List;
@@ -35,4 +36,9 @@ public interface RoleService {
      * 查看角色关联的用户ID列表
      */
     List<Long> listUserIdsByRoleId(Long roleId);
+
+    /**
+     * 当前租户内启用角色的下拉选项
+     */
+    List<RoleOptionVO> listOptions();
 }

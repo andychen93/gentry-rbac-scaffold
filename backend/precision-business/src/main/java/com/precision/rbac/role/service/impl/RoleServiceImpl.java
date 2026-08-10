@@ -16,6 +16,7 @@ import com.precision.rbac.role.mapper.RoleMenuMapper;
 import com.precision.rbac.role.service.RoleService;
 import com.precision.rbac.role.vo.RoleDetailVO;
 import com.precision.rbac.role.vo.RoleListVO;
+import com.precision.rbac.role.vo.RoleOptionVO;
 import com.precision.rbac.role.vo.RoleVO;
 import com.precision.rbac.user.mapper.UserRoleMapper;
 import org.slf4j.Logger;
@@ -66,6 +67,12 @@ public class RoleServiceImpl implements RoleService {
         roleMapper.insert(role);
         log.info("Created admin role: id={}, tenantId={}, code={}", role.getId(), tenantId, roleCode);
         return role.getId();
+    }
+
+    @Override
+    public List<RoleOptionVO> listOptions() {
+        Long tenantId = UserContext.getTenantId();
+        return roleMapper.selectOptions(tenantId);
     }
 
     @Override

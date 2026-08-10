@@ -8,6 +8,7 @@ import com.precision.rbac.role.dto.*;
 import com.precision.rbac.role.service.RoleService;
 import com.precision.rbac.role.vo.RoleDetailVO;
 import com.precision.rbac.role.vo.RoleListVO;
+import com.precision.rbac.role.vo.RoleOptionVO;
 import com.precision.rbac.role.vo.RoleVO;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +33,13 @@ public class RoleController {
     @SaCheckPermission("system:role:list")
     public R<PageResult<RoleListVO>> list(@Valid RoleQueryDTO query) {
         return R.ok(roleService.list(query));
+    }
+
+    /** API-010 角色下拉选项（启用角色，供用户分配等场景） */
+    @GetMapping("/options")
+    @SaCheckPermission("system:role:list")
+    public R<List<RoleOptionVO>> options() {
+        return R.ok(roleService.listOptions());
     }
 
     /** API-002 角色详情 */

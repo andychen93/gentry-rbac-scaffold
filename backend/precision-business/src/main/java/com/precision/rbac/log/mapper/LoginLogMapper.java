@@ -20,4 +20,8 @@ public interface LoginLogMapper extends BaseMapper<LoginLog> {
 
     @Delete("DELETE FROM sys_login_log WHERE tenant_id = #{tenantId} AND login_time < #{cutoffTime}")
     int deleteBeforeTime(@Param("tenantId") Long tenantId, @Param("cutoffTime") LocalDateTime cutoffTime);
+
+    /** 跨租户清理过期日志（定时任务用，需配合 TenantManager.ignoreTenantCondition） */
+    @Delete("DELETE FROM sys_login_log WHERE login_time < #{cutoffTime}")
+    int cleanExpiredBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

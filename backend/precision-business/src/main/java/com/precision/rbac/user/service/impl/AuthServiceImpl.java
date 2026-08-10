@@ -20,6 +20,11 @@ import com.precision.rbac.user.entity.User;
 import com.precision.rbac.user.mapper.UserMapper;
 import com.precision.rbac.user.mapper.UserRoleMapper;
 import com.precision.rbac.user.service.AuthService;
+import com.precision.rbac.user.service.CaptchaService;
+import com.precision.rbac.user.service.LoginFailCounterService;
+import com.precision.core.config.CaptchaProperties;
+import com.precision.core.config.LoginSecurityProperties;
+import com.precision.core.config.PasswordProperties;
 import com.precision.rbac.user.vo.LoginVO;
 import com.precision.rbac.user.vo.UserInfoVO;
 import com.precision.rbac.log.service.LogService;
@@ -49,13 +54,23 @@ public class AuthServiceImpl implements AuthService {
     private final DeptMapper deptMapper;
     private final PasswordEncoder passwordEncoder;
     private final LogService logService;
+    private final CaptchaService captchaService;
+    private final LoginFailCounterService loginFailCounterService;
+    private final CaptchaProperties captchaProperties;
+    private final LoginSecurityProperties loginSecurityProperties;
+    private final PasswordProperties passwordProperties;
 
     public AuthServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, RoleMenuMapper roleMenuMapper,
                            TenantMapper tenantMapper, MenuMapper menuMapper,
                            DeptMapper deptMapper,
                            PasswordEncoder passwordEncoder,
-                           LogService logService) {
+                           LogService logService,
+                           CaptchaService captchaService,
+                           LoginFailCounterService loginFailCounterService,
+                           CaptchaProperties captchaProperties,
+                           LoginSecurityProperties loginSecurityProperties,
+                           PasswordProperties passwordProperties) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
@@ -65,10 +80,20 @@ public class AuthServiceImpl implements AuthService {
         this.deptMapper = deptMapper;
         this.passwordEncoder = passwordEncoder;
         this.logService = logService;
+        this.captchaService = captchaService;
+        this.loginFailCounterService = loginFailCounterService;
+        this.captchaProperties = captchaProperties;
+        this.loginSecurityProperties = loginSecurityProperties;
+        this.passwordProperties = passwordProperties;
     }
 
     @Override
     public LoginVO login(LoginDTO dto, String loginIp, String userAgent) {
+        // 0. 验证码校验（可配置开关；关闭时不校验）
+        if (captchaProperties.isEnabled()) {
+            captchaService.validate(dto.getUuid(), dto.getCaptcha());
+        }
+
         // 1. 解析租户
         Long tenantId;
         try {
@@ -78,17 +103,30 @@ public class AuthServiceImpl implements AuthService {
             throw e;
         }
 
-        // 2. 校验用户
+        // 2. 账号锁定前置检查（连续失败达上限则拒绝，等 TTL 到期自动解锁）
+        if (loginFailCounterService.isLocked(tenantId, dto.getUsername())) {
+            String msg = "账号已被锁定，请 " + loginSecurityProperties.getLockMinutes() + " 分钟后再试";
+            logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, msg);
+            throw new BizException(ErrorCode.ACCOUNT_LOCKED);
+        }
+
+        // 3. 校验用户
         User user;
         try {
             user = findAndValidateUser(tenantId, dto.getUsername(), dto.getPassword());
         } catch (BizException e) {
+            // 仅对「用户名或密码错误」计数（防爆破），用户禁用不计
+            if (e.getCode() == ErrorCode.LOGIN_FAILED.getCode()) {
+                loginFailCounterService.recordFail(tenantId, dto.getUsername());
+            }
             logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, e.getMessage());
             throw e;
         }
 
-        // 3. 构建登录结果 + 记录成功日志
+        // 4. 构建登录结果 + 清除失败计数 + 密码过期标志 + 记录成功日志
         LoginVO result = buildLoginResult(user, tenantId, loginIp, userAgent);
+        loginFailCounterService.clear(tenantId, dto.getUsername());
+        result.setPasswordExpired(isPasswordExpired(user.getPwdUpdateTime()));
         logService.saveLoginLog(user.getUsername(), tenantId, "password", loginIp, userAgent, 1, "登录成功");
         return result;
     }
@@ -160,6 +198,20 @@ public class AuthServiceImpl implements AuthService {
         return user;
     }
 
+    /**
+     * 判断密码是否过期。
+     * <ul>
+     *   <li>expireDays &lt;= 0：不校验</li>
+     *   <li>pwdUpdateTime == null：视为未过期（容错种子数据，避免首次登录全员被强制改密）</li>
+     * </ul>
+     */
+    private boolean isPasswordExpired(LocalDateTime pwdUpdateTime) {
+        int expireDays = passwordProperties.getExpireDays();
+        if (expireDays <= 0) return false;
+        if (pwdUpdateTime == null) return false;
+        return pwdUpdateTime.plusDays(expireDays).isBefore(LocalDateTime.now());
+    }
+
     // ========== Extract Method: 构建登录结果 ==========
 
     private LoginVO buildLoginResult(User user, Long tenantId, String loginIp, String userAgent) {
@@ -198,19 +250,24 @@ public class AuthServiceImpl implements AuthService {
 
         // B-3: 登录时预加载 roles/permissions 到 Session
         List<Long> roleIds = userRoleMapper.selectRoleIdsByUserId(user.getId());
+        boolean platformAdmin = false;
         if (!roleIds.isEmpty()) {
             List<String> roleCodes = new ArrayList<>();
             for (Long roleId : roleIds) {
                 Role r = roleMapper.selectOneById(roleId);
                 if (r != null && r.getRoleCode() != null) roleCodes.add(r.getRoleCode());
             }
+            // 平台超管识别：角色含 SUPER_ADMIN → 跨租户可见所有数据
+            platformAdmin = roleCodes.contains(TenantConstants.PLATFORM_ROLE_CODE);
             List<String> permissions = roleMenuMapper.selectPermissionsByRoleIds(roleIds);
-            StpUtil.getSession().set("roleList", roleCodes);
-            StpUtil.getSession().set("permissionList", permissions);
+            session.set("roleList", roleCodes);
+            session.set("permissionList", permissions);
         } else {
-            StpUtil.getSession().set("roleList", new ArrayList<>());
-            StpUtil.getSession().set("permissionList", new ArrayList<>());
+            session.set("roleList", new ArrayList<>());
+            session.set("permissionList", new ArrayList<>());
         }
+        session.set("platformAdmin", platformAdmin);
+        UserContext.setPlatformAdmin(platformAdmin);
 
         userMapper.updateLoginInfo(user.getId(), loginIp, LocalDateTime.now());
 

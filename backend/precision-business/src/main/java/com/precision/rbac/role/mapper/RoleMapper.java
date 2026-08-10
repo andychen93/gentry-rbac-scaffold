@@ -2,6 +2,7 @@ package com.precision.rbac.role.mapper;
 
 import com.mybatisflex.core.BaseMapper;
 import com.precision.rbac.role.entity.Role;
+import com.precision.rbac.role.vo.RoleOptionVO;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -69,5 +70,11 @@ public interface RoleMapper extends BaseMapper<Role> {
      * 根据ID查询角色（使用XML ResultMap映射）
      */
     Role selectRoleById(@Param("id") Long id);
+
+    /**
+     * 查询租户内启用角色的下拉选项
+     */
+    @Select("SELECT id, role_code, role_name FROM sys_role WHERE tenant_id = #{tenantId} AND status = 1 AND deleted = 0 ORDER BY sort ASC, id ASC")
+    List<RoleOptionVO> selectOptions(@Param("tenantId") Long tenantId);
 
 }

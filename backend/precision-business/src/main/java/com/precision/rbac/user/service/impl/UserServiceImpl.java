@@ -20,10 +20,16 @@ import com.precision.rbac.user.service.UserService;
 import com.precision.rbac.user.vo.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.alibaba.excel.EasyExcel;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,6 +39,8 @@ public class UserServiceImpl implements UserService {
 
     private static final Logger log = LoggerFactory.getLogger(UserServiceImpl.class);
     private static final String ADMIN_USERNAME = "admin";
+    /** 导入用户的默认初始密码（符合密码强度规则，用户首次登录后可自行修改） */
+    private static final String DEFAULT_IMPORT_PASSWORD = "Abc@123456";
 
     private final UserMapper userMapper;
     private final UserRoleMapper userRoleMapper;
@@ -251,6 +259,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
+    public void updateProfile(UserProfileUpdateDTO dto) {
+        Long userId = UserContext.getUserId();
+        Long tenantId = UserContext.getTenantId();
+        getExistingUser(userId);
+
+        // 手机号唯一校验（排除自身）
+        if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
+            if (userMapper.countByPhone(tenantId, dto.getPhone(), userId) > 0) {
+                throw new BizException(ErrorCode.PARAM_ERROR, "手机号已被使用");
+            }
+        }
+
+        // 部分更新：MyBatis-Flex update 忽略 null 字段，用户未填的字段不会被覆盖
+        User user = new User();
+        user.setId(userId);
+        user.setNickname(dto.getNickname());
+        user.setPhone(dto.getPhone());
+        user.setEmail(dto.getEmail());
+        user.setGender(dto.getGender());
+        user.setPostName(dto.getPostName());
+        userMapper.update(user);
+    }
+
+    @Override
+    @Transactional
     public void assignRoles(Long id, UserRoleAssignDTO dto) {
         getExistingUser(id);
         userRoleMapper.deleteByUserId(id);
@@ -372,5 +405,90 @@ public class UserServiceImpl implements UserService {
     private String maskPhone(String phone) {
         if (phone == null || phone.length() < 7) return phone;
         return phone.substring(0, 3) + "****" + phone.substring(phone.length() - 4);
+    }
+
+    // ========== 导入导出 ==========
+
+    @Override
+    public void exportUsers(UserQueryDTO query, HttpServletResponse response) throws IOException {
+        Long tenantId = UserContext.getTenantId();
+        List<Long> deptIds = query.getDeptId() != null ? deptService.getChildDeptIds(query.getDeptId()) : null;
+        List<User> users = userMapper.selectList(query, tenantId, deptIds);
+        List<UserExportVO> rows = users.stream().map(this::toExportVO).collect(Collectors.toList());
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
+        EasyExcel.write(response.getOutputStream(), UserExportVO.class).sheet("用户列表").doWrite(rows);
+    }
+
+    @Override
+    public UserImportResultVO importUsers(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "导入文件为空");
+        }
+        List<UserImportDTO> rows;
+        try (InputStream is = file.getInputStream()) {
+            rows = EasyExcel.read(is).head(UserImportDTO.class).sheet().doReadSync();
+        } catch (IOException e) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "文件读取失败");
+        }
+        int success = 0, fail = 0;
+        List<UserImportResultVO.ErrorItem> errors = new ArrayList<>();
+        // 逐行导入：单行失败不影响其他行。create 内 self-invocation 的 @Transactional 不生效，
+        // 但导入不分配角色（roleIds 为空），仅单条 insert user，原子操作，安全。
+        for (int i = 0; i < rows.size(); i++) {
+            UserImportDTO row = rows.get(i);
+            String username = row.getUsername();
+            try {
+                if (!StringUtils.hasText(username)) {
+                    throw new BizException(ErrorCode.PARAM_ERROR, "用户名为空");
+                }
+                UserCreateDTO dto = new UserCreateDTO();
+                dto.setUsername(username.trim());
+                dto.setNickname(StringUtils.hasText(row.getNickname()) ? row.getNickname() : username.trim());
+                dto.setPhone(row.getPhone());
+                dto.setEmail(row.getEmail());
+                dto.setGender(row.getGender() != null ? row.getGender() : 0);
+                dto.setPostName(row.getPostName());
+                dto.setPassword(DEFAULT_IMPORT_PASSWORD);
+                dto.setStatus(1);
+                create(dto);
+                success++;
+            } catch (BizException e) {
+                fail++;
+                errors.add(new UserImportResultVO.ErrorItem(i + 2, username, e.getMessage()));
+            }
+        }
+        return new UserImportResultVO(success, fail, errors);
+    }
+
+    @Override
+    public void downloadUserTemplate(HttpServletResponse response) throws IOException {
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setCharacterEncoding("UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=user_import_template.xlsx");
+        EasyExcel.write(response.getOutputStream(), UserImportDTO.class)
+                .sheet("用户导入模板").doWrite(Collections.emptyList());
+    }
+
+    private UserExportVO toExportVO(User user) {
+        UserExportVO vo = new UserExportVO();
+        vo.setUsername(user.getUsername());
+        vo.setNickname(user.getNickname());
+        vo.setPhone(user.getPhone());
+        vo.setEmail(user.getEmail());
+        vo.setGender(switch (user.getGender() == null ? 0 : user.getGender()) {
+            case 1 -> "男";
+            case 2 -> "女";
+            default -> "未知";
+        });
+        if (user.getDeptId() != null) {
+            var dept = deptMapper.selectOneById(user.getDeptId());
+            if (dept != null) vo.setDeptName(dept.getName());
+        }
+        vo.setPostName(user.getPostName());
+        vo.setStatus(user.getStatus() != null && user.getStatus() == 1 ? "启用" : "禁用");
+        vo.setCreateTime(user.getCreateTime() == null ? "" : user.getCreateTime().toString());
+        return vo;
     }
 }
