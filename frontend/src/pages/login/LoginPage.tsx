@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, Tabs, Select, message } from 'antd';
-import { UserOutlined, LockOutlined, BankOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, BankOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useUserStore } from '../../stores/userStore';
-import { tenantApi, TenantOptionVO } from '../../services/userApi';
+import { authApi, tenantApi, TenantOptionVO } from '../../services/userApi';
 import { APP_NAME } from '../../config/app';
 
 const { Title, Text } = Typography;
@@ -16,8 +16,26 @@ export default function LoginPage() {
   const [tenantOptions, setTenantOptions] = useState<{ label: string; value: string }[]>([
     { label: '默认租户', value: '' },
   ]);
+  const [captchaImg, setCaptchaImg] = useState('');
+  const [captchaUuid, setCaptchaUuid] = useState('');
   const [defaultForm] = Form.useForm();
   const [tenantForm] = Form.useForm();
+
+  // 刷新验证码
+  const refreshCaptcha = useCallback(() => {
+    authApi.getCaptcha()
+      .then((res) => {
+        setCaptchaImg(res.data.img);
+        setCaptchaUuid(res.data.uuid);
+      })
+      .catch(() => {
+        // 验证码不可用时不阻塞登录（后端可能关闭了验证码开关）
+      });
+  }, []);
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, [refreshCaptcha]);
 
   // 加载租户选项
   useEffect(() => {
@@ -37,20 +55,52 @@ export default function LoginPage() {
     setLoading(true);
     try {
       const tenantCode = activeTab === 'tenant' ? (values.tenantCode || '') : '';
-      if (tenantCode) {
-        await login({ tenantCode, username: values.username, password: values.password });
+      await login({
+        tenantCode: tenantCode || undefined,
+        username: values.username,
+        password: values.password,
+        uuid: captchaUuid,
+        captcha: values.captcha,
+      });
+      // 密码过期引导：不阻断登录，跳个人中心提示修改
+      if (useUserStore.getState().passwordExpired) {
+        message.warning('密码已过期，建议尽快修改');
+        navigate('/profile');
       } else {
-        await login({ username: values.username, password: values.password });
+        message.success('登录成功');
+        // 跳到根路径，由 App.tsx 依据动态菜单的第一条路由重定向（避免写死落地页）
+        navigate('/');
       }
-      message.success('登录成功');
-      // 跳到根路径，由 App.tsx 依据动态菜单的第一条路由重定向（避免写死落地页）
-      navigate('/');
     } catch {
-      // 错误已在拦截器中处理
+      // 错误已在拦截器中处理；验证码一次性，失败后刷新并清空输入
+      refreshCaptcha();
+      defaultForm.setFieldValue('captcha', '');
+      tenantForm.setFieldValue('captcha', '');
     } finally {
       setLoading(false);
     }
   };
+
+  // 验证码输入项（两个 Tab 共用同一张图）
+  const captchaItem = (
+    <Form.Item name="captcha" rules={[{ required: true, message: '请输入验证码' }]}>
+      <Input
+        prefix={<SafetyOutlined />}
+        placeholder="验证码"
+        suffix={
+          captchaImg ? (
+            <img
+              src={captchaImg}
+              alt="验证码"
+              onClick={refreshCaptcha}
+              title="点击刷新"
+              style={{ height: 32, cursor: 'pointer', borderRadius: 4 }}
+            />
+          ) : null
+        }
+      />
+    </Form.Item>
+  );
 
   const tabItems = [
     {
@@ -64,6 +114,7 @@ export default function LoginPage() {
           <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="密码" />
           </Form.Item>
+          {captchaItem}
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading}>登录</Button>
           </Form.Item>
@@ -85,6 +136,7 @@ export default function LoginPage() {
           <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
             <Input.Password prefix={<LockOutlined />} placeholder="密码" />
           </Form.Item>
+          {captchaItem}
           <Form.Item>
             <Button type="primary" htmlType="submit" block loading={loading}>登录</Button>
           </Form.Item>

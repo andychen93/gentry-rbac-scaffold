@@ -3,6 +3,7 @@ import { useMemo, useEffect } from 'react';
 import { Spin } from 'antd';
 import LoginPage from './pages/login/LoginPage';
 import PermissionPage from './pages/role/PermissionPage';
+import ProfilePage from './pages/profile/ProfilePage';
 import { AppLayout } from './components/layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import LazyPage from './components/common/LazyPage';
@@ -68,11 +69,12 @@ export default function App() {
                     />
                   );
                 })}
-                {/* 子页面（非菜单页面，从角色管理跳转） */}
+                {/* 子页面（非菜单页面） */}
                 <Route
                   path="system/roles/:id/permissions"
                   element={<PermissionPage />}
                 />
+                <Route path="profile" element={<ProfilePage />} />
                 <Route path="*" element={<Navigate to={`/${firstRoute}`} replace />} />
               </Routes>
             </AppLayout>

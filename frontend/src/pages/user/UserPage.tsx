@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Button, Card, Tree, Tag, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, UserSwitchOutlined, KeyOutlined } from '@ant-design/icons';
+import { Button, Card, Tree, Tag, message, Space, Upload } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, UserSwitchOutlined, KeyOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
 import { ProTable, StatusSwitch, RowActions } from '../../components/pro';
 import { userApi } from '../../services/userApi';
+import { useUserStore } from '../../stores/userStore';
 import type { UserListVO } from '../../services/userApi';
 import { deptApi } from '../../services/deptApi';
 import type { DeptTreeVO } from '../../services/deptApi';
@@ -42,6 +43,9 @@ export default function UserPage() {
   const [currentRoleIds, setCurrentRoleIds] = useState<number[]>([]);
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
   const [passwordTargetUserId, setPasswordTargetUserId] = useState<number | null>(null);
+  const [importing, setImporting] = useState(false);
+  const [exportFilters, setExportFilters] = useState<Record<string, unknown>>({});
+  const hasPermission = useUserStore((s) => s.hasPermission);
 
   useEffect(() => {
     setDeptLoading(true);
@@ -52,6 +56,31 @@ export default function UserPage() {
   }, []);
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['users'] });
+
+  const handleExport = async () => {
+    try {
+      await userApi.exportUsers({ pageNum: 1, pageSize: 10, ...exportFilters, deptId: selectedDeptId ?? undefined });
+      message.success('导出成功');
+    } catch {
+      message.error('导出失败');
+    }
+  };
+
+  const handleImport = (file: File) => {
+    setImporting(true);
+    userApi.importUsers(file)
+      .then((res) => {
+        message.success(`导入完成：成功 ${res.success} 条，失败 ${res.fail} 条`);
+        if (res.fail > 0 && res.errors?.length) {
+          const detail = res.errors.slice(0, 3)
+            .map((e) => `第${e.row}行${e.username ? '(' + e.username + ')' : ''}${e.msg}`).join('；');
+          message.warning(`失败明细：${detail}${res.errors.length > 3 ? '...' : ''}`);
+        }
+        refresh();
+      })
+      .catch(() => { /* 拦截器已弹 toast */ })
+      .finally(() => setImporting(false));
+  };
 
   const handleStatus = async (id: string | number, checked: boolean) => {
     try {
@@ -152,6 +181,7 @@ export default function UserPage() {
           columns={columns}
           rowKey="id"
           scroll={{ x: 1200 }}
+          onFiltersChange={(f) => setExportFilters(f as Record<string, unknown>)}
           querySchema={[
             { name: 'username', label: '用户名' },
             { name: 'phone', label: '手机号' },
@@ -161,13 +191,14 @@ export default function UserPage() {
             },
           ]}
           toolbar={
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => { setEditingId(null); setFormOpen(true); }}
-            >
-              新增用户
-            </Button>
+            <Space>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); setFormOpen(true); }}>新增用户</Button>
+              <Button icon={<DownloadOutlined />} disabled={!hasPermission('system:user:export')} onClick={handleExport}>导出</Button>
+              <Upload accept=".xlsx,.xls" showUploadList={false} beforeUpload={(file) => { handleImport(file); return false; }}>
+                <Button icon={<UploadOutlined />} loading={importing} disabled={!hasPermission('system:user:import')}>导入</Button>
+              </Upload>
+              <Button icon={<DownloadOutlined />} onClick={() => userApi.downloadTemplate()}>模板</Button>
+            </Space>
           }
         />
       </div>

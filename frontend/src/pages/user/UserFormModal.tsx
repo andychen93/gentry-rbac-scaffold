@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, Radio, Switch, Transfer, message } from 'antd';
 import { userApi } from '../../services/userApi';
-import { roleApi, RoleListVO } from '../../services/roleApi';
+import { roleApi } from '../../services/roleApi';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
 
 interface Props {
@@ -41,9 +41,9 @@ export default function UserFormModal({ open, userId, onSuccess, onCancel }: Pro
   // 加载角色列表
   useEffect(() => {
     if (open) {
-      roleApi.list({ pageNum: 1, pageSize: 100, status: 1 })
+      roleApi.options()
         .then((res) => {
-          setRoleOptions((res.data.list || []).map((r: RoleListVO) => ({ key: String(r.id), title: r.roleName })));
+          setRoleOptions((res.data || []).map((r) => ({ key: String(r.id), title: r.roleName })));
         })
         .catch(() => setRoleOptions([]));
     }

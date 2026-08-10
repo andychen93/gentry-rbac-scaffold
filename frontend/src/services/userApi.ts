@@ -5,6 +5,8 @@ export interface LoginDTO {
   tenantCode?: string;
   username: string;
   password: string;
+  uuid?: string;      // 验证码标识
+  captcha?: string;   // 验证码答案
 }
 
 export interface UserCreateDTO {
@@ -81,6 +83,7 @@ export interface UserDetailVO {
 
 export interface LoginVO {
   token: string;
+  passwordExpired?: boolean;
   userInfo: {
     userId: number;
     username: string;
@@ -114,6 +117,18 @@ export const authApi = {
 
   updatePassword: (data: { oldPassword: string; newPassword: string }) =>
     request.put('/api/v1/auth/password', data),
+
+  // 获取登录验证码（公开接口，返回 data URI 图片 + uuid）
+  getCaptcha: () =>
+    request.get<any, { code: number; data: { uuid: string; img: string } }>('/api/v1/auth/captcha'),
+
+  // 获取当前用户完整资料（含手机/邮箱/职务等，仅需登录）
+  getProfile: () =>
+    request.get<any, { code: number; data: UserDetailVO }>('/api/v1/auth/profile'),
+
+  // 修改当前用户个人资料
+  updateProfile: (data: { nickname?: string; phone?: string; email?: string; gender?: number; postName?: string }) =>
+    request.put('/api/v1/auth/profile', data),
 };
 
 // 用户管理接口
@@ -143,7 +158,26 @@ export const userApi = {
 
   updateStatus: (id: number | string, data: { status: number }) =>
     request.put(`/api/v1/users/${id}/status`, data),
+
+  // 导出用户（Excel，按当前查询条件）
+  exportUsers: (params: Record<string, unknown>) =>
+    downloadExcel('/api/v1/users/export', params, 'users.xlsx'),
+
+  // 下载导入模板
+  downloadTemplate: () =>
+    downloadExcel('/api/v1/users/import/template', {}, 'user_import_template.xlsx'),
+
+  // 导入用户（Excel），返回成功/失败统计与错误明细
+  importUsers: (file: File) =>
+    uploadFile<UserImportResult>('/api/v1/users/import', file),
 };
+
+/** 用户导入结果 */
+export interface UserImportResult {
+  success: number;
+  fail: number;
+  errors: { row: number; username: string; msg: string }[];
+}
 
 // 租户选项接口（公开，登录页下拉框）
 export interface TenantOptionVO {
@@ -155,3 +189,41 @@ export const tenantApi = {
   options: () =>
     request.get<any, { code: number; data: TenantOptionVO[] }>('/api/v1/tenants/options'),
 };
+
+/** 下载二进制（Excel），绕过 axios 拦截器（拦截器会把响应解包成 JSON） */
+async function downloadExcel(url: string, params: Record<string, unknown>, filename: string) {
+  const query = new URLSearchParams();
+  Object.entries(params || {}).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') query.append(k, String(v));
+  });
+  const token = localStorage.getItem('precision_token');
+  const sep = url.includes('?') ? '&' : '?';
+  const response = await fetch(`${url}${sep}${query.toString()}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+  if (!response.ok) throw new Error('下载失败');
+  const blob = await response.blob();
+  const objectUrl = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(objectUrl);
+}
+
+/** 上传文件（FormData），返回后端 R.data */
+async function uploadFile<T>(url: string, file: File): Promise<T> {
+  const form = new FormData();
+  form.append('file', file);
+  const token = localStorage.getItem('precision_token');
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: form,
+  });
+  const json = await response.json();
+  if (json.code !== 0) throw new Error(json.message || '上传失败');
+  return json.data as T;
+}

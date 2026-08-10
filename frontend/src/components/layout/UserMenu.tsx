@@ -1,6 +1,7 @@
 import React from 'react';
 import { Dropdown, Avatar, Space } from 'antd';
 import { UserOutlined, LogoutOutlined } from '@ant-design/icons';
+import { useNavigate } from 'react-router-dom';
 
 interface UserMenuProps {
   username?: string;
@@ -10,10 +11,17 @@ interface UserMenuProps {
 
 /**
  * UserMenu 组件 - 用户下拉菜单
- * 显示用户头像和用户名，下拉菜单包含退出登录
+ * 显示用户头像和用户名，下拉菜单包含「个人中心」「退出登录」。
  */
 const UserMenu: React.FC<UserMenuProps> = ({ username = '用户', avatar, onLogout }) => {
+  const navigate = useNavigate();
   const items = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人中心',
+      onClick: () => navigate('/profile'),
+    },
     {
       key: 'logout',
       icon: <LogoutOutlined />,

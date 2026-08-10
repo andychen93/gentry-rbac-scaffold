@@ -23,6 +23,7 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: React.ComponentType
   'pages/log/LoginLogPage': () => import('../pages/log/LoginLogPage'),
   'pages/log/OnlineUserPage': () => import('../pages/log/OnlineUserPage'),
   'pages/monitor/RedisMonitorPage': () => import('../pages/monitor/RedisMonitorPage'),
+  'pages/config/ConfigPage': () => import('../pages/config/ConfigPage'),
   // ↓↓↓ 新业务页面在此登记：'pages/{module}/{Xxx}Page': () => import('../pages/{module}/{Xxx}Page'),
   // 兼容旧 component 路径
   'system/user/index': () => import('../pages/user/UserPage'),

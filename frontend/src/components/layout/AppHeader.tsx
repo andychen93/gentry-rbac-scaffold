@@ -11,12 +11,14 @@ import UserMenu from './UserMenu';
 /** 路径 → 面包屑名称映射（新增业务页面时在此登记） */
 const BREADCRUMB_MAP: Record<string, string> = {
   '/home': '工作台',
+  '/profile': '个人中心',
   '/system/tenants': '租户管理',
   '/system/users': '用户管理',
   '/system/roles': '角色管理',
   '/system/menu': '菜单管理',
   '/system/dept': '部门管理',
   '/system/dict': '字典管理',
+  '/system/config': '参数配置',
   '/monitor/operlog': '操作日志',
   '/monitor/loginlog': '登录日志',
   '/monitor/online': '在线用户',

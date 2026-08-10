@@ -21,6 +21,7 @@ interface UserStore {
   userInfo: UserInfo | null;
   menus: MenuNavItem[];
   isLoggedIn: boolean;
+  passwordExpired: boolean;
 
   login: (dto: LoginDTO) => Promise<void>;
   logout: () => Promise<void>;
@@ -34,12 +35,13 @@ export const useUserStore = create<UserStore>((set, get) => ({
   userInfo: null,
   menus: [],
   isLoggedIn: !!localStorage.getItem(TOKEN_KEY),
+  passwordExpired: false,
 
   login: async (dto: LoginDTO) => {
     const res = await authApi.login(dto);
-    const { token, userInfo } = res.data;
+    const { token, userInfo, passwordExpired } = res.data;
     localStorage.setItem(TOKEN_KEY, token);
-    set({ token, userInfo, menus: userInfo.menus || [], isLoggedIn: true });
+    set({ token, userInfo, menus: userInfo.menus || [], isLoggedIn: true, passwordExpired: !!passwordExpired });
   },
 
   logout: async () => {

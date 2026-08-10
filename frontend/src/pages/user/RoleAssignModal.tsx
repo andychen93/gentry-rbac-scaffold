@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Modal, Transfer, message } from 'antd';
 import { userApi } from '../../services/userApi';
-import { roleApi, RoleListVO } from '../../services/roleApi';
+import { roleApi } from '../../services/roleApi';
 
 interface Props {
   open: boolean;
@@ -24,9 +24,9 @@ export default function RoleAssignModal({ open, userId, currentRoleIds, onSucces
   useEffect(() => {
     if (open) {
       setTargetKeys(currentRoleIds.map(String));
-      roleApi.list({ pageNum: 1, pageSize: 100, status: 1 })
+      roleApi.options()
         .then((res) => {
-          setDataSource((res.data.list || []).map((r: RoleListVO) => ({
+          setDataSource((res.data || []).map((r) => ({
             key: String(r.id),
             title: r.roleName,
           })));

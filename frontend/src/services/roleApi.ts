@@ -125,4 +125,8 @@ export const roleApi = {
   /** ROLE-009 切换角色状态 */
   updateStatus: (id: number | string, data: RoleStatusDTO) =>
     request.put(`/api/v1/roles/${id}/status`, data),
+
+  /** 角色下拉选项（启用角色，供用户分配等场景） */
+  options: () =>
+    request.get<any, { code: number; data: { id: number; roleCode: string; roleName: string }[] }>('/api/v1/roles/options'),
 };
