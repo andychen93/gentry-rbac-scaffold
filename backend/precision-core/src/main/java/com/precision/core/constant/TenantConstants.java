@@ -14,5 +14,16 @@ public class TenantConstants {
     /** 默认租户 ID（写死在代码中，对应 sys_tenant.id = 1） */
     public static final Long DEFAULT_TENANT_ID = 1L;
 
+    /**
+     * 平台租户 ID（预留）。
+     * <p>当前「真多租户务实最小集」不引入平台租户实体、不迁移现有数据，
+     * 平台超管识别改用 {@link #PLATFORM_ROLE_CODE}（角色编码）。
+     * 完整 SaaS 多租户（平台租户隔离、超管/租户管理员登录分流 UI）留待后续单独立项。</p>
+     */
+    public static final Long PLATFORM_TENANT_ID = 0L;
+
+    /** 平台超管角色编码（拥有此角色的用户登录后跨租户可见所有数据） */
+    public static final String PLATFORM_ROLE_CODE = "SUPER_ADMIN";
+
     private TenantConstants() {}
 }

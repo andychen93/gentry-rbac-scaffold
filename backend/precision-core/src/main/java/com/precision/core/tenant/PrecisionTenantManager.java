@@ -22,11 +22,15 @@ public class PrecisionTenantManager implements TenantFactory {
      * 不需要租户隔离的全局表（平台级数据）
      */
     private static final Set<String> IGNORE_TABLES = Set.of(
-        "sys_tenant", "sys_menu", "sys_role_menu", "sys_dict_type", "sys_dict_data"
+        "sys_tenant", "sys_menu", "sys_role_menu", "sys_dict_type", "sys_dict_data", "sys_config"
     );
 
     @Override
     public Object[] getTenantIds() {
+        // 平台超管：跨租户可见所有数据（TenantFactory 返回 null 即跳过租户条件追加）
+        if (UserContext.isPlatformAdmin()) {
+            return null;
+        }
         Long tenantId = UserContext.getTenantId();
         return new Object[]{tenantId != null ? tenantId : TenantConstants.DEFAULT_TENANT_ID};
     }

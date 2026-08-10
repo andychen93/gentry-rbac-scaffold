@@ -42,6 +42,9 @@ public enum ErrorCode {
     DICT_TYPE_EXISTS(20016, "字典类型已存在"),
     DICT_TYPE_IN_USE(20017, "字典类型正在使用中"),
     LOGIN_FAILED(20018, "用户名或密码错误"),
+    ACCOUNT_LOCKED(20019, "账号已被锁定，请稍后再试"),
+    CAPTCHA_ERROR(20020, "验证码错误或已过期"),
+    PASSWORD_EXPIRED(20021, "密码已过期，请修改密码"),
 
     // ==================== 认证/数据错误 30001-30099 ====================
     TOKEN_INVALID(30001, "Token无效"),

@@ -35,6 +35,9 @@
         <mysql.version>8.4.0</mysql.version>
         <sqlite-jdbc.version>3.45.1.0</sqlite-jdbc.version>
         <jacoco.version>0.8.15</jacoco.version>
+        <!-- 新增依赖版本（Phase 0） -->
+        <ip2region.version>2.7.0</ip2region.version>
+        <easyexcel.version>3.3.4</easyexcel.version>
     </properties>
 
     <dependencyManagement>

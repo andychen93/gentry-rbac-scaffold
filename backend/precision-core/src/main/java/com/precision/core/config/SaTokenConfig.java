@@ -37,9 +37,8 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 .addPathPatterns("/api/**")
                 .excludePathPatterns(
                         "/api/v1/auth/login",
+                        "/api/v1/auth/captcha",
                         "/api/v1/tenants/options",
-                        "/api/v1/monitor/locations/stream",
-                        "/api/v1/notifications/stream",
                         "/actuator/**"
                 );
 
@@ -52,9 +51,11 @@ public class SaTokenConfig implements WebMvcConfigurer {
                     Object userId = session.get("userId");
                     Object tenantId = session.get("tenantId");
                     Object deptId = session.get("deptId");
+                    Object platformAdmin = session.get("platformAdmin");
                     if (userId instanceof Number) UserContext.setUserId(((Number) userId).longValue());
                     if (tenantId instanceof Number) UserContext.setTenantId(((Number) tenantId).longValue());
                     if (deptId instanceof Number) UserContext.setDeptId(((Number) deptId).longValue());
+                    UserContext.setPlatformAdmin(Boolean.TRUE.equals(platformAdmin));
                 }
                 return true;
             }

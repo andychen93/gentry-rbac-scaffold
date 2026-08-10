@@ -80,3 +80,24 @@ management:
   metrics:
     tags:
       application: precision-platform
+
+# ==================== 业务配置（precision 命名空间） ====================
+precision:
+  # 登录验证码
+  captcha:
+    enabled: true
+    type: math              # math=算术验证码 | char=字符验证码
+    length: 4
+    expire-seconds: 300     # 验证码有效期（秒）
+    width: 120
+    height: 40
+  # 登录失败锁定
+  login-security:
+    max-fail-count: 5       # 连续失败 N 次锁定
+    lock-minutes: 10        # 锁定时长（分钟），即失败计数 Redis TTL
+  # 密码策略
+  password:
+    expire-days: 90         # 密码过期天数（0 或负数表示不校验）
+  # 日志保留
+  log:
+    keep-days: 90           # 操作/登录日志保留天数，定时清理超出部分

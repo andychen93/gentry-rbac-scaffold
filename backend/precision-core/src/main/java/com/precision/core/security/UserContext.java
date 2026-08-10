@@ -9,6 +9,7 @@ public class UserContext {
     private static final ThreadLocal<Long> USER_ID = new ThreadLocal<>();
     private static final ThreadLocal<Long> TENANT_ID = new ThreadLocal<>();
     private static final ThreadLocal<Long> DEPT_ID = new ThreadLocal<>();
+    private static final ThreadLocal<Boolean> PLATFORM_ADMIN = new ThreadLocal<>();
 
     public static void setUserId(Long userId) { USER_ID.set(userId); }
     public static Long getUserId() { return USER_ID.get(); }
@@ -19,9 +20,17 @@ public class UserContext {
     public static void setDeptId(Long deptId) { DEPT_ID.set(deptId); }
     public static Long getDeptId() { return DEPT_ID.get(); }
 
+    /** 是否平台超管（跨租户，由 roleCode=SUPER_ADMIN 判定，登录时写入 Session） */
+    public static void setPlatformAdmin(boolean platformAdmin) { PLATFORM_ADMIN.set(platformAdmin); }
+    public static boolean isPlatformAdmin() {
+        Boolean v = PLATFORM_ADMIN.get();
+        return v != null && v;
+    }
+
     public static void clear() {
         USER_ID.remove();
         TENANT_ID.remove();
         DEPT_ID.remove();
+        PLATFORM_ADMIN.remove();
     }
 }

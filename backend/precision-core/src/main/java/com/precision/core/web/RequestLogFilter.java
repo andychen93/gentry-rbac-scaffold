@@ -37,11 +37,12 @@ public class RequestLogFilter extends OncePerRequestFilter {
 
     private static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
 
-    /** 敏感路径 → 敏感字段清单（JSON 字段名） */
+    /** 敏感路径 → 敏感字段清单（JSON 字段名），路径支持 Ant 通配 */
     private static final Map<String, List<String>> SENSITIVE_PATHS = Map.of(
-            "/api/v1/auth/login", List.of("password"),
+            "/api/v1/auth/login", List.of("password", "captcha"),
             "/api/v1/auth/password", List.of("oldPassword", "newPassword"),
-            "/api/v1/users/password", List.of("oldPassword", "newPassword")
+            // 管理员重置密码：PUT /api/v1/users/{id}/password/reset
+            "/api/v1/users/*/password/reset", List.of("newPassword")
     );
 
     private static final String MASK = "***";
