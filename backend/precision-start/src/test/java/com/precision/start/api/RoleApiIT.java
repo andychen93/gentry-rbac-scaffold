@@ -102,4 +102,13 @@ class RoleApiIT extends BaseApiIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(10002));
     }
+
+    @Test
+    @DisplayName("下拉选项：GET /roles/options → 200 + 启用角色数组")
+    void options() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/roles/options"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").isArray());
+    }
 }

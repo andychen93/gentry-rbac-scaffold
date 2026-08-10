@@ -8,6 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -78,10 +81,13 @@ class UserApiIT extends BaseApiIT {
     }
 
     @Test
-    @DisplayName("权限不足：chenli 无 system:user:list → 403")
+    @DisplayName("权限不足：无角色用户 → 403")
     void list_forbidden() throws Exception {
-        String chenli = login(CHENLI, CHENLI_PWD);
-        mockMvc.perform(bareGet("/api/v1/users?pageNum=1&pageSize=10").header("Authorization", chenli))
+        // 用 forbiddenAuth()（无角色用户）稳定触发 403。
+        // 不用 chenli：chenli 兼具 SUPER_ADMIN，Phase 6 后作为平台超管跨租户，
+        // getTenantIds 返回 null 跳过租户过滤，真正拥有全部权限（含 system:user:list）。
+        String noPerm = forbiddenAuth();
+        mockMvc.perform(bareGet("/api/v1/users?pageNum=1&pageSize=10").header("Authorization", noPerm))
                 .andExpect(status().isForbidden());
     }
 
@@ -102,5 +108,32 @@ class UserApiIT extends BaseApiIT {
         mockMvc.perform(authedPost("/api/v1/users").content(json(bad)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(10002));
+    }
+
+    @Test
+    @DisplayName("导出模板：GET /users/import/template → 200 + xlsx")
+    void importTemplate() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/users/import/template"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", containsString("user_import_template.xlsx")));
+    }
+
+    @Test
+    @DisplayName("导出：GET /users/export → 200 + xlsx")
+    void exportUsers() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/users/export"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Disposition", containsString("users.xlsx")));
+    }
+
+    @Test
+    @DisplayName("导入：POST /users/import 上传空模板 → 200 + success=0")
+    void importUsers_emptyTemplate() throws Exception {
+        byte[] template = mockMvc.perform(authedGet("/api/v1/users/import/template"))
+                .andReturn().getResponse().getContentAsByteArray();
+        mockMvc.perform(multipart("/api/v1/users/import").file("file", template).header("Authorization", auth))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.success").value(0));
     }
 }

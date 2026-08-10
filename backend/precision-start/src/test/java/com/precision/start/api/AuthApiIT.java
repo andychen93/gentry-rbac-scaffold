@@ -105,4 +105,31 @@ class AuthApiIT extends BaseApiIT {
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.token").isNotEmpty());
     }
+
+    @Test
+    @DisplayName("验证码：GET /auth/captcha → 200 + uuid + img（公开，无需登录）")
+    void captcha_public() throws Exception {
+        mockMvc.perform(bareGet("/api/v1/auth/captcha"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.uuid").isNotEmpty())
+                .andExpect(jsonPath("$.data.img").isNotEmpty());
+    }
+
+    @Test
+    @DisplayName("个人资料：GET /auth/profile → 200 + 当前用户")
+    void profile_get() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/auth/profile"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.username").value(ADMIN));
+    }
+
+    @Test
+    @DisplayName("个人资料：PUT /auth/profile 改昵称 → 200（事务回滚）")
+    void profile_update() throws Exception {
+        mockMvc.perform(authedPut("/api/v1/auth/profile")
+                        .content(json(Map.of("nickname", "管理员改", "gender", 1))))
+                .andExpect(jsonPath("$.code").value(0));
+    }
 }

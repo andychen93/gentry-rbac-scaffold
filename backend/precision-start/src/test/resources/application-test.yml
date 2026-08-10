@@ -4,3 +4,15 @@ spring:
   data:
     redis:
       database: 15
+
+# 测试环境关闭登录安全策略，避免 *IT 登录流程被阻塞：
+# - captcha 关闭：*IT 登录辅助不传 captcha
+# - login-security 放大阈值：错误密码用例不会意外触发账号锁定
+# - password 关闭过期：种子用户 pwd_update_time 为 null 已容错为未过期，再显式关闭
+precision:
+  captcha:
+    enabled: false
+  login-security:
+    max-fail-count: 999
+  password:
+    expire-days: 0
