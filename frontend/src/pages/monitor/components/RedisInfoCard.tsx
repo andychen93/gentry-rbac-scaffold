@@ -1,4 +1,4 @@
-import { Card, Col, Descriptions, Row, Tag, Tooltip } from 'antd';
+import { Card, Col, Descriptions, Row, Tag, Tooltip, theme } from 'antd';
 import type { RedisInfoVO } from '../../../services/monitorApi';
 import { formatBytes, formatTimestamp, formatUptime } from '../../../utils/format';
 
@@ -74,7 +74,7 @@ export default function RedisInfoCard({ info, dbSize }: Props) {
             <Metric
               label="QPS"
               value={info.instantaneousOpsPerSec?.toLocaleString() ?? '-'}
-              accent="#52c41a"
+              accent="success"
             />
           </Tooltip>
         </Col>
@@ -83,7 +83,7 @@ export default function RedisInfoCard({ info, dbSize }: Props) {
             <Metric
               label="命中率"
               value={info.hitRate != null ? `${info.hitRate.toFixed(2)}%` : '-'}
-              accent={getHitRateColor(info.hitRate)}
+              accent={getHitRateAccent(info.hitRate)}
             />
           </Tooltip>
         </Col>
@@ -104,26 +104,44 @@ export default function RedisInfoCard({ info, dbSize }: Props) {
   );
 }
 
-function getHitRateColor(hitRate: number | null | undefined): string {
-  if (hitRate == null) return '#1677ff';
-  if (hitRate >= 90) return '#52c41a';
-  if (hitRate >= 70) return '#faad14';
-  return '#ff4d4f';
+/**
+ * 指标强调色档位。
+ *
+ * 只表达「语义」不表达「颜色」—— 具体色值由 Metric 从 antd token 取，
+ * token 在 theme/argonTheme.ts 里指向 argonColors，所以改配色仍然只动一处。
+ */
+type Accent = 'primary' | 'success' | 'warning' | 'danger';
+
+/** 命中率分档：≥90% 健康、≥70% 需关注、其余告警；无数据时不着色（走主色） */
+function getHitRateAccent(hitRate: number | null | undefined): Accent {
+  if (hitRate == null) return 'primary';
+  if (hitRate >= 90) return 'success';
+  if (hitRate >= 70) return 'warning';
+  return 'danger';
 }
 
 function Metric({
   label,
   value,
-  accent = '#1677ff',
+  accent = 'primary',
 }: {
   label: string;
   value: React.ReactNode;
-  accent?: string;
+  accent?: Accent;
 }) {
+  const { token } = theme.useToken();
+  // 语义档位 → antd 语义 token（ConfigProvider 里已被 argonTheme 覆盖成 Argon 色板）
+  const accentColor: Record<Accent, string> = {
+    primary: token.colorPrimary,
+    success: token.colorSuccess,
+    warning: token.colorWarning,
+    danger: token.colorError,
+  };
+
   return (
     <div style={{ textAlign: 'center', padding: '4px 0' }}>
-      <div style={{ fontSize: 22, fontWeight: 600, color: accent }}>{value}</div>
-      <div style={{ color: '#666', fontSize: 12 }}>{label}</div>
+      <div style={{ fontSize: 22, fontWeight: 600, color: accentColor[accent] }}>{value}</div>
+      <div style={{ color: token.colorTextSecondary, fontSize: 12 }}>{label}</div>
     </div>
   );
 }

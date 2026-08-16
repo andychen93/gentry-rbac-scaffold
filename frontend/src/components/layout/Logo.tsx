@@ -1,4 +1,5 @@
 import React from 'react';
+import { theme } from 'antd';
 import { APP_NAME, APP_INITIAL } from '../../config/app';
 
 interface LogoProps {
@@ -12,6 +13,10 @@ interface LogoProps {
  * 改名字去 config/app.ts
  */
 const Logo: React.FC<LogoProps> = ({ title = APP_NAME, collapsed = false }) => {
+  // 品牌圆标取主色 token（argonTheme → argonColors.primary），
+  // 原先写死的 #1677ff 是 antd 默认蓝，和站内其他地方的 Argon 靛不是一个颜色
+  const { token } = theme.useToken();
+
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, overflow: 'hidden', whiteSpace: 'nowrap' }}>
       <div
@@ -19,12 +24,12 @@ const Logo: React.FC<LogoProps> = ({ title = APP_NAME, collapsed = false }) => {
           width: 32,
           height: 32,
           minWidth: 32,
-          background: '#1677ff',
+          background: token.colorPrimary,
           borderRadius: '50%',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: '#fff',
+          color: token.colorTextLightSolid,
           fontSize: 16,
           fontWeight: 'bold',
         }}
@@ -32,7 +37,7 @@ const Logo: React.FC<LogoProps> = ({ title = APP_NAME, collapsed = false }) => {
         {APP_INITIAL}
       </div>
       {!collapsed && (
-        <span style={{ fontSize: 16, fontWeight: 600, color: '#000000d9' }}>{title}</span>
+        <span style={{ fontSize: 16, fontWeight: 600, color: token.colorTextHeading }}>{title}</span>
       )}
     </div>
   );

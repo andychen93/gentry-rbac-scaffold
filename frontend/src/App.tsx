@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useMemo, useEffect } from 'react';
-import { Spin } from 'antd';
+import { Spin, Typography } from 'antd';
 import LoginPage from './pages/login/LoginPage';
 import PermissionPage from './pages/role/PermissionPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -38,7 +38,7 @@ export default function App() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16 }}>
         <Spin size="large" />
-        <span style={{ color: '#8898aa', fontSize: 14 }}>恢复登录状态...</span>
+        <Typography.Text type="secondary" style={{ fontSize: 14 }}>恢复登录状态...</Typography.Text>
       </div>
     );
   }

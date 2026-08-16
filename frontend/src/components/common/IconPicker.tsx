@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Input, Popover, Empty } from 'antd';
+import { Input, Popover, Empty, theme } from 'antd';
 import * as Icons from '@ant-design/icons';
 
 /** 可选图标列表（常用 Ant Design 图标） */
@@ -55,6 +55,7 @@ interface IconPickerProps {
 }
 
 export default function IconPicker({ value, onChange }: IconPickerProps) {
+  const { token } = theme.useToken();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
 
@@ -102,8 +103,12 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
                   fontSize: 18,
                   cursor: 'pointer',
                   borderRadius: 4,
-                  border: value === name ? '2px solid #1677ff' : '1px solid #f0f0f0',
-                  background: value === name ? '#e6f4ff' : '#fff',
+                  border:
+                    value === name
+                      ? `2px solid ${token.colorPrimary}`
+                      : `1px solid ${token.colorBorderSecondary}`,
+                  // controlItemBgActive 是 antd「列表项选中底色」语义，跟着主色走
+                  background: value === name ? token.controlItemBgActive : token.colorBgContainer,
                 }}
               >
                 {getIconComponent(name)}

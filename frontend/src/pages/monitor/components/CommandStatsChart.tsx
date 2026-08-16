@@ -1,4 +1,4 @@
-import { Card, Empty } from 'antd';
+import { Card, Empty, theme } from 'antd';
 import ReactECharts from 'echarts-for-react';
 import type { RedisCommandStatVO } from '../../../services/monitorApi';
 
@@ -9,6 +9,9 @@ interface Props {
 const TOP = 10;
 
 export default function CommandStatsChart({ stats }: Props) {
+  // 必须在下面的空数据 early return 之前取（Rules of Hooks：hook 不能在条件 return 之后）
+  const { token } = theme.useToken();
+
   if (!stats || stats.length === 0) {
     return (
       <Card title="命令调用 TOP 10" size="small">
@@ -36,7 +39,8 @@ export default function CommandStatsChart({ stats }: Props) {
         type: 'pie',
         radius: ['35%', '65%'],
         avoidLabelOverlap: true,
-        itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+        // 扇区描边取卡片底色，视觉上是「留白缝隙」而不是白线
+        itemStyle: { borderRadius: 4, borderColor: token.colorBgContainer, borderWidth: 2 },
         label: { show: true, formatter: '{b}: {d}%' },
         data: pieData,
       },

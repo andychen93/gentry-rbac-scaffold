@@ -13,6 +13,7 @@ import {
   Tabs,
   Tag,
   Tooltip,
+  Typography,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -247,9 +248,9 @@ export default function RedisMonitorPage() {
           >
             搜索
           </Button>
-          <span style={{ color: '#999', fontSize: 12 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             支持通配符 *，单次扫描上限 10000 Key
-          </span>
+          </Typography.Text>
         </Space>
       </Card>
       <Card size="small">
@@ -289,7 +290,7 @@ export default function RedisMonitorPage() {
         <h2 style={{ margin: 0 }}>Redis 监控</h2>
         <Space>
           <Tooltip title="开启后每 30 秒自动刷新监控信息 Tab">
-            <span style={{ color: '#666' }}>自动刷新</span>
+            <Typography.Text type="secondary">自动刷新</Typography.Text>
           </Tooltip>
           <Switch
             checked={autoRefresh}

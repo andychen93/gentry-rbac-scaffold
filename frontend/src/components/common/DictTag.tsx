@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tag } from 'antd';
+import { Tag, Typography } from 'antd';
 import { useQuery } from '@tanstack/react-query';
 import { dictApi, DictDataVO } from '../../services/dictApi';
 
@@ -25,7 +25,7 @@ const DictTag: React.FC<DictTagProps> = ({ dictType, value }) => {
   });
 
   if (value === null || value === undefined) {
-    return <span style={{ color: '#999' }}>—</span>;
+    return <Typography.Text type="secondary">—</Typography.Text>;
   }
   const hit = data?.find((d) => String(d.dictValue) === String(value));
   return hit ? <Tag>{hit.dictLabel}</Tag> : <span>{String(value)}</span>;

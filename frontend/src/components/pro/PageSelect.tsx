@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Input, Popover, Table } from 'antd';
+import { Input, Popover, Table, theme } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { usePagedList } from '../../hooks/usePagedList';
 import type { ApiResult, PageResult, PageQuery } from '../../types/api';
@@ -32,6 +32,7 @@ function PageSelectInner<T>(props: PageSelectProps<T>) {
     service, columns, rowKey, labelField, value, onChange,
     placeholder = '请选择', searchField, pageSize = 5, popoverWidth = 480,
   } = props;
+  const { token } = theme.useToken();
   const [open, setOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
   const list = usePagedList<T>({
@@ -91,7 +92,7 @@ function PageSelectInner<T>(props: PageSelectProps<T>) {
         value={displayLabel}
         placeholder={placeholder}
         readOnly
-        suffix={<SearchOutlined style={{ color: '#8898aa' }} />}
+        suffix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
         style={{ cursor: 'pointer' }}
         onClick={() => setOpen(true)}
       />

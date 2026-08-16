@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react';
-import { Modal, Button } from 'antd';
+import { Modal, Button, theme } from 'antd';
 import {
   CheckCircleOutlined,
   CloseCircleOutlined,
@@ -54,6 +54,9 @@ const SweetAlert: React.FC<SweetAlertProps> = ({
   onCancel,
 }) => {
   const Icon = ICONS[type];
+  // 渐变没有对应 token，只能继续从 argonColors 取（见上方 import）；
+  // 纯色部分一律走 token，不再写死 hex
+  const { token: themeToken } = theme.useToken();
   return (
     <Modal
       open={open}
@@ -78,11 +81,11 @@ const SweetAlert: React.FC<SweetAlertProps> = ({
             boxShadow: '0 0 2rem 0 rgba(136,152,170,.3)',
           }}
         >
-          <Icon style={{ fontSize: 40, color: '#fff' }} />
+          <Icon style={{ fontSize: 40, color: themeToken.colorTextLightSolid }} />
         </div>
-        <h3 style={{ color: '#32325d', fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>{title}</h3>
+        <h3 style={{ color: themeToken.colorTextHeading, fontSize: 22, fontWeight: 700, margin: '0 0 8px' }}>{title}</h3>
         {content && (
-          <div style={{ color: '#525f7f', fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>{content}</div>
+          <div style={{ color: themeToken.colorText, fontSize: 14, marginBottom: 20, lineHeight: 1.6 }}>{content}</div>
         )}
         <div>
           <Button type="primary" className={BTN_CLASS[type]} onClick={onConfirm} style={{ marginRight: 8 }}>

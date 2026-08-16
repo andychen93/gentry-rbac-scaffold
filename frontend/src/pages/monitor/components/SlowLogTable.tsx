@@ -1,5 +1,5 @@
 import { ReloadOutlined } from '@ant-design/icons';
-import { Button, Card, InputNumber, message, Modal, Space, Table, Tag } from 'antd';
+import { Button, Card, InputNumber, message, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useState } from 'react';
 import { redisMonitorApi, type RedisSlowLogVO } from '../../../services/monitorApi';
@@ -105,9 +105,9 @@ export default function SlowLogTable() {
               清空慢日志
             </Button>
           )}
-          <span style={{ color: '#999', fontSize: 12 }}>
+          <Typography.Text type="secondary" style={{ fontSize: 12 }}>
             慢日志阈值通过 <code>config set slowlog-log-slower-than &lt;us&gt;</code> 设置，默认 10000 微秒
-          </span>
+          </Typography.Text>
         </Space>
       </Card>
       <Card size="small">

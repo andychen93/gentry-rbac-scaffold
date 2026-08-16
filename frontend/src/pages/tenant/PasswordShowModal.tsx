@@ -55,7 +55,9 @@ export default function PasswordShowModal({ open, result, onConfirm }: Props) {
                 copyable={{ tooltips: false, onCopy: handleCopy }}
                 style={{ marginBottom: 0, display: 'inline' }}
               >
-                <Text strong style={{ fontSize: 16, color: '#ff4d4f' }}>
+                {/* type="danger" 走 antd colorError token（argonTheme 里指向 argonColors.danger），
+                    不写死颜色 —— 原本的 #ff4d4f 是 antd 默认红，和 Argon 的 #f5365c 不是一个色 */}
+                <Text strong type="danger" style={{ fontSize: 16 }}>
                   {result.adminPassword}
                 </Text>
               </Paragraph>

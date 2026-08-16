@@ -1,4 +1,4 @@
-import { Descriptions, Modal, Skeleton, Tag } from 'antd';
+import { Descriptions, Modal, Skeleton, Tag, theme } from 'antd';
 import { useEffect, useState } from 'react';
 import { redisMonitorApi, type RedisKeyVO } from '../../../services/monitorApi';
 import { formatTtl } from '../../../utils/format';
@@ -10,6 +10,7 @@ interface Props {
 }
 
 export default function KeyValueModal({ open, keyName, onClose }: Props) {
+  const { token } = theme.useToken();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<RedisKeyVO | null>(null);
 
@@ -50,7 +51,7 @@ export default function KeyValueModal({ open, keyName, onClose }: Props) {
             style={{
               marginTop: 8,
               padding: 12,
-              background: '#f5f5f5',
+              background: token.colorFillTertiary,
               borderRadius: 4,
               maxHeight: 320,
               overflow: 'auto',

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Form, Input, Button, Card, Typography, Tabs, Select, message } from 'antd';
+import { Form, Input, Button, Card, Typography, Tabs, Select, message, theme } from 'antd';
 import { UserOutlined, LockOutlined, BankOutlined, SafetyOutlined } from '@ant-design/icons';
 import { useUserStore } from '../../stores/userStore';
 import { authApi, tenantApi, TenantOptionVO } from '../../services/userApi';
@@ -9,6 +9,7 @@ import { APP_NAME } from '../../config/app';
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
+  const { token: themeToken } = theme.useToken();
   const navigate = useNavigate();
   const login = useUserStore((s) => s.login);
   const [activeTab, setActiveTab] = useState<'default' | 'tenant'>('default');
@@ -146,13 +147,15 @@ export default function LoginPage() {
   ];
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f0f2f5' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: themeToken.colorBgLayout }}>
       <Card style={{ width: 420, borderRadius: 8 }}>
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
+          {/* 品牌圆标用主色 token；原先的 #1677ff / #f0f2f5 是 antd 默认蓝和默认灰，
+              让登录页跟站内 Argon 配色对不上 */}
           <div style={{
-            width: 64, height: 64, background: '#1677ff', borderRadius: '50%',
+            width: 64, height: 64, background: themeToken.colorPrimary, borderRadius: '50%',
             margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fff', fontSize: 24, fontWeight: 'bold',
+            color: themeToken.colorTextLightSolid, fontSize: 24, fontWeight: 'bold',
           }}>P</div>
           <Title level={3} style={{ margin: 0 }}>{APP_NAME}</Title>
           <Text type="secondary">RBAC 权限管理控制台</Text>
