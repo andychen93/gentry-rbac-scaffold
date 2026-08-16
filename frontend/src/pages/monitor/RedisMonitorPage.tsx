@@ -1,4 +1,4 @@
-import { ReloadOutlined, SearchOutlined } from '@ant-design/icons';
+import { ReloadOutlined, SearchOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import {
   Button,
   Card,
@@ -23,6 +23,7 @@ import {
   type RedisMonitorVO,
 } from '../../services/monitorApi';
 import { useUserStore } from '../../stores/userStore';
+import { RowActions } from '../../components/pro';
 import { formatTtl } from '../../utils/format';
 import CommandStatsChart from './components/CommandStatsChart';
 import KeyDefineTable from './components/KeyDefineTable';
@@ -179,20 +180,20 @@ export default function RedisMonitorPage() {
     {
       title: '操作',
       key: 'action',
-      width: 140,
+      width: 90,
       render: (_: unknown, record: RedisKeyVO) => (
-        <Space size="small">
-          {canQuery && (
-            <Button type="link" size="small" onClick={() => handleView(record)}>
-              查看
-            </Button>
-          )}
-          {canDelete && (
-            <Button type="link" danger size="small" onClick={() => handleDelete(record)}>
-              删除
-            </Button>
-          )}
-        </Space>
+        <RowActions items={[
+          ...(canQuery ? [{
+            key: 'view', label: '查看', icon: <EyeOutlined />,
+            onClick: () => handleView(record),
+          }] : []),
+          // 只传 danger（红色样式）不传 confirmText：handleDelete 内部已有 Modal.confirm，
+          // 再包一层 Popconfirm 会让用户确认两次
+          ...(canDelete ? [{
+            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
+            onClick: () => handleDelete(record),
+          }] : []),
+        ]} />
       ),
     },
   ];

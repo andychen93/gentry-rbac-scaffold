@@ -22,7 +22,9 @@ test.describe.serial('部门管理 CRUD', () => {
   });
 
   test('D-002 新增部门', async () => {
-    await page.getByRole('button', { name: /新增/ }).click();
+    // 限定工具栏：行内操作图标也是 role=button（aria-label「新增下级」），
+    // 用宽松的 /新增/ 会同时匹配到行内图标而报 strict mode 冲突
+    await page.locator('.ant-card').getByRole('button', { name: '新增部门' }).click();
     await expect(page.locator('.ant-modal')).toBeVisible({ timeout: 3000 });
 
     await page.locator('.ant-modal #name').fill('测试部门' + TS);
@@ -40,7 +42,7 @@ test.describe.serial('部门管理 CRUD', () => {
   test('D-003 编辑部门', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: '测试部门' + TS });
     if (await row.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await row.getByText('编辑').click();
+      await row.getByLabel('编辑').click();
       await expect(page.locator('.ant-modal')).toBeVisible({ timeout: 3000 });
 
       await page.locator('.ant-modal #name').clear();
@@ -57,7 +59,7 @@ test.describe.serial('部门管理 CRUD', () => {
       page.locator('.ant-table-row').filter({ hasText: '测试部门' + TS })
     );
     if (await row.first().isVisible({ timeout: 3000 }).catch(() => false)) {
-      await row.first().getByText('删除').click();
+      await row.first().getByLabel('删除').click();
       await page.locator('.ant-popconfirm .ant-btn-primary').or(page.locator('.ant-popover .ant-btn-primary')).click();
       await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(1000);

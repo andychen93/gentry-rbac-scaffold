@@ -62,7 +62,7 @@ export default function RolePage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 220, fixed: 'right',
+      title: '操作', key: 'action', width: 110, fixed: 'right',
       render: (_: unknown, r: RoleListVO) => (
         <RowActions items={[
           {

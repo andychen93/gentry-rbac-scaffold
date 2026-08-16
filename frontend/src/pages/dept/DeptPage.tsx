@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Card, Table, Button, Input, Select, Space, Form, Tag, message, Popconfirm, Row, Col,
+  Card, Table, Button, Input, Select, Space, Form, Tag, message, Row, Col,
 } from 'antd';
+import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { deptApi } from '../../services/deptApi';
 import type { DeptTreeVO, DeptQueryParams } from '../../services/deptApi';
 import { useUserStore } from '../../stores/userStore';
+import { RowActions } from '../../components/pro';
 import DeptFormModal from './DeptFormModal';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -118,28 +120,23 @@ export default function DeptPage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: '25%',
+      title: '操作', key: 'action', width: 110,
       render: (_: unknown, record: DeptTreeVO) => (
-        <Space size="small">
-          {hasPermission('system:dept:edit') && (
-            <a onClick={() => handleEdit(record.id)}>
-              编辑
-            </a>
-          )}
-          {hasPermission('system:dept:add') && (
-            <a onClick={() => handleAddChild(record.id)}>
-              新增
-            </a>
-          )}
-          {hasPermission('system:dept:remove') && (
-            <Popconfirm
-              title={`确定删除部门「${record.name}」？`}
-              onConfirm={() => handleDelete(record.id)}
-            >
-              <a style={{ color: '#ff4d4f' }}>删除</a>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions items={[
+          {
+            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:dept:edit',
+            onClick: () => handleEdit(record.id),
+          },
+          {
+            key: 'add', label: '新增下级', icon: <PlusOutlined />, perm: 'system:dept:add',
+            onClick: () => handleAddChild(record.id),
+          },
+          {
+            key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:dept:remove',
+            danger: true, confirmText: `确定删除部门「${record.name}」？`,
+            onClick: () => handleDelete(record.id),
+          },
+        ]} />
       ),
     },
   ];

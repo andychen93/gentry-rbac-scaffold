@@ -48,7 +48,7 @@ export default function ConfigPage() {
     { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true },
     { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 160, fixed: 'right',
+      title: '操作', key: 'action', width: 90, fixed: 'right',
       render: (_: unknown, r: ConfigVO) => (
         <RowActions items={[
           {

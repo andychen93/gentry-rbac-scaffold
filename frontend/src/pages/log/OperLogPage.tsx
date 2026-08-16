@@ -64,7 +64,7 @@ export default function OperLogPage() {
     },
     { title: '操作时间', dataIndex: 'operateTime', key: 'operateTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 100, fixed: 'right',
+      title: '操作', key: 'action', width: 70, fixed: 'right',
       render: (_: unknown, r: OperLogListVO) => (
         <RowActions items={[
           { key: 'view', label: '详情', icon: <EyeOutlined />, onClick: () => handleViewDetail(r.id) },

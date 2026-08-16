@@ -11,6 +11,11 @@ Icon?
 !.vscode/extensions.json
 !.vscode/settings.example.json
 *.iml
+# Eclipse / STS（Maven 项目导入 Eclipse 系 IDE 时生成的本地元数据）
+.project
+.classpath
+.factorypath
+.settings/
 
 # Java / Maven build outputs
 target/

@@ -128,7 +128,7 @@ export default function UserPage() {
     },
     { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 240, fixed: 'right',
+      title: '操作', key: 'action', width: 130, fixed: 'right',
       render: (_: unknown, r: UserListVO) => (
         <RowActions items={[
           {

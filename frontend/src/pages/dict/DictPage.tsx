@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Card, Table, Button, Space, Tag, message, Popconfirm } from 'antd';
-import { PlusOutlined, ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Card, Table, Button, Space, Tag, message } from 'antd';
+import {
+  PlusOutlined, ArrowLeftOutlined, ReloadOutlined,
+  EditOutlined, DeleteOutlined, DatabaseOutlined,
+} from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
@@ -77,16 +80,16 @@ export default function DictPage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 200, fixed: 'right',
+      title: '操作', key: 'action', width: 110, fixed: 'right',
       render: (_: unknown, record: DictTypeListVO) => (
         <RowActions items={[
-          { key: 'data', label: '数据', onClick: () => handleEnterData(record) },
+          { key: 'data', label: '数据', icon: <DatabaseOutlined />, onClick: () => handleEnterData(record) },
           {
-            key: 'edit', label: '编辑',
+            key: 'edit', label: '编辑', icon: <EditOutlined />,
             onClick: () => { setEditingType(record); setTypeModalMode('edit'); setTypeModalOpen(true); },
           },
           {
-            key: 'del', label: '删除', danger: true,
+            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
             confirmText: '确定删除该字典类型？',
             onClick: () => handleDeleteType(record.id),
           },
@@ -113,14 +116,19 @@ export default function DictPage() {
     },
     { title: '备注', dataIndex: 'remark', key: 'remark', width: 160, ellipsis: true },
     {
-      title: '操作', key: 'action', width: 140,
+      title: '操作', key: 'action', width: 90,
       render: (_: unknown, record: DictDataVO) => (
-        <Space size="small">
-          <a onClick={() => { setEditingData(record); setDataModalMode('edit'); setDataModalOpen(true); }}>编辑</a>
-          <Popconfirm title="确定删除该数据项？" onConfirm={() => handleDeleteData(record.id)}>
-            <a style={{ color: '#ff4d4f' }}>删除</a>
-          </Popconfirm>
-        </Space>
+        <RowActions items={[
+          {
+            key: 'edit', label: '编辑', icon: <EditOutlined />,
+            onClick: () => { setEditingData(record); setDataModalMode('edit'); setDataModalOpen(true); },
+          },
+          {
+            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
+            confirmText: '确定删除该数据项？',
+            onClick: () => handleDeleteData(record.id),
+          },
+        ]} />
       ),
     },
   ];

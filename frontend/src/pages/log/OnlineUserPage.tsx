@@ -59,7 +59,7 @@ export default function OnlineUserPage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 100, fixed: 'right',
+      title: '操作', key: 'action', width: 70, fixed: 'right',
       render: (_: unknown, record: OnlineUserVO) => (
         <RowActions items={[
           {

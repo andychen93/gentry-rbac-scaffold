@@ -36,7 +36,7 @@ test.describe.serial('角色管理 CRUD', () => {
 
   test('R-003 编辑角色', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: 'TESTROLE' + TS });
-    await row.getByText('编辑').click();
+    await row.getByLabel('编辑').click();
     await expect(page.locator('.ant-modal')).toBeVisible({ timeout: 3000 });
 
     await page.locator('.ant-modal #roleName').clear();
@@ -50,7 +50,7 @@ test.describe.serial('角色管理 CRUD', () => {
   test('R-006 删除角色', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: 'TESTROLE' + TS });
     if (await row.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await row.getByText('删除').click();
+      await row.getByLabel('删除').click();
       // Popconfirm 确认按钮
       await page.locator('.ant-popconfirm .ant-btn-primary').or(page.locator('.ant-popover .ant-btn-primary')).click();
       await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });

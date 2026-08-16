@@ -57,7 +57,7 @@ test.describe.serial('用户管理 CRUD', () => {
   test('U-003 编辑用户', async () => {
     // 找到刚创建的用户行，点击编辑
     const row = page.locator('.ant-table-row').filter({ hasText: 'testuser' + TS });
-    await row.getByText('编辑').click();
+    await row.getByLabel('编辑').click();
     await expect(page.locator('.ant-modal')).toBeVisible({ timeout: 3000 });
 
     // 修改昵称
@@ -71,7 +71,7 @@ test.describe.serial('用户管理 CRUD', () => {
 
   test('U-004 重置密码', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: 'testuser' + TS });
-    await row.getByText('重置密码').click();
+    await row.getByLabel('重置密码').click();
     await expect(page.locator('.ant-modal')).toBeVisible({ timeout: 3000 });
 
     await page.locator('.ant-modal #newPassword').fill('NewPass@123');
@@ -87,7 +87,7 @@ test.describe.serial('用户管理 CRUD', () => {
 
   test('U-005 删除用户', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: 'testuser' + TS });
-    await row.getByText('删除').click();
+    await row.getByLabel('删除').click();
     await page.locator('.ant-popconfirm .ant-btn-primary').or(page.locator('.ant-popover .ant-btn-primary')).click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
     await page.waitForTimeout(1000);

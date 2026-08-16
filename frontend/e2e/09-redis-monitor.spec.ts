@@ -64,13 +64,11 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
       activePane.getByText(/Authorization:login:(token|session):/).first()
     ).toBeVisible({ timeout: 10000 });
 
-    // 当前面板内不应出现"删除"按钮（权限缺失）
-    const deleteBtns = activePane.locator('button', { hasText: '删除' });
-    await expect(deleteBtns).toHaveCount(0);
-    // "查看"按钮应存在
-    const viewBtns = activePane.locator('button', { hasText: '查看' });
-    const count = await viewBtns.count();
-    expect(count).toBeGreaterThan(0);
+    // 操作列已改为纯图标 + Tooltip，按 aria-label 定位（不再是带文字的 button）
+    // 当前面板内不应出现"删除"（权限缺失）
+    await expect(activePane.getByLabel('删除')).toHaveCount(0);
+    // "查看"应存在
+    expect(await activePane.getByLabel('查看').count()).toBeGreaterThan(0);
   });
 
   test('MON-REDIS-005 慢查询日志 Tab 加载', async ({ page }) => {

@@ -42,7 +42,7 @@ test.describe.serial('字典管理 CRUD', () => {
   test('DT-004 删除字典类型', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: '测试字典' + TS });
     if (await row.isVisible({ timeout: 3000 }).catch(() => false)) {
-      await row.getByText('删除').click();
+      await row.getByLabel('删除').click();
       await page.locator('.ant-popconfirm .ant-btn-primary').or(page.locator('.ant-popover .ant-btn-primary')).click();
       await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
       await page.waitForTimeout(1000);

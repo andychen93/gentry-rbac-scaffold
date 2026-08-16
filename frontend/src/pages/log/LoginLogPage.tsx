@@ -65,7 +65,7 @@ export default function LoginLogPage() {
     { title: '提示消息', dataIndex: 'message', key: 'message', width: 150 },
     { title: '登录时间', dataIndex: 'loginTime', key: 'loginTime', width: 170 },
     {
-      title: '操作', key: 'action', width: 100, fixed: 'right',
+      title: '操作', key: 'action', width: 70, fixed: 'right',
       render: (_: unknown, r: LoginLogListVO) => (
         <RowActions items={[
           { key: 'view', label: '详情', icon: <EyeOutlined />, onClick: () => handleViewDetail(r.id) },

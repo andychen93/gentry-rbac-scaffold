@@ -69,7 +69,7 @@ export default function TenantPage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 240, fixed: 'right',
+      title: '操作', key: 'action', width: 130, fixed: 'right',
       render: (_: unknown, r: TenantListVO) => (
         <RowActions items={[
           {

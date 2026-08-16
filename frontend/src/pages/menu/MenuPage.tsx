@@ -1,11 +1,13 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
-  Card, Table, Button, Input, Select, Space, Form, Tag, message, Popconfirm, Row, Col,
+  Card, Table, Button, Input, Select, Space, Form, Tag, message, Row, Col,
 } from 'antd';
 import * as AllIcons from '@ant-design/icons';
+import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO, MenuQueryDTO } from '../../services/menuApi';
 import { useUserStore } from '../../stores/userStore';
+import { RowActions } from '../../components/pro';
 import MenuFormModal from './MenuFormModal';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -208,28 +210,27 @@ export default function MenuPage() {
       },
     },
     {
-      title: '操作', key: 'action', width: 200,
+      title: '操作', key: 'action', width: 110,
       render: (_: unknown, record: MenuTreeVO) => (
-        <Space size="small">
-          {hasPermission('system:menu:edit') && (
-            <a onClick={() => handleEdit(record)}>编辑</a>
-          )}
-          {hasPermission('system:menu:add') && record.type !== 3 && (
-            <a onClick={() => handleAddChild(record)}>新增</a>
-          )}
-          {hasPermission('system:menu:remove') && (
-            <Popconfirm
-              title={
-                record.children?.length
-                  ? `将同时删除所有子菜单和角色关联，确定删除「${record.name}」？`
-                  : `确定删除菜单「${record.name}」？`
-              }
-              onConfirm={() => handleDelete(record.id)}
-            >
-              <a style={{ color: '#ff4d4f' }}>删除</a>
-            </Popconfirm>
-          )}
-        </Space>
+        <RowActions items={[
+          {
+            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:menu:edit',
+            onClick: () => handleEdit(record),
+          },
+          // 按钮类型(type=3)没有下级，不展示「新增下级」
+          ...(record.type !== 3 ? [{
+            key: 'add', label: '新增下级', icon: <PlusOutlined />, perm: 'system:menu:add',
+            onClick: () => handleAddChild(record),
+          }] : []),
+          {
+            key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:menu:remove',
+            danger: true,
+            confirmText: record.children?.length
+              ? `将同时删除所有子菜单和角色关联，确定删除「${record.name}」？`
+              : `确定删除菜单「${record.name}」？`,
+            onClick: () => handleDelete(record.id),
+          },
+        ]} />
       ),
     },
   ];

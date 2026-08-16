@@ -2,6 +2,7 @@ import { request } from '@playwright/test';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
 /**
  * 全局前置：一次性登录内置账号，把 Token 落盘给各 spec 复用。
@@ -22,14 +23,51 @@ const ACCOUNTS: Record<string, string> = {
   chenli: 'Chenli@2026',
 };
 
+/** 验证码错误的业务码（ErrorCode.CAPTCHA_ERROR） */
+const CAPTCHA_ERROR = 20020;
+
+/**
+ * 取验证码答案。
+ *
+ * 验证码答案只存在 Redis（key = `captcha:{uuid}`，见 CaptchaServiceImpl），
+ * 接口只返回图片，所以测试环境直接用 redis-cli 读。仅测试用途。
+ */
+function readCaptchaAnswer(uuid: string): string {
+  return execFileSync('redis-cli', ['get', `captcha:${uuid}`], { encoding: 'utf-8' }).trim();
+}
+
 export default async function globalSetup() {
   const ctx = await request.newContext({ baseURL: 'http://localhost:9090' });
   const tokens: Record<string, string> = {};
 
   try {
     for (const [username, password] of Object.entries(ACCOUNTS)) {
-      const res = await ctx.post('/api/v1/auth/login', { data: { username, password } });
-      const body = await res.json();
+      // 先按无验证码登录（precision.captcha.enabled=false 的部署）
+      let res = await ctx.post('/api/v1/auth/login', { data: { username, password } });
+      let body = await res.json();
+
+      // 开了验证码就取一次答案重试
+      if (body.code === CAPTCHA_ERROR) {
+        const capRes = await ctx.get('/api/v1/auth/captcha');
+        const capBody = await capRes.json();
+        const uuid = capBody?.data?.uuid;
+        if (!uuid) {
+          throw new Error(`获取验证码失败: ${JSON.stringify(capBody)}`);
+        }
+        const captcha = readCaptchaAnswer(uuid);
+        if (!captcha) {
+          throw new Error(
+            `未能从 Redis 读到验证码答案（key=captcha:${uuid}）。\n` +
+              '确认 redis-cli 可用且连的是后端所用的那个 Redis；' +
+              '或把后端以 -Dprecision.captcha.enabled=false 启动。',
+          );
+        }
+        res = await ctx.post('/api/v1/auth/login', {
+          data: { username, password, uuid, captcha },
+        });
+        body = await res.json();
+      }
+
       if (body.code !== 0 || !body.data?.token) {
         throw new Error(
           `预登录失败 ${username}: HTTP ${res.status()} ${JSON.stringify(body)}\n` +
