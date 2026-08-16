@@ -4,6 +4,7 @@ import { DownloadOutlined, EyeOutlined, ReloadOutlined } from '@ant-design/icons
 import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
+import UserTableSelect from '../../components/common/UserTableSelect';
 import { logApi } from '../../services/logApi';
 import type { LoginLogListVO, LoginLogDetailVO } from '../../services/logApi';
 
@@ -83,7 +84,7 @@ export default function LoginLogPage() {
         rowKey="id"
         scroll={{ x: 1200 }}
         querySchema={[
-          { name: 'username', label: '用户名' },
+          { name: 'username', label: '用户名', type: 'node', node: <UserTableSelect /> },
           {
             name: 'status', label: '状态', type: 'select',
             options: [{ label: '成功', value: 1 }, { label: '失败', value: 0 }],

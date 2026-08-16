@@ -4,6 +4,8 @@ import { DownloadOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons
 import { useQueryClient } from '@tanstack/react-query';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
+import UserTableSelect from '../../components/common/UserTableSelect';
+import MenuTableSelect from '../../components/common/MenuTableSelect';
 import { logApi } from '../../services/logApi';
 import type { OperLogListVO, OperLogDetailVO } from '../../services/logApi';
 
@@ -49,7 +51,8 @@ export default function OperLogPage() {
   };
 
   const columns: ColumnsType<OperLogListVO> = [
-    { title: '日志编号', dataIndex: 'id', key: 'id', width: 100 },
+    // 雪花 ID 是 18 位数字，width 100 装不下必然折行
+    { title: '日志编号', dataIndex: 'id', key: 'id', width: 190 },
     { title: '操作用户', dataIndex: 'operator', key: 'operator', width: 120 },
     { title: '操作模块', dataIndex: 'module', key: 'module', width: 120 },
     { title: '动作', dataIndex: 'type', key: 'type', width: 100 },
@@ -80,10 +83,10 @@ export default function OperLogPage() {
         queryKey={['oper-logs']}
         columns={columns}
         rowKey="id"
-        scroll={{ x: 1100 }}
+        scroll={{ x: 1300 }}
         querySchema={[
-          { name: 'operator', label: '操作用户' },
-          { name: 'module', label: '模块' },
+          { name: 'operator', label: '操作用户', type: 'node', node: <UserTableSelect /> },
+          { name: 'module', label: '模块', type: 'node', node: <MenuTableSelect /> },
           {
             name: 'status', label: '结果', type: 'select',
             options: [{ label: '成功', value: 1 }, { label: '失败', value: 0 }],

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Input, Popover, Table, theme } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { SearchOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { usePagedList } from '../../hooks/usePagedList';
 import type { ApiResult, PageResult, PageQuery } from '../../types/api';
 import type { TableProps } from 'antd';
@@ -16,8 +16,8 @@ export interface PageSelectProps<T> {
   labelField: keyof T;
   /** 受控值：整条记录（value=record 设计） */
   value?: T | null;
-  /** 选中回调，返回整条记录 */
-  onChange: (record: T) => void;
+  /** 选中回调，返回整条记录；allowClear 时清空会回调 null */
+  onChange: (record: T | null) => void;
   placeholder?: string;
   /** 远程搜索字段（作为 key 传给 service） */
   searchField?: keyof T;
@@ -25,19 +25,30 @@ export interface PageSelectProps<T> {
   pageSize?: number;
   /** 弹层宽度（默认 480） */
   popoverWidth?: number;
+  /**
+   * 显示清除按钮（查询条件场景必开：选错了要能清掉，否则该条件无法取消）。
+   * 清空时 onChange(null)。
+   */
+  allowClear?: boolean;
+  /**
+   * react-query 缓存键后缀。同一页面放多个 PageSelect 时必须传不同值，
+   * 否则它们共用 ['pageSelect', rowKey] 前缀，rowKey 又常常都是 'id'，容易互相串数据。
+   */
+  cacheKey?: string;
 }
 
 function PageSelectInner<T>(props: PageSelectProps<T>) {
   const {
     service, columns, rowKey, labelField, value, onChange,
     placeholder = '请选择', searchField, pageSize = 5, popoverWidth = 480,
+    allowClear = false, cacheKey,
   } = props;
   const { token } = theme.useToken();
   const [open, setOpen] = useState(false);
   const [keyword, setKeyword] = useState('');
   const list = usePagedList<T>({
     service,
-    queryKey: ['pageSelect', rowKey],
+    queryKey: ['pageSelect', cacheKey ?? rowKey],
     pageSize,
     extraParams: searchField ? { [searchField]: keyword } : {},
   });
@@ -92,7 +103,26 @@ function PageSelectInner<T>(props: PageSelectProps<T>) {
         value={displayLabel}
         placeholder={placeholder}
         readOnly
-        suffix={<SearchOutlined style={{ color: token.colorTextPlaceholder }} />}
+        /*
+         * 不能用 Input 自带的 allowClear：antd 对 readOnly/disabled 的输入框会
+         * 给清除按钮加上 ant-input-clear-icon-hidden，永远点不到。
+         * 这里自己在 suffix 里放清除图标，有值时才出现。
+         */
+        suffix={
+          allowClear && displayLabel ? (
+            <CloseCircleFilled
+              className="ps-page-select-clear"
+              style={{ color: token.colorTextPlaceholder, cursor: 'pointer' }}
+              onClick={(e) => {
+                e.stopPropagation();   // 否则会顺带把弹层打开
+                onChange(null);
+                setOpen(false);
+              }}
+            />
+          ) : (
+            <SearchOutlined style={{ color: token.colorTextPlaceholder }} />
+          )
+        }
         style={{ cursor: 'pointer' }}
         onClick={() => setOpen(true)}
       />

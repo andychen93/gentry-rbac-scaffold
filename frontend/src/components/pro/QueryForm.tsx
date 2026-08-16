@@ -6,10 +6,19 @@ import DictSelect from '../common/DictSelect';
 export type QueryField = {
   name: string;
   label: string;
-  type?: 'input' | 'select' | 'dict' | 'dateRange';
+  type?: 'input' | 'select' | 'dict' | 'dateRange' | 'node';
   options?: { label: string; value: string | number }[];
   dictType?: string;
   placeholder?: string;
+  /**
+   * type='node' 时渲染的自定义控件，用于「下拉 table」这类内置类型覆盖不到的筛选。
+   *
+   * 该元素会被 Form.Item 克隆并注入 value/onChange，所以它必须是**受控组件**：
+   * 接受 value、变更时调 onChange，且值应是可直接进查询参数的标量
+   * （别把整条记录塞进去，那会被当成查询参数序列化）。
+   * 现成的：components/common/UserTableSelect、MenuTableSelect。
+   */
+  node?: React.ReactElement;
 };
 
 export interface QueryFormProps {
@@ -35,7 +44,9 @@ const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
           {fields.map((f) => (
             <Col key={f.name} xs={24} sm={12} md={8} lg={6}>
               <Form.Item name={f.name} label={f.label} style={{ marginBottom: 0 }}>
-                {f.type === 'select' ? (
+                {f.type === 'node' ? (
+                  f.node
+                ) : f.type === 'select' ? (
                   <Select placeholder={f.placeholder ?? '全部'} allowClear options={f.options} style={{ width: '100%' }} />
                 ) : f.type === 'dict' ? (
                   <DictSelect dictType={f.dictType!} placeholder={f.placeholder ?? '全部'} />
