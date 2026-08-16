@@ -123,7 +123,16 @@ export default function UserPage() {
     {
       title: '状态', dataIndex: 'status', key: 'status', width: 80,
       render: (s: number, r: UserListVO) => (
-        <StatusSwitch id={r.id} status={s} onToggle={handleStatus} />
+        <StatusSwitch
+          id={r.id}
+          status={s}
+          onToggle={handleStatus}
+          confirmText={(next) =>
+            next
+              ? `确定启用用户「${r.username}」？启用后该账号可以正常登录。`
+              : `确定停用用户「${r.username}」？停用后该账号将无法登录，已登录的会话不受影响。`
+          }
+        />
       ),
     },
     { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },

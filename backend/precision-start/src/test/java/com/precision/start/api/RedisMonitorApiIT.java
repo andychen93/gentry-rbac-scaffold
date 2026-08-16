@@ -53,7 +53,7 @@ class RedisMonitorApiIT extends BaseApiIT {
     @DisplayName("删 Key：写探针 key → DELETE /keys/{key} → 200")
     void deleteKey() throws Exception {
         redis.opsForValue().set("itest:probe:delete", "bye");
-        mockMvc.perform(authedDelete("/api/v1/monitor/redis/keys/{key}", "itest:probe:delete"))
+        mockMvc.perform(superDelete("/api/v1/monitor/redis/keys/{key}", "itest:probe:delete"))
                 .andExpect(jsonPath("$.code").value(0));
     }
 
@@ -67,7 +67,7 @@ class RedisMonitorApiIT extends BaseApiIT {
     @Test
     @DisplayName("重置慢日志：DELETE /slowlog → 200")
     void resetSlowlog() throws Exception {
-        mockMvc.perform(authedDelete("/api/v1/monitor/redis/slowlog"))
+        mockMvc.perform(superDelete("/api/v1/monitor/redis/slowlog"))
                 .andExpect(jsonPath("$.code").value(0));
     }
 

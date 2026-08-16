@@ -27,9 +27,9 @@ class TenantApiIT extends BaseApiIT {
     }
 
     @Test
-    @DisplayName("分页列表：admin → 200 + 非空")
+    @DisplayName("分页列表：SUPER_ADMIN → 200 + 非空")
     void list() throws Exception {
-        mockMvc.perform(authedGet("/api/v1/tenants?pageNum=1&pageSize=10"))
+        mockMvc.perform(superGet("/api/v1/tenants?pageNum=1&pageSize=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.list").isArray());
@@ -38,7 +38,7 @@ class TenantApiIT extends BaseApiIT {
     @Test
     @DisplayName("详情：GET /tenants/1 → default 租户")
     void detail() throws Exception {
-        mockMvc.perform(authedGet("/api/v1/tenants/{id}", DEFAULT_TENANT_ID))
+        mockMvc.perform(superGet("/api/v1/tenants/{id}", DEFAULT_TENANT_ID))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.data.code").value("default"));
     }
@@ -55,22 +55,22 @@ class TenantApiIT extends BaseApiIT {
     @Test
     @DisplayName("完整流：新增→改→配置→状态→删除")
     void fullFlow() throws Exception {
-        MvcResult r = mockMvc.perform(authedPost("/api/v1/tenants").content(json(createBody())))
+        MvcResult r = mockMvc.perform(superPost("/api/v1/tenants").content(json(createBody())))
                 .andExpect(jsonPath("$.code").value(0))
                 .andExpect(jsonPath("$.data.tenantId").exists())
                 .andReturn();
         long id = parse(r).at("/data/tenantId").asLong();
 
-        mockMvc.perform(authedPut("/api/v1/tenants/{id}", id).content(json(Map.of("name", "IT测试租户改"))))
+        mockMvc.perform(superPut("/api/v1/tenants/{id}", id).content(json(Map.of("name", "IT测试租户改"))))
                 .andExpect(jsonPath("$.code").value(0));
 
         // 注：PUT /tenants/{id}/config 需要 system:tenant:config，种子未授予任何角色，略过其 happy-path。
-        mockMvc.perform(authedPut("/api/v1/tenants/{id}/status", id).content(json(Map.of("status", 0))))
+        mockMvc.perform(superPut("/api/v1/tenants/{id}/status", id).content(json(Map.of("status", 0))))
                 .andExpect(jsonPath("$.code").value(0));
-        mockMvc.perform(authedPut("/api/v1/tenants/{id}/status", id).content(json(Map.of("status", 1))))
+        mockMvc.perform(superPut("/api/v1/tenants/{id}/status", id).content(json(Map.of("status", 1))))
                 .andExpect(jsonPath("$.code").value(0));
 
-        mockMvc.perform(authedDelete("/api/v1/tenants/{id}", id))
+        mockMvc.perform(superDelete("/api/v1/tenants/{id}", id))
                 .andExpect(jsonPath("$.code").value(0));
     }
 
@@ -93,7 +93,7 @@ class TenantApiIT extends BaseApiIT {
     void create_missingName() throws Exception {
         Map<String, Object> bad = new HashMap<>();
         bad.put("code", "tntitbad" + SEQ.incrementAndGet());
-        mockMvc.perform(authedPost("/api/v1/tenants").content(json(bad)))
+        mockMvc.perform(superPost("/api/v1/tenants").content(json(bad)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(10002));
     }

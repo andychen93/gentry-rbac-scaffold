@@ -47,7 +47,11 @@ const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
               </Form.Item>
             </Col>
           ))}
-          <Col xs={24} sm={12} md={8}>
+          {/*
+            查询/重置固定靠右：flex="auto" 吃掉本行剩余宽度，textAlign 把按钮推到最右。
+            字段刚好占满一行时该 Col 会换行，此时 auto = 整行宽，按钮仍在右端。
+          */}
+          <Col flex="auto" style={{ textAlign: 'right' }}>
             <Space style={{ marginBottom: 0 }}>
               <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch} aria-label="查询">查询</Button>
               <Button icon={<ReloadOutlined />} onClick={handleReset} aria-label="重置">重置</Button>

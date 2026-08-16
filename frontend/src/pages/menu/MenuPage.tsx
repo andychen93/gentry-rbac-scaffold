@@ -263,7 +263,8 @@ export default function MenuPage() {
                 </Select>
               </Form.Item>
             </Col>
-            <Col xs={24} sm={12} md={8} lg={6}>
+            {/* 查询/重置靠右，与 ProTable 的 QueryForm 保持一致 */}
+            <Col flex="auto" style={{ textAlign: 'right' }}>
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space>
                   <Button type="primary" onClick={handleSearch}>查询</Button>

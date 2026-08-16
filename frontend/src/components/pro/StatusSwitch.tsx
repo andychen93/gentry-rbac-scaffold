@@ -1,19 +1,45 @@
 import React from 'react';
-import { Switch } from 'antd';
+import { Modal, Switch } from 'antd';
 
 export interface StatusSwitchProps {
   id: string | number;
   status: number;              // 1=启用 0=停用
   onToggle: (id: string | number, checked: boolean) => Promise<void> | void;
   disabled?: boolean;
+  /**
+   * 传了就在切换前弹二次确认，不传则点击直接生效（保持原行为）。
+   * 入参是「即将切换到的状态」，方便启用/停用给出不同文案。
+   */
+  confirmText?: (nextEnabled: boolean) => string;
 }
 
-const StatusSwitch: React.FC<StatusSwitchProps> = ({ status, id, onToggle, disabled }) => {
+const StatusSwitch: React.FC<StatusSwitchProps> = ({ status, id, onToggle, disabled, confirmText }) => {
   const [loading, setLoading] = React.useState(false);
-  const handleChange = async (checked: boolean) => {
+
+  const run = async (checked: boolean) => {
     setLoading(true);
     try { await onToggle(id, checked); } finally { setLoading(false); }
   };
+
+  const handleChange = async (checked: boolean) => {
+    if (!confirmText) {
+      await run(checked);
+      return;
+    }
+    /*
+     * Switch 是受控的（checked 由 status 决定），所以用户点「取消」时开关不会自己动，
+     * 不需要手动回滚 UI。onOk 返回 Promise 让弹窗按钮显示 loading 并等请求结束再关。
+     */
+    Modal.confirm({
+      title: checked ? '启用确认' : '停用确认',
+      content: confirmText(checked),
+      okText: '确定',
+      cancelText: '取消',
+      okButtonProps: { danger: !checked },
+      onOk: () => run(checked),
+    });
+  };
+
   return <Switch checked={status === 1} onChange={handleChange} loading={loading} disabled={disabled} size="small" />;
 };
 export default StatusSwitch;
