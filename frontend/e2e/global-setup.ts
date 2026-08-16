@@ -32,8 +32,44 @@ const CAPTCHA_ERROR = 20020;
  * 验证码答案只存在 Redis（key = `captcha:{uuid}`，见 CaptchaServiceImpl），
  * 接口只返回图片，所以测试环境直接用 redis-cli 读。仅测试用途。
  */
-function readCaptchaAnswer(uuid: string): string {
+export function readCaptchaAnswer(uuid: string): string {
   return execFileSync('redis-cli', ['get', `captcha:${uuid}`], { encoding: 'utf-8' }).trim();
+}
+
+/**
+ * ADMIN 按设计不该有的权限（租户管理属 SUPER_ADMIN；Redis 删除/清慢日志见 V3/V4 迁移）。
+ * 多个用例（08 T-003、09 MON-REDIS-004/006、10 H-002）都建立在这个前提上。
+ */
+const ADMIN_FORBIDDEN = [
+  'system:tenant:list',
+  'system:tenant:config',
+  'monitor:redis:key:delete',
+  'monitor:redis:slowlog:reset',
+];
+
+/**
+ * 前置校验：ADMIN 的权限没被改坏。
+ *
+ * 在「角色管理→权限」页面给 ADMIN 保存一次全选，就会让它拿到租户等越权权限，
+ * 进而让上述用例莫名失败。这里提前拦住并给出可执行的修复指引，
+ * 而不是让人去追 4 个看不懂的断言错误。
+ */
+async function assertAdminBaseline(
+  ctx: Awaited<ReturnType<typeof request.newContext>>,
+  adminToken: string,
+) {
+  const res = await ctx.get('/api/v1/auth/user-info', {
+    headers: { Authorization: `Bearer ${adminToken}` },
+  });
+  const perms: string[] = (await res.json())?.data?.permissions ?? [];
+  const leaked = ADMIN_FORBIDDEN.filter((p) => perms.includes(p));
+  if (leaked.length > 0) {
+    throw new Error(
+      `ADMIN 权限已被改坏，越权持有：${leaked.join(', ')}\n` +
+        '多半是在「角色管理→权限」里给 ADMIN 保存过全选。\n' +
+        '修复：bash scripts/db_reset.sh 重建库（Flyway 会按迁移重新灌种子数据），然后重启后端。',
+    );
+  }
 }
 
 export default async function globalSetup() {
@@ -76,6 +112,8 @@ export default async function globalSetup() {
       }
       tokens[username] = body.data.token;
     }
+
+    await assertAdminBaseline(ctx, tokens['admin']);
   } finally {
     await ctx.dispose();
   }

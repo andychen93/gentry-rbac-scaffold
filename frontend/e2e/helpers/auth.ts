@@ -1,23 +1,89 @@
 import { expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import fs from 'node:fs';
-import { TOKENS_FILE } from '../global-setup';
+import { TOKENS_FILE, readCaptchaAnswer } from '../global-setup';
 
 const TOKEN_KEY = 'precision_token';
 
 /**
- * 走真实 UI 表单登录。
+ * 打开登录页，并在开启了验证码时取回正确答案。
+ *
+ * 验证码 uuid 只存在页面的 React state 里（DOM 读不到），所以拦截页面自己发的
+ * /auth/captcha 响应拿 uuid，再从 Redis 读答案。关闭验证码时返回 null。
+ */
+export async function gotoLoginAndGetCaptcha(page: Page): Promise<string | null> {
+  /*
+   * 收集本次导航期间所有验证码响应，取「最后一个」。
+   *
+   * main.tsx 开了 React.StrictMode，开发模式下 effect 会双调用，
+   * refreshCaptcha() 因此触发两次、产生两个 uuid；页面 state 里留下的是最后那个。
+   * 只抓第一个响应就会拿到已被覆盖的 uuid，答案对不上 → 登录失败且验证码框被清空。
+   */
+  const uuids: string[] = [];
+  page.on('response', async (r) => {
+    if (!r.url().includes('/api/v1/auth/captcha') || r.request().method() !== 'GET') return;
+    try {
+      const u = (await r.json())?.data?.uuid;
+      if (u) uuids.push(u);
+    } catch {
+      /* 非 JSON 响应忽略 */
+    }
+  });
+
+  await page.goto('/login');
+  await page.waitForLoadState('networkidle');
+
+  // 后端关掉验证码时前端不渲染这个输入框
+  if ((await page.locator('#defaultLogin_captcha').count()) === 0) return null;
+
+  // 等到至少有一次验证码响应被记录（StrictMode 下通常是两次）
+  await expect.poll(() => uuids.length, { timeout: 10000 }).toBeGreaterThan(0);
+  const uuid = uuids[uuids.length - 1];
+  if (!uuid) throw new Error('验证码接口未返回 uuid，无法完成 UI 登录');
+
+  const answer = readCaptchaAnswer(uuid);
+  // 不静默跳过：取不到答案就必然登录失败，直接报清楚原因，
+  // 否则表现为「验证码框空着、登录卡住」，很难查
+  if (!answer) {
+    throw new Error(
+      `未能从 Redis 读到验证码答案（key=captcha:${uuid}）。\n` +
+        '确认 redis-cli 可用、且连的是后端所用的那个 Redis。',
+    );
+  }
+  return answer;
+}
+
+/**
+ * 走真实 UI 表单登录（含验证码）。
  * 只在 01-login.spec.ts 里用 —— 登录接口有 IP 限流（10 次/60 秒），
  * 其他用例请用 `login()`（复用 global-setup 预登录的 Token）。
  */
 export async function loginViaUi(page: Page, username = 'admin', password = 'Abc@123456') {
-  await page.goto('/login');
-  await page.waitForLoadState('networkidle');
+  const captcha = await gotoLoginAndGetCaptcha(page);
 
   // Ant Design Form 的 input 通过 id 定位：#defaultLogin_username, #defaultLogin_password
   await page.locator('#defaultLogin_username').fill(username);
   await page.locator('#defaultLogin_password').fill(password);
+  if (captcha) await page.locator('#defaultLogin_captcha').fill(captcha);
+
+  // 先挂上响应等待再点击，否则快响应会在 await 之前就到达
+  const loginResp = page.waitForResponse(
+    (r) => r.url().includes('/api/v1/auth/login') && r.request().method() === 'POST',
+    { timeout: 15000 },
+  );
   await page.locator('button[type="submit"]').first().click();
+
+  // 断言业务码而不是直接等跳转：登录被拒时（验证码过期 20020、限流 40001、
+  // 账号锁定…）页面就是停在 /login，只等 URL 的话只能拿到一句 15s 超时，
+  // 查不出到底是哪一种。
+  const body = await (await loginResp).json().catch(() => null);
+  if (!body || body.code !== 0) {
+    throw new Error(
+      `UI 登录被拒（${username}）：${JSON.stringify(body)}\n` +
+        'code 20020=验证码错误/过期，40001=登录接口 IP 限流（10 次/60 秒），' +
+        '20014=账号锁定（redis-cli del "login_fail:'.concat(username, '" 解锁）'),
+    );
+  }
 
   // 登录成功后跳到 '/'，由 App.tsx 依据动态菜单重定向到第一条路由
   await page.waitForURL(/\/(home|system|monitor|monitor-center)/, { timeout: 15000 });
