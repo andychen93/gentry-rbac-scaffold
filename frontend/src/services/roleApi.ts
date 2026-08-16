@@ -81,6 +81,11 @@ export interface RoleStatusDTO {
   status: number;
 }
 
+export interface RoleUserAssignDTO {
+  // 雪花 ID：运行时是字符串，别 map(Number)
+  userIds: (number | string)[];
+}
+
 // ========== 分页结果 ==========
 
 interface PageResult<T> {
@@ -129,4 +134,12 @@ export const roleApi = {
   /** 角色下拉选项（启用角色，供用户分配等场景） */
   options: () =>
     request.get<any, { code: number; data: { id: number; roleCode: string; roleName: string }[] }>('/api/v1/roles/options'),
+
+  /** ROLE-008 查看角色已绑定的用户 ID（返回字符串形态的雪花 ID） */
+  listUserIds: (id: number | string) =>
+    request.get<any, { code: number; data: (number | string)[] }>(`/api/v1/roles/${id}/users`),
+
+  /** ROLE-011 绑定用户（全量覆盖） */
+  assignUsers: (id: number | string, data: RoleUserAssignDTO) =>
+    request.put(`/api/v1/roles/${id}/users`, data),
 };

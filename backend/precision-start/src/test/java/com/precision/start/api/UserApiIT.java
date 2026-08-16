@@ -18,6 +18,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("用户管理 API - /api/v1/users")
 class UserApiIT extends BaseApiIT {
 
+    /** 直连库造/验脏数据用（测试带 @Transactional，用完自动回滚） */
+    @org.springframework.beans.factory.annotation.Autowired
+    private org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+
     private static final long ADMIN_USER_ID = 2L;
     private static final long ADMIN_ROLE_ID = 1L;
     private static final AtomicInteger SEQ = new AtomicInteger();
@@ -78,6 +82,71 @@ class UserApiIT extends BaseApiIT {
 
         mockMvc.perform(authedDelete("/api/v1/users/{id}", id))
                 .andExpect(jsonPath("$.code").value(0));
+    }
+
+    @Test
+    @DisplayName("用户选项：GET /users/options → 200 + 数组")
+    void options() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/users/options"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").isArray())
+                .andExpect(jsonPath("$.data[0].username").exists());
+    }
+
+    @Test
+    @DisplayName("详情：roleIds 过滤掉指向已删除/不存在角色的脏关联")
+    void detail_filtersOrphanRoleIds() throws Exception {
+        /*
+         * 回归：sys_user_role 里若残留指向不存在角色的行（历史上「编辑用户」不校验
+         * roleIds 就会写进来），detail 直读关联表会把它返回给前端；
+         * 「分配角色」弹窗以此初始化选中项，而候选列表不含该角色 →
+         * 这个 id 界面上看不见却会被提交，报「角色不存在: [xxx]」且用户无法自救。
+         */
+        long orphanRoleId = 999999999999L;
+        long orphanRowId = 987654321L;
+        try {
+            jdbcTemplate.update(
+                    "INSERT INTO sys_user_role (id, tenant_id, user_id, role_id, create_time) "
+                            + "VALUES (?, 1, ?, ?, CURRENT_TIMESTAMP)",
+                    orphanRowId, ADMIN_USER_ID, orphanRoleId);
+
+            // 脏行确实在库里
+            Integer raw = jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM sys_user_role WHERE user_id = ? AND role_id = ?",
+                    Integer.class, ADMIN_USER_ID, orphanRoleId);
+            org.assertj.core.api.Assertions.assertThat(raw).isEqualTo(1);
+
+            // 但接口不该把它吐出来
+            mockMvc.perform(authedGet("/api/v1/users/{id}", ADMIN_USER_ID))
+                    .andExpect(jsonPath("$.code").value(0))
+                    .andExpect(jsonPath("$.data.roleIds").isArray())
+                    .andExpect(jsonPath("$.data.roleIds[?(@ == '" + orphanRoleId + "')]").doesNotExist());
+        } finally {
+            // 显式清理：不能只依赖 @Transactional 回滚 —— 实测这条脏行会残留到库里，
+            // 留下去会让「孤儿关联」检查永远非零，掩盖真实问题
+            jdbcTemplate.update("DELETE FROM sys_user_role WHERE id = ?", orphanRowId);
+        }
+    }
+
+    @Test
+    @DisplayName("编辑用户：roleIds 含不存在角色 → 200 + ROLE_NOT_FOUND(20015)，且不落脏数据")
+    void update_rejectsUnknownRoleIds() throws Exception {
+        // create/assignRoles 一直有校验，update 漏了 —— 脏关联就是从这个口子进来的
+        Map<String, Object> body = new HashMap<>();
+        body.put("nickname", "IT用户改");
+        body.put("deptId", 100);
+        body.put("status", 1);
+        body.put("roleIds", java.util.List.of(999999999999L));
+
+        mockMvc.perform(authedPut("/api/v1/users/{id}", ADMIN_USER_ID).content(json(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(20015));
+
+        Integer polluted = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sys_user_role WHERE user_id = ? AND role_id = ?",
+                Integer.class, ADMIN_USER_ID, 999999999999L);
+        org.assertj.core.api.Assertions.assertThat(polluted).isZero();
     }
 
     @Test

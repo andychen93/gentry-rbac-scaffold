@@ -38,6 +38,11 @@ public interface RoleService {
     List<Long> listUserIdsByRoleId(Long roleId);
 
     /**
+     * 绑定用户（全量覆盖：先解除该角色全部关联，再按 userIds 重建）
+     */
+    void assignUsers(Long roleId, RoleUserAssignDTO dto);
+
+    /**
      * 当前租户内启用角色的下拉选项
      */
     List<RoleOptionVO> listOptions();

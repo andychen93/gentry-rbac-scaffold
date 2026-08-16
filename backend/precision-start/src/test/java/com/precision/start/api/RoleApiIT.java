@@ -104,6 +104,70 @@ class RoleApiIT extends BaseApiIT {
     }
 
     @Test
+    @DisplayName("绑定用户：绑定→查回→全量覆盖→解绑全部")
+    void assignUsers_fullFlow() throws Exception {
+        MvcResult r = mockMvc.perform(authedPost("/api/v1/roles").content(json(createBody())))
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        long roleId = parse(r).at("/data/id").asLong();
+
+        // 绑定 admin(2) + zhangsan(3)
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", roleId)
+                        .content(json(Map.of("userIds", List.of(2, 3)))))
+                .andExpect(jsonPath("$.code").value(0));
+        mockMvc.perform(authedGet("/api/v1/roles/{id}/users", roleId))
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.length()").value(2));
+
+        // 全量覆盖：只留 zhangsan
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", roleId)
+                        .content(json(Map.of("userIds", List.of(3)))))
+                .andExpect(jsonPath("$.code").value(0));
+        mockMvc.perform(authedGet("/api/v1/roles/{id}/users", roleId))
+                .andExpect(jsonPath("$.data.length()").value(1))
+                .andExpect(jsonPath("$.data[0]").value("3"));
+
+        // 空数组 = 解绑全部
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", roleId)
+                        .content(json(Map.of("userIds", List.of()))))
+                .andExpect(jsonPath("$.code").value(0));
+        mockMvc.perform(authedGet("/api/v1/roles/{id}/users", roleId))
+                .andExpect(jsonPath("$.data.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("绑定用户：userId 不存在 → 200 + USER_NOT_FOUND(20013)")
+    void assignUsers_unknownUser() throws Exception {
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", ADMIN_ROLE_ID)
+                        .content(json(Map.of("userIds", List.of(999999999999L)))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(20013));
+    }
+
+    @Test
+    @DisplayName("绑定用户：userIds 重复 → 去重，不触发唯一约束")
+    void assignUsers_duplicateIds() throws Exception {
+        MvcResult r = mockMvc.perform(authedPost("/api/v1/roles").content(json(createBody())))
+                .andReturn();
+        long roleId = parse(r).at("/data/id").asLong();
+
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", roleId)
+                        .content(json(Map.of("userIds", List.of(3, 3, 3)))))
+                .andExpect(jsonPath("$.code").value(0));
+        mockMvc.perform(authedGet("/api/v1/roles/{id}/users", roleId))
+                .andExpect(jsonPath("$.data.length()").value(1));
+    }
+
+    @Test
+    @DisplayName("绑定用户：userIds 为 null → 200 + PARAM_ERROR(10002)")
+    void assignUsers_nullUserIds() throws Exception {
+        mockMvc.perform(authedPut("/api/v1/roles/{id}/users", ADMIN_ROLE_ID)
+                        .content(json(new HashMap<String, Object>())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(10002));
+    }
+
+    @Test
     @DisplayName("下拉选项：GET /roles/options → 200 + 启用角色数组")
     void options() throws Exception {
         mockMvc.perform(authedGet("/api/v1/roles/options"))

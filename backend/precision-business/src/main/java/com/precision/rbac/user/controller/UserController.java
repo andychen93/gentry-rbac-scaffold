@@ -1,6 +1,7 @@
 package com.precision.rbac.user.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import cn.dev33.satoken.annotation.SaMode;
 import com.precision.core.common.PageResult;
 import com.precision.core.common.R;
 import com.precision.core.web.RepeatSubmit;
@@ -10,12 +11,14 @@ import com.precision.rbac.user.service.UserService;
 import com.precision.rbac.user.vo.UserDetailVO;
 import com.precision.rbac.user.vo.UserImportResultVO;
 import com.precision.rbac.user.vo.UserListVO;
+import com.precision.rbac.user.vo.UserOptionVO;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -32,6 +35,19 @@ public class UserController {
     @SaCheckPermission("system:user:list")
     public R<PageResult<UserListVO>> list(@Valid UserQueryDTO query) {
         return R.ok(userService.list(query));
+    }
+
+    /**
+     * USER-014 用户下拉选项（租户内启用用户）。
+     *
+     * <p>供「角色管理 → 绑定用户」穿梭框取候选，与 {@code GET /roles/options} 对称。
+     * 用 {@code system:role:assignUser} 或 {@code system:user:list} 任一即可访问：
+     * 只有绑定用户权限的角色管理员也要能拉到候选列表。</p>
+     */
+    @GetMapping("/options")
+    @SaCheckPermission(value = {"system:user:list", "system:role:assignUser"}, mode = SaMode.OR)
+    public R<List<UserOptionVO>> options() {
+        return R.ok(userService.listOptions());
     }
 
     /** USER-002 用户详情 */

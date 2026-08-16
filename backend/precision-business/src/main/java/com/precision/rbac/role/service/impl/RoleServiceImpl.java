@@ -18,6 +18,8 @@ import com.precision.rbac.role.vo.RoleDetailVO;
 import com.precision.rbac.role.vo.RoleListVO;
 import com.precision.rbac.role.vo.RoleOptionVO;
 import com.precision.rbac.role.vo.RoleVO;
+import com.precision.rbac.user.entity.UserRole;
+import com.precision.rbac.user.mapper.UserMapper;
 import com.precision.rbac.user.mapper.UserRoleMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,17 +44,20 @@ public class RoleServiceImpl implements RoleService {
     private final RoleDeptMapper roleDeptMapper;
     private final com.precision.rbac.dept.mapper.DeptMapper deptMapper;
     private final UserRoleMapper userRoleMapper;
+    private final UserMapper userMapper;
 
     public RoleServiceImpl(RoleMapper roleMapper,
                            RoleMenuMapper roleMenuMapper,
                            RoleDeptMapper roleDeptMapper,
                            com.precision.rbac.dept.mapper.DeptMapper deptMapper,
-                           UserRoleMapper userRoleMapper) {
+                           UserRoleMapper userRoleMapper,
+                           UserMapper userMapper) {
         this.roleMapper = roleMapper;
         this.roleMenuMapper = roleMenuMapper;
         this.roleDeptMapper = roleDeptMapper;
         this.deptMapper = deptMapper;
         this.userRoleMapper = userRoleMapper;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -257,6 +262,45 @@ public class RoleServiceImpl implements RoleService {
     public List<Long> listUserIdsByRoleId(Long roleId) {
         getExistingRole(roleId);
         return userRoleMapper.selectUserIdsByRoleId(roleId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void assignUsers(Long roleId, RoleUserAssignDTO dto) {
+        Role role = getExistingRole(roleId);
+        List<Long> userIds = dto.getUserIds() == null ? List.of() : dto.getUserIds();
+
+        // 去重：前端穿梭框理论上不会给重复值，但 userIds 直接进唯一约束，
+        // 重复会整批插入失败，在这里挡掉比让用户看数据库报错友好
+        List<Long> distinctIds = userIds.stream().distinct().collect(Collectors.toList());
+
+        // 校验用户存在且属于本租户 —— 与 UserServiceImpl.validateRoleIds 同理：
+        // 不校验就会把不存在的 userId 写进 sys_user_role 变成脏关联，
+        // 之后每次打开绑定弹窗都带着一个界面上看不见、又提交必失败的 id
+        if (!distinctIds.isEmpty()) {
+            Long tenantId = UserContext.getTenantId();
+            int existing = userMapper.countExistingByIds(tenantId, distinctIds);
+            if (existing != distinctIds.size()) {
+                throw new BizException(ErrorCode.USER_NOT_FOUND,
+                        "存在无效用户，或用户不属于当前租户");
+            }
+        }
+
+        // 全量覆盖：先解除该角色的所有关联，再按本次列表重建
+        userRoleMapper.deleteByRoleId(roleId);
+        if (!distinctIds.isEmpty()) {
+            Long tenantId = UserContext.getTenantId();
+            List<UserRole> rows = distinctIds.stream().map(uid -> {
+                UserRole ur = new UserRole(uid, roleId);
+                ur.setId(IdGenerator.nextId());
+                ur.setTenantId(tenantId);
+                return ur;
+            }).collect(Collectors.toList());
+            userRoleMapper.batchInsert(rows);
+        }
+
+        log.info("Assigned users to role: roleId={}, code={}, userCount={}",
+                roleId, role.getRoleCode(), distinctIds.size());
     }
 
     // ========== 私有方法 ==========

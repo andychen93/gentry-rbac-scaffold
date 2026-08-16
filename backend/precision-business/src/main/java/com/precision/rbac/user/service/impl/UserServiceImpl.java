@@ -145,6 +145,12 @@ public class UserServiceImpl implements UserService {
 
         // 更新角色（先删后插）
         if (dto.getRoleIds() != null) {
+            // 必须校验：create 与 assignRoles 都校验了，这里漏掉会把不存在的 roleId
+            // 直接写进 sys_user_role 变成脏关联（历史上就是这么进来的），
+            // 之后该用户每次「分配角色」都会被 validateRoleIds 拦下且无法自愈
+            if (!dto.getRoleIds().isEmpty()) {
+                validateRoleIds(dto.getRoleIds());
+            }
             userRoleMapper.deleteByUserId(id);
             if (!dto.getRoleIds().isEmpty()) {
                 batchInsertUserRoles(id, dto.getRoleIds());
@@ -330,6 +336,11 @@ public class UserServiceImpl implements UserService {
             return ur;
         }).collect(Collectors.toList());
         userRoleMapper.batchInsert(userRoles);
+    }
+
+    @Override
+    public List<UserOptionVO> listOptions() {
+        return userMapper.selectOptions(UserContext.getTenantId());
     }
 
     private void validateRoleIds(List<Long> roleIds) {

@@ -47,6 +47,51 @@ test.describe.serial('角色管理 CRUD', () => {
     await page.waitForTimeout(1000);
   });
 
+  test('R-007 绑定用户（穿梭框）', async () => {
+    const row = page.locator('.ant-table-row').filter({ hasText: 'TESTROLE' + TS });
+    await row.getByLabel('绑定用户').click();
+
+    const modal = page.locator('.ant-modal');
+    await expect(modal).toBeVisible({ timeout: 3000 });
+    await expect(modal.getByText('可选用户')).toBeVisible();
+    await expect(modal.getByText('已绑定用户')).toBeVisible();
+
+    // 新角色还没绑人，右侧应为空
+    const left = modal.locator('.ant-transfer-list').first();
+    const right = modal.locator('.ant-transfer-list').last();
+    await expect(right.locator('.ant-transfer-list-content-item')).toHaveCount(0);
+    await expect(left.locator('.ant-transfer-list-content-item').first()).toBeVisible({ timeout: 5000 });
+
+    // 勾选左侧第一个用户 → 移到右侧
+    await left.locator('.ant-transfer-list-content-item').first().click();
+    await modal.locator('.ant-transfer-operation button').first().click();
+    await expect(right.locator('.ant-transfer-list-content-item')).toHaveCount(1);
+
+    await modal.getByRole('button', { name: /确\s*定/ }).click();
+    await expect(page.locator('.ant-message').getByText('绑定用户成功')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(800);
+  });
+
+  test('R-007 重开弹窗能回显已绑定用户', async () => {
+    const row = page.locator('.ant-table-row').filter({ hasText: 'TESTROLE' + TS });
+    await row.getByLabel('绑定用户').click();
+
+    const modal = page.locator('.ant-modal');
+    await expect(modal).toBeVisible({ timeout: 3000 });
+    // 已绑定的那个人应出现在右侧（验证 GET /roles/{id}/users 回显链路）
+    const right = modal.locator('.ant-transfer-list').last();
+    await expect(right.locator('.ant-transfer-list-content-item')).toHaveCount(1, { timeout: 5000 });
+
+    // 移回左侧 → 解绑（否则角色下有用户，R-006 删除会被 ROLE_IN_USE 拦住）
+    await right.locator('.ant-transfer-list-content-item').first().click();
+    await modal.locator('.ant-transfer-operation button').last().click();
+    await expect(right.locator('.ant-transfer-list-content-item')).toHaveCount(0);
+
+    await modal.getByRole('button', { name: /确\s*定/ }).click();
+    await expect(page.locator('.ant-message').getByText('绑定用户成功')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(800);
+  });
+
   test('R-006 删除角色', async () => {
     const row = page.locator('.ant-table-row').filter({ hasText: 'TESTROLE' + TS });
     if (await row.isVisible({ timeout: 3000 }).catch(() => false)) {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button, Tag, message } from 'antd';
-import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
@@ -9,6 +9,7 @@ import { roleApi } from '../../services/roleApi';
 import type { RoleListVO } from '../../services/roleApi';
 import { useUserStore } from '../../stores/userStore';
 import RoleFormModal from './RoleFormModal';
+import UserAssignModal from './UserAssignModal';
 
 const DATA_SCOPE_MAP: Record<number, string> = {
   1: '全部数据',
@@ -24,6 +25,8 @@ export default function RolePage() {
   const qc = useQueryClient();
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [userModalOpen, setUserModalOpen] = useState(false);
+  const [userModalRole, setUserModalRole] = useState<RoleListVO | null>(null);
   const refresh = () => qc.invalidateQueries({ queryKey: ['roles'] });
 
   const handleStatus = async (id: string | number, checked: boolean) => {
@@ -62,7 +65,7 @@ export default function RolePage() {
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 110, fixed: 'right',
+      title: '操作', key: 'action', width: 140, fixed: 'right',
       render: (_: unknown, r: RoleListVO) => (
         <RowActions items={[
           {
@@ -72,6 +75,11 @@ export default function RolePage() {
           {
             key: 'perm', label: '权限', icon: <SafetyOutlined />, perm: 'system:role:assignMenu',
             onClick: () => navigate(`/system/roles/${r.id}/permissions`),
+          },
+          {
+            key: 'users', label: '绑定用户', icon: <UserSwitchOutlined />,
+            perm: 'system:role:assignUser',
+            onClick: () => { setUserModalRole(r); setUserModalOpen(true); },
           },
           {
             key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:role:remove',
@@ -121,6 +129,16 @@ export default function RolePage() {
         onSuccess={() => { setFormOpen(false); refresh(); }}
         onCancel={() => setFormOpen(false)}
       />
+      {userModalRole && (
+        <UserAssignModal
+          open={userModalOpen}
+          roleId={userModalRole.id}
+          roleName={userModalRole.roleName}
+          /* 绑定完要刷列表：「关联用户」列的 userCount 会变 */
+          onSuccess={() => { setUserModalOpen(false); refresh(); }}
+          onCancel={() => setUserModalOpen(false)}
+        />
+      )}
     </>
   );
 }

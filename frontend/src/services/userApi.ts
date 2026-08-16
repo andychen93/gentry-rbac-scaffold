@@ -170,7 +170,18 @@ export const userApi = {
   // 导入用户（Excel），返回成功/失败统计与错误明细
   importUsers: (file: File) =>
     uploadFile<UserImportResult>('/api/v1/users/import', file),
+  /** 用户下拉选项（租户内启用用户），供「角色→绑定用户」穿梭框取候选 */
+  options: () =>
+    request.get<any, { code: number; data: UserOptionVO[] }>('/api/v1/users/options'),
 };
+
+/** 用户下拉选项（id 为字符串形态的雪花 ID） */
+export interface UserOptionVO {
+  id: number | string;
+  username: string;
+  nickname: string | null;
+  deptName: string | null;
+}
 
 /** 用户导入结果 */
 export interface UserImportResult {

@@ -3,6 +3,7 @@ package com.precision.rbac.user.mapper;
 import com.mybatisflex.core.BaseMapper;
 import com.precision.rbac.user.dto.UserQueryDTO;
 import com.precision.rbac.user.entity.User;
+import com.precision.rbac.user.vo.UserOptionVO;
 import org.apache.ibatis.annotations.*;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,23 @@ public interface UserMapper extends BaseMapper<User> {
 
     @Select("SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND username = #{username} AND deleted = 0")
     int countByUsername(@Param("tenantId") Long tenantId, @Param("username") String username);
+
+    /** 租户内启用用户的下拉选项（供角色绑定用户的穿梭框） */
+    @Select("SELECT u.id, u.username, u.nickname, d.name AS deptName "
+            + "FROM sys_user u LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.deleted = 0 "
+            + "WHERE u.tenant_id = #{tenantId} AND u.status = 1 AND u.deleted = 0 "
+            + "ORDER BY u.id ASC")
+    List<UserOptionVO> selectOptions(@Param("tenantId") Long tenantId);
+
+    /**
+     * 统计给定 id 中属于本租户且未删除的用户数，用于绑定前校验。
+     * 带 tenant_id 是防越权：不能把别的租户的用户绑到本租户角色上。
+     */
+    @Select({"<script>",
+            "SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND deleted = 0 AND id IN",
+            "<foreach collection='userIds' item='uid' open='(' separator=',' close=')'>#{uid}</foreach>",
+            "</script>"})
+    int countExistingByIds(@Param("tenantId") Long tenantId, @Param("userIds") List<Long> userIds);
 
     @Select({"<script>",
         "SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND phone = #{phone} AND deleted = 0",

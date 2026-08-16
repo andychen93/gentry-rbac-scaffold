@@ -108,4 +108,13 @@ public class RoleController {
     public R<List<Long>> listUserIds(@PathVariable Long id) {
         return R.ok(roleService.listUserIdsByRoleId(id));
     }
+
+    /** API-011 绑定用户（全量覆盖） */
+    @PutMapping("/{id}/users")
+    @SaCheckPermission("system:role:assignUser")
+    @Log(module = "角色管理", type = "UPDATE", title = "绑定用户")
+    public R<Void> assignUsers(@PathVariable Long id, @Valid @RequestBody RoleUserAssignDTO dto) {
+        roleService.assignUsers(id, dto);
+        return R.ok();
+    }
 }
