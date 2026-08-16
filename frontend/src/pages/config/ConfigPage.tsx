@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Button, Modal, Form, Input, Select, Tag, message } from 'antd';
+import { Button, Modal, Form, Input, Select, Space, Tag, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
@@ -16,13 +16,44 @@ export default function ConfigPage() {
   const hasPermission = useUserStore((s) => s.hasPermission);
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
   const refresh = () => qc.invalidateQueries({ queryKey: ['configs'] });
 
-  const handleSave = async () => {
+  /**
+   * 刷新后端参数缓存。
+   *
+   * 原实现直接 `await` 后无条件弹「缓存已刷新」：请求失败时 await 抛出，
+   * 成功提示不会弹，但异常也没人接，变成 onClick 里的未处理 Promise 拒绝；
+   * 而且没有 loading，能连点触发多次请求。
+   * 顺带重拉一次列表 —— 否则点完界面毫无变化，看不出到底生效没有。
+   */
+  const handleRefreshCache = async () => {
+    setRefreshing(true);
     try {
-      const values = await form.validateFields();
+      await configApi.refreshCache();
+      message.success('缓存已刷新');
+      refresh();
+    } catch {
+      /* 错误提示由 request 拦截器统一弹 */
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleSave = async () => {
+    // 校验失败要直接返回，不能进 loading（validateFields 抛的是 errorFields 对象）
+    let values: Record<string, unknown>;
+    try {
+      values = await form.validateFields();
+    } catch {
+      return;
+    }
+
+    setSaving(true);
+    try {
       if (editingId) {
         await configApi.update(editingId, values);
         message.success('编辑成功');
@@ -32,8 +63,10 @@ export default function ConfigPage() {
       }
       setFormOpen(false);
       refresh();
-    } catch (err: any) {
-      if (err?.errorFields) return;
+    } catch {
+      /* 业务错误（如「参数键已存在」）由拦截器弹提示，弹窗保持打开让用户改 */
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -78,7 +111,9 @@ export default function ConfigPage() {
           { name: 'configName', label: '参数名称' },
         ]}
         toolbar={
-          <>
+          /* 必须用 Space 撑间距：ProTable 的 toolbar 只是塞进一个普通 div，
+             不会替你加 gap，裸 Fragment 会让两个按钮贴在一起 */
+          <Space>
             {hasPermission('system:config:add') && (
               <Button type="primary" icon={<PlusOutlined />}
                 onClick={() => { setEditingId(null); form.resetFields(); setFormOpen(true); }}>
@@ -86,19 +121,16 @@ export default function ConfigPage() {
               </Button>
             )}
             {hasPermission('system:config:refresh') && (
-              <Button icon={<ReloadOutlined />} onClick={async () => {
-                await configApi.refreshCache();
-                message.success('缓存已刷新');
-              }}>
+              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>
                 刷新缓存
               </Button>
             )}
-          </>
+          </Space>
         }
       />
 
       <Modal title={editingId ? '编辑参数' : '新增参数'} open={formOpen} onOk={handleSave}
-        onCancel={() => setFormOpen(false)} confirmLoading={false} width={560}>
+        onCancel={() => setFormOpen(false)} confirmLoading={saving} width={560}>
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
           <Form.Item name="configName" label="参数名称" rules={[{ max: 100, message: '最长100字符' }]}>
             <Input placeholder="如：登录失败最大次数" />
