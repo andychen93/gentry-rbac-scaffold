@@ -72,7 +72,7 @@ interface Props {
  * 注意二者是「约定对齐」而不是外键，个别模块名（如「日志管理」）在菜单表里
  * 没有完全同名的行，反之菜单里也有从未产生日志的项 —— 选中后查不到结果是正常的。
  */
-const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '点击选择模块' }) => {
+const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '输入名称搜索模块' }) => {
   const pseudoRecord = value ? ({ name: value } as MenuFlatVO) : null;
 
   return (

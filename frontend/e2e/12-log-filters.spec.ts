@@ -39,7 +39,7 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
 
   test('LOG-F02 操作用户是下拉 table，点开有用户表格', async () => {
     // 该筛选框是只读 Input，点击弹出 Popover 里的分页表格
-    const input = page.locator('.ant-card').first().getByPlaceholder('点击选择用户');
+    const input = page.locator('.ant-card').first().getByPlaceholder('输入昵称搜索用户');
     await expect(input).toBeVisible();
     await input.click();
 
@@ -52,13 +52,23 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
     await expect(pop.locator('.ant-table-row').first()).toBeVisible({ timeout: 5000 });
   });
 
-  test('LOG-F03 选中用户后回填并能筛出该用户的日志', async () => {
+  test('LOG-F03 输入框即搜索框：打昵称边打边筛，无需点搜索', async () => {
+    const input = page.locator('.ant-card').first().getByPlaceholder('输入昵称搜索用户');
     const pop = page.locator('.ant-popover:visible');
+
+    // 弹层里不应再有第二个搜索框
+    await expect(pop.getByPlaceholder('输入关键字搜索...')).toHaveCount(0);
+
+    // 只打字，不回车、不点任何按钮 —— 列表应自己收敛到「陈立」
+    await input.fill('陈立');
+    await expect(pop.locator('.ant-table-row')).toHaveCount(1, { timeout: 8000 });
+    await expect(pop.locator('.ant-table-row').first()).toContainText('chenli');
+
     // 选 chenli 这一行（种子账号，必然有操作日志）
     await pop.locator('.ant-table-row').filter({ hasText: 'chenli' }).first().click();
     await expect(pop).toBeHidden({ timeout: 5000 });
 
-    const input = page.locator('.ant-card').first().getByPlaceholder('点击选择用户');
+    // 回填的是 username（提交给后端的值），不是搜索用的昵称
     await expect(input).toHaveValue('chenli');
 
     await page.getByRole('button', { name: '查询', exact: true }).click();
@@ -81,7 +91,7 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
   });
 
   test('LOG-F04 可清除已选用户（查询条件要能取消）', async () => {
-    const input = page.locator('.ant-card').first().getByPlaceholder('点击选择用户');
+    const input = page.locator('.ant-card').first().getByPlaceholder('输入昵称搜索用户');
     await expect(input).toHaveValue('chenli');
     // 自绘的清除图标（antd 自带 allowClear 在 readOnly 输入框上会被隐藏）
     await page.locator('.ant-card').first().locator('.ps-page-select-clear').first().click();
@@ -89,7 +99,7 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
   });
 
   test('LOG-F05 模块是下拉 table，模糊查菜单表', async () => {
-    const input = page.locator('.ant-card').first().getByPlaceholder('点击选择模块');
+    const input = page.locator('.ant-card').first().getByPlaceholder('输入名称搜索模块');
     await expect(input).toBeVisible();
     await input.click();
 
@@ -97,11 +107,11 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
     await expect(pop).toBeVisible({ timeout: 5000 });
     await expect(pop.getByRole('columnheader', { name: '位置' })).toBeVisible();  // 菜单层级路径列
 
-    // 模糊搜索「角色」应命中角色管理菜单
-    await pop.getByPlaceholder('输入关键字搜索...').fill('角色');
-    await pop.getByPlaceholder('输入关键字搜索...').press('Enter');
+    // 弹层里没有多余搜索框，直接在输入框打字即模糊搜菜单
+    await expect(pop.getByPlaceholder('输入关键字搜索...')).toHaveCount(0);
+    await input.fill('角色');
     await expect(pop.locator('.ant-table-row').filter({ hasText: '角色管理' }).first())
-      .toBeVisible({ timeout: 5000 });
+      .toBeVisible({ timeout: 8000 });
 
     // 选中后回填菜单名
     await pop.locator('.ant-table-row').filter({ hasText: '角色管理' }).first().click();
@@ -111,7 +121,7 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
 
   test('LOG-F06 登录日志的用户名也是下拉 table', async () => {
     await gotoPage(page, '/monitor/loginlog');
-    const input = page.locator('.ant-card').first().getByPlaceholder('点击选择用户');
+    const input = page.locator('.ant-card').first().getByPlaceholder('输入昵称搜索用户');
     await expect(input).toBeVisible();
     await input.click();
     const pop = page.locator('.ant-popover:visible');

@@ -21,7 +21,7 @@ interface Props {
  * 受控接口（value/onChange）是为了能直接放进 QueryForm 的 type='node' 字段，
  * 由 Form.Item 注入。
  */
-const UserTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '点击选择用户' }) => {
+const UserTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '输入昵称搜索用户' }) => {
   // PageSelect 的 value 是「整条记录」，这里用只含 username 的伪记录回显，
   // 避免为了显示一个名字去额外查一次用户详情
   const pseudoRecord = value ? ({ username: value } as UserListVO) : null;
@@ -39,7 +39,13 @@ const UserTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '点�
       ]}
       rowKey="id"
       labelField="username"
-      searchField="username"
+      /*
+       * 按昵称搜索（后端 UserQueryDTO.nickname → u.nickname LIKE）。
+       * 注意搜索字段是 nickname，但回填/提交的值仍是 username ——
+       * 日志表 operator 存的是用户名，值必须能直接进查询参数；
+       * 昵称只用来「找人」，不参与过滤。
+       */
+      searchField="nickname"
       value={pseudoRecord}
       onChange={(record) => onChange?.(record ? record.username : undefined)}
       placeholder={placeholder}

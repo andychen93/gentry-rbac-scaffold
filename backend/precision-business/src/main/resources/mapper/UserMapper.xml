@@ -33,6 +33,9 @@
         <if test="query.username != null and query.username != ''">
             AND u.username LIKE CONCAT('%', #{query.username}, '%')
         </if>
+        <if test="query.nickname != null and query.nickname != ''">
+            AND u.nickname LIKE CONCAT('%', #{query.nickname}, '%')
+        </if>
         <if test="query.phone != null and query.phone != ''">
             AND u.phone = #{query.phone}
         </if>

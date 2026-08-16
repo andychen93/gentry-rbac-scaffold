@@ -63,6 +63,47 @@ describe('PageSelect', () => {
     expect(service).toHaveBeenCalled();
   });
 
+  it('弹层里没有多余的搜索框（输入框即搜索框）', async () => {
+    render(
+      <PageSelect<Row>
+        service={service}
+        columns={[{ title: '名', dataIndex: 'name', key: 'name' }]}
+        rowKey="id"
+        labelField="name"
+        searchField="name"
+        onChange={vi.fn()}
+      />,
+      { wrapper },
+    );
+    fireEvent.click(screen.getByRole('textbox'));
+    await waitFor(() => expect(screen.getByText('项1')).toBeInTheDocument());
+    // 整个组件只有一个输入框：触发框本身
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+  });
+
+  it('打开弹层后第一次输入就要触发搜索（回归：skip 标志曾吞掉首次输入）', async () => {
+    render(
+      <PageSelect<Row>
+        service={service}
+        columns={[{ title: '名', dataIndex: 'name', key: 'name' }]}
+        rowKey="id"
+        labelField="name"
+        searchField="name"
+        onChange={vi.fn()}
+      />,
+      { wrapper },
+    );
+    const box = screen.getByRole('textbox');
+    // 先点开（这一步曾把 skip 标志置位且因 text 未变而不复位）
+    fireEvent.click(box);
+    await waitFor(() => expect(screen.getByText('项1')).toBeInTheDocument());
+
+    // 紧接着的第一次输入必须真的过滤（项12 唯一命中 '12'）
+    fireEvent.change(box, { target: { value: '12' } });
+    await waitFor(() => expect(screen.getByText('项12')).toBeInTheDocument(), { timeout: 3000 });
+    await waitFor(() => expect(screen.queryByText('项1')).not.toBeInTheDocument());
+  });
+
   it('点行选中回填 label 并关闭', async () => {
     // value=record 受控：用 StatefulWrapper 把 onChange 回灌到 value，验证 round-trip
     function StatefulWrapper() {
