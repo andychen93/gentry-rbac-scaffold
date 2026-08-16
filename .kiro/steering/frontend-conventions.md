@@ -29,8 +29,15 @@ fileMatchPattern: 'frontend/**/*.{ts,tsx}'
 - 权限渲染用 `useUserStore().hasPermission('xxx:yyy:zzz')`；整页无权限用 `AccessDenied`
 - 服务端数据用 TanStack Query，别塞进 Zustand。Zustand 只放 `userStore` / `layoutStore` 这类全局状态
 - 字典值展示用 `DictTag`，字典下拉用 `DictSelect`，部门树选择用 `DeptTreeSelect`
-- 改配色只动 `theme/argonColors.ts`；antd token 在 `theme/argonTheme.ts`，
-  token 覆盖不到的写 `styles/argon.less`。对照页 `/dev/style`
+- **改配色只动 `theme/argonColors.ts`**（唯一源头）。antd 侧由 `theme/argonTheme.ts`
+  灌进 token；`styles/argon.less` 侧由 `vite.config.ts` + `theme/argonLessVars.ts`
+  注入成 `@ps-*` Less 变量。token 覆盖不到的样式才写 `argon.less`，且颜色一律用
+  `@ps-*` / `fade(@ps-*, N%)`。对照页 `/dev/style`
+- **不要写死颜色**：组件里要色值用 `theme.useToken()` 取语义 token
+  （`colorPrimary` / `colorSuccess` / `colorError` / `colorTextSecondary`…），
+  纯文字灰阶优先 `<Typography.Text type="secondary">`。
+  新增颜色请往 `argonColors.ts` 加键，别就地写 hex
+  —— `theme/argonLessVars.test.ts` 会拦住 `argon.less` 里的裸 hex/rgba
 
 ## 测试
 
