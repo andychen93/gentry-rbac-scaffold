@@ -5,16 +5,16 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class DictTypeCreateDTO {
-    @NotBlank(message = "字典名称不能为空")
-    @Size(min = 2, max = 100, message = "字典名称2-100字符")
+    @NotBlank(message = "{valid.dict.dictName.notBlank}")
+    @Size(min = 2, max = 100, message = "{valid.dict.dictName.size}")
     private String dictName;
 
-    @NotBlank(message = "字典类型不能为空")
-    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{1,99}$", message = "字母开头，字母数字下划线，2-100字符")
+    @NotBlank(message = "{valid.dict.dictType.notBlank}")
+    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{1,99}$", message = "{valid.dict.dictType.pattern}")
     private String dictType;
 
     private Integer status;
-    @Size(max = 500, message = "备注最长500字符")
+    @Size(max = 500, message = "{valid.common.remark.size}")
     private String remark;
 
     public String getDictName() { return dictName; }

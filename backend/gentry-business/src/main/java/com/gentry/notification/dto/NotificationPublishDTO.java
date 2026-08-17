@@ -14,22 +14,22 @@ public class NotificationPublishDTO {
     private Long userId;
 
     /** 类型，默认 SYSTEM；业务方可自定义并用它做筛选 */
-    @Size(max = 30, message = "类型长度不能超过30")
+    @Size(max = 30, message = "{valid.notification.type.size}")
     private String type;
 
     /** 级别 1紧急 2严重 3一般 4提示；≤2 会额外触发短信 */
-    @Min(value = 1, message = "级别取值 1-4")
-    @Max(value = 4, message = "级别取值 1-4")
+    @Min(value = 1, message = "{valid.notification.level.min}")
+    @Max(value = 4, message = "{valid.notification.level.min}")
     private Integer level;
 
-    @NotBlank(message = "标题不能为空")
-    @Size(max = 200, message = "标题长度不能超过200")
+    @NotBlank(message = "{valid.notification.title.notBlank}")
+    @Size(max = 200, message = "{valid.notification.title.size}")
     private String title;
 
-    @Size(max = 1000, message = "内容长度不能超过1000")
+    @Size(max = 1000, message = "{valid.notification.content.size}")
     private String content;
 
-    @Size(max = 200, message = "业务关联键长度不能超过200")
+    @Size(max = 200, message = "{valid.notification.bizRef.size}")
     private String bizRef;
 
     public Long getUserId() { return userId; }

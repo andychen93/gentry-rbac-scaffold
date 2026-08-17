@@ -6,7 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 
 public class DictDataUpdateDTO {
-    @NotBlank(message = "字典标签不能为空")
+    @NotBlank(message = "{valid.dict.dictLabel.notBlank}")
     @Size(min = 1, max = 100)
     private String dictLabel;
     private String cssClass;

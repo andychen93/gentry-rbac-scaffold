@@ -7,9 +7,9 @@ import java.util.List;
 
 public class RoleDataScopeDTO {
 
-    @NotNull(message = "数据权限范围不能为空")
-    @Min(value = 1, message = "数据权限范围最小为1")
-    @Max(value = 5, message = "数据权限范围最大为5")
+    @NotNull(message = "{valid.role.dataScope.notNull}")
+    @Min(value = 1, message = "{valid.role.dataScope.min}")
+    @Max(value = 5, message = "{valid.role.dataScope.max}")
     private Integer dataScope;
 
     private List<Long> deptIds;

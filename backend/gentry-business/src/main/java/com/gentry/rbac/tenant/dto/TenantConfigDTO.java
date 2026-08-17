@@ -4,13 +4,13 @@ import jakarta.validation.constraints.Min;
 
 public class TenantConfigDTO {
 
-    @Min(value = 1, message = "最大设备数最小为1")
+    @Min(value = 1, message = "{valid.tenant.maxDevices.min}")
     private Integer maxDevices;
 
-    @Min(value = 1, message = "最大用户数最小为1")
+    @Min(value = 1, message = "{valid.tenant.maxUsers.min}")
     private Integer maxUsers;
 
-    @Min(value = 1, message = "数据保留天数最小为1")
+    @Min(value = 1, message = "{valid.tenant.dataRetentionDays.min}")
     private Integer dataRetentionDays;
 
     private Boolean videoEnabled;

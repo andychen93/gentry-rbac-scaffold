@@ -5,13 +5,13 @@ import jakarta.validation.constraints.Size;
 
 public class LoginDTO {
 
-    @Size(max = 50, message = "租户编码最长50字符")
+    @Size(max = 50, message = "{valid.login.tenantCode.size}")
     private String tenantCode;
 
-    @NotBlank(message = "用户名不能为空")
+    @NotBlank(message = "{valid.common.username.notBlank}")
     private String username;
 
-    @NotBlank(message = "密码不能为空")
+    @NotBlank(message = "{valid.common.password.notBlank}")
     private String password;
 
     /** 验证码唯一标识（验证码开关开启时必填，由 CaptchaService 校验） */

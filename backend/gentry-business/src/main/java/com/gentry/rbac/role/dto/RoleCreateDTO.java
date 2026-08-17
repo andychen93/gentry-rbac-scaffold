@@ -4,24 +4,24 @@ import jakarta.validation.constraints.*;
 
 public class RoleCreateDTO {
 
-    @NotBlank(message = "角色编码不能为空")
-    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{1,49}$", message = "角色编码格式错误：字母开头，2-50字符，仅字母数字下划线")
+    @NotBlank(message = "{valid.role.roleCode.notBlank}")
+    @Pattern(regexp = "^[a-zA-Z][a-zA-Z0-9_]{1,49}$", message = "{valid.role.roleCode.pattern}")
     private String roleCode;
 
-    @NotBlank(message = "角色名称不能为空")
-    @Size(min = 2, max = 50, message = "角色名称长度为2-50字符")
+    @NotBlank(message = "{valid.role.roleName.notBlank}")
+    @Size(min = 2, max = 50, message = "{valid.role.roleName.size}")
     private String roleName;
 
     private Integer dataScope;
 
-    @NotNull(message = "排序不能为空")
-    @Min(value = 0, message = "排序最小为0")
-    @Max(value = 999, message = "排序最大为999")
+    @NotNull(message = "{valid.common.sort.notNull}")
+    @Min(value = 0, message = "{valid.role.sort.min}")
+    @Max(value = 999, message = "{valid.role.sort.max}")
     private Integer sort;
 
     private Integer status;
 
-    @Size(max = 500, message = "备注最长500字符")
+    @Size(max = 500, message = "{valid.common.remark.size}")
     private String remark;
 
     public String getRoleCode() { return roleCode; }

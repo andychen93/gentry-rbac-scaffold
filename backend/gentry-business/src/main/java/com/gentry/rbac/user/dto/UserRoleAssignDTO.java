@@ -5,7 +5,7 @@ import java.util.List;
 
 public class UserRoleAssignDTO {
 
-    @NotNull(message = "角色ID列表不能为null")
+    @NotNull(message = "{valid.user.roleIds.notNull}")
     private List<Long> roleIds;
 
     public List<Long> getRoleIds() { return roleIds; }

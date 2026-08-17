@@ -204,6 +204,87 @@ class I18nApiIT extends BaseApiIT {
         }
     }
 
+    // ==================== Bean Validation 消息 ====================
+
+    @Test
+    @DisplayName("校验失败提示_按语言本地化且不露裸key")
+    void 校验失败提示_按语言本地化且不露裸key() throws Exception {
+        // 空 body 触发 @NotBlank：username / nickname / password 均必填
+        String empty = json(Map.of());
+
+        MvcResult en = mockMvc.perform(authedPost("/api/v1/users")
+                        .header("Accept-Language", "en-US")
+                        .content(empty))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(10002))
+                .andReturn();
+        String enMsg = parse(en).at("/message").asText();
+        assertThat(enMsg)
+                .as("Bean Validation 的 {key} 缺失会原样输出，没有 defaultValue 可退")
+                .doesNotContain("{").doesNotContain("}")
+                .contains("Username is required");
+
+        MvcResult zh = mockMvc.perform(authedPost("/api/v1/users")
+                        .header("Accept-Language", "zh-CN")
+                        .content(empty))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(parse(zh).at("/message").asText())
+                .doesNotContain("{").contains("用户名不能为空");
+    }
+
+    @Test
+    @DisplayName("校验消息里的BV属性插值_max仍被替换")
+    void 校验消息里的BV属性插值_max仍被替换() throws Exception {
+        // @Size 的 {max} 由 Hibernate Validator 自己插值，与 MessageSource 无关；
+        // 译文里若写 {max} 必须被替换成数字，不能原样输出
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", "toolongusername_exceeding_limit");
+        body.put("nickname", "n");
+        body.put("password", "Abc@12345");
+        MvcResult result = mockMvc.perform(authedPost("/api/v1/users")
+                        .header("Accept-Language", "en-US")
+                        .content(json(body)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(parse(result).at("/message").asText())
+                .as("出现裸 {max} 说明属性插值被破坏")
+                .doesNotContain("{max}").doesNotContain("{min}");
+    }
+
+    @Test
+    @DisplayName("未带message的校验注解_仍走HibernateValidator自带多语言默认消息")
+    void 未带message的校验注解_仍走HibernateValidator自带多语言默认消息() throws Exception {
+        // ConfigCreateDTO.configName 是 @Size(max = 100) 且 **不带 message**。
+        // 关注点：把 MessageSource 接进 LocalValidatorFactoryBean 之后，
+        // HV 自己的 ValidationMessages 兜底不能被顶掉 —— 否则这类注解会退化成裸 key。
+        Map<String, Object> body = new HashMap<>();
+        body.put("configKey", "i18n.probe.key");
+        body.put("configName", "n".repeat(120));   // 超 100，触发无 message 的 @Size
+
+        MvcResult en = mockMvc.perform(authedPost("/api/v1/configs")
+                        .header("Accept-Language", "en-US")
+                        .content(json(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(10002))
+                .andReturn();
+        String enMsg = parse(en).at("/message").asText();
+        assertThat(enMsg)
+                .as("HV 默认消息必须仍被本地化，且不出现裸占位符")
+                .doesNotContain("{").doesNotContain("}")
+                .containsIgnoringCase("size must be between");
+
+        MvcResult zh = mockMvc.perform(authedPost("/api/v1/configs")
+                        .header("Accept-Language", "zh-CN")
+                        .content(json(body)))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(parse(zh).at("/message").asText())
+                .as("HV 自带 zh_CN 资源包应生效")
+                .doesNotContain("{")
+                .isNotEqualTo(enMsg);
+    }
+
     // ==================== 显式 messageKey ====================
 
     @Test

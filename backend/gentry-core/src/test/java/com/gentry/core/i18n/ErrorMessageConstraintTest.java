@@ -33,6 +33,12 @@ class ErrorMessageConstraintTest {
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\d+}");
 
+    /** 是否是注释行。文档与 Javadoc 里写有示例代码，不跳过会误报 */
+    private static boolean isComment(String line) {
+        String t = line.strip();
+        return t.startsWith("//") || t.startsWith("*") || t.startsWith("/*");
+    }
+
     private Properties load(String name) throws IOException {
         Properties p = new Properties();
         try (InputStream in = getClass().getClassLoader().getResourceAsStream("i18n/" + name)) {
@@ -102,6 +108,7 @@ class ErrorMessageConstraintTest {
         for (Path java : sourceFiles(backendRoot)) {
             List<String> lines = Files.readAllLines(java, StandardCharsets.UTF_8);
             for (int i = 0; i < lines.size(); i++) {
+                if (isComment(lines.get(i))) continue;
                 Matcher m = call.matcher(lines.get(i));
                 while (m.find()) {
                     String key = m.group(1);

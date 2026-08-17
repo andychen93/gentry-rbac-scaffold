@@ -5,27 +5,27 @@ import java.util.List;
 
 public class UserUpdateDTO {
 
-    @NotBlank(message = "昵称不能为空")
-    @Size(min = 2, max = 20, message = "昵称2-20字符")
+    @NotBlank(message = "{valid.user.nickname.notBlank}")
+    @Size(min = 2, max = 20, message = "{valid.user.nickname.size}")
     private String nickname;
 
     private Long deptId;
 
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "{valid.common.phone.pattern}")
     private String phone;
 
-    @Email(message = "邮箱格式不正确")
+    @Email(message = "{valid.common.email.email}")
     private String email;
 
     private Integer gender;
 
-    @Size(max = 50, message = "职务最长50字符")
+    @Size(max = 50, message = "{valid.user.postName.size}")
     private String postName;
 
     private Integer status;
     private List<Long> roleIds;
 
-    @Size(max = 500, message = "备注最长500字符")
+    @Size(max = 500, message = "{valid.common.remark.size}")
     private String remark;
 
     public String getNickname() { return nickname; }

@@ -9,21 +9,21 @@ public class DeptCreateDTO {
 
     private Long parentId;
 
-    @NotBlank(message = "部门名称不能为空")
-    @Size(min = 2, max = 50, message = "部门名称长度为2-50字符")
+    @NotBlank(message = "{valid.dept.name.notBlank}")
+    @Size(min = 2, max = 50, message = "{valid.dept.name.size}")
     private String name;
 
     private Long leaderId;
 
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "请输入正确的手机号格式")
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "{valid.dept.phone.pattern}")
     private String phone;
 
-    @Email(message = "请输入正确的邮箱格式")
+    @Email(message = "{valid.dept.email.email}")
     private String email;
 
-    @NotNull(message = "排序不能为空")
-    @Min(value = 0, message = "排序值最小为0")
-    @Max(value = 999, message = "排序值最大为999")
+    @NotNull(message = "{valid.common.sort.notNull}")
+    @Min(value = 0, message = "{valid.common.sort.min}")
+    @Max(value = 999, message = "{valid.common.sort.max}")
     private Integer sort;
 
     private Integer status;

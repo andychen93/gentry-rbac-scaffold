@@ -10,7 +10,7 @@ import java.util.List;
 public class RoleUserAssignDTO {
 
     /** 允许传空集合表示「解绑全部用户」，但不允许为 null */
-    @NotNull(message = "用户ID列表不能为null")
+    @NotNull(message = "{valid.role.userIds.notNull}")
     private List<Long> userIds;
 
     public List<Long> getUserIds() { return userIds; }

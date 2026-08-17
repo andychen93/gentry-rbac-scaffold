@@ -9,19 +9,19 @@ public class MenuCreateDTO {
 
     private Long parentId;
 
-    @NotBlank(message = "菜单名称不能为空")
-    @Size(min = 2, max = 50, message = "菜单名称长度为2-50字符")
+    @NotBlank(message = "{valid.menu.name.notBlank}")
+    @Size(min = 2, max = 50, message = "{valid.menu.name.size}")
     private String name;
 
-    @Size(max = 100, message = "图标长度不能超过100字符")
+    @Size(max = 100, message = "{valid.menu.icon.size}")
     private String icon;
 
-    @NotNull(message = "菜单类型不能为空")
+    @NotNull(message = "{valid.menu.type.notNull}")
     private Integer type;
 
-    @NotNull(message = "排序不能为空")
-    @Min(value = 0, message = "排序值最小为0")
-    @Max(value = 999, message = "排序值最大为999")
+    @NotNull(message = "{valid.common.sort.notNull}")
+    @Min(value = 0, message = "{valid.common.sort.min}")
+    @Max(value = 999, message = "{valid.common.sort.max}")
     private Integer sort;
 
     private String permission;

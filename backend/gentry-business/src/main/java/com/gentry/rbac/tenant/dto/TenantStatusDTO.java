@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 
 public class TenantStatusDTO {
 
-    @NotNull(message = "状态不能为空")
+    @NotNull(message = "{valid.common.status.notNull}")
     private Integer status;
 
     public Integer getStatus() { return status; }

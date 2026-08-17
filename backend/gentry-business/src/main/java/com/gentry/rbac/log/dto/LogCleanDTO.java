@@ -4,8 +4,8 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 
 public class LogCleanDTO {
-    @NotNull(message = "清理天数不能为空")
-    @Min(value = 30, message = "至少保留30天日志")
+    @NotNull(message = "{valid.log.beforeDays.notNull}")
+    @Min(value = 30, message = "{valid.log.beforeDays.min}")
     private Integer beforeDays;
 
     public Integer getBeforeDays() { return beforeDays; }

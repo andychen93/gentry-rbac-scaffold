@@ -6,9 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 public class RoleStatusDTO {
 
-    @NotNull(message = "状态不能为空")
-    @Min(value = 0, message = "状态值最小为0")
-    @Max(value = 1, message = "状态值最大为1")
+    @NotNull(message = "{valid.common.status.notNull}")
+    @Min(value = 0, message = "{valid.role.status.min}")
+    @Max(value = 1, message = "{valid.role.status.max}")
     private Integer status;
 
     public Integer getStatus() { return status; }

@@ -5,11 +5,11 @@ import jakarta.validation.constraints.Min;
 
 public class TenantQueryDTO {
 
-    @Min(value = 1, message = "页码最小为1")
+    @Min(value = 1, message = "{valid.common.pageNum.min}")
     private Integer pageNum = 1;
 
-    @Min(value = 1, message = "每页条数最小为1")
-    @Max(value = 100, message = "每页条数最大为100")
+    @Min(value = 1, message = "{valid.common.pageSize.min}")
+    @Max(value = 100, message = "{valid.common.pageSize.max}")
     private Integer pageSize = 10;
 
     private String name;

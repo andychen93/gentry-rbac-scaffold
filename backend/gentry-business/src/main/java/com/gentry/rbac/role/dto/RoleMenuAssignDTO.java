@@ -5,7 +5,7 @@ import java.util.List;
 
 public class RoleMenuAssignDTO {
 
-    @NotNull(message = "菜单ID列表不能为null")
+    @NotNull(message = "{valid.role.menuIds.notNull}")
     private List<Long> menuIds;
 
     public List<Long> getMenuIds() { return menuIds; }
