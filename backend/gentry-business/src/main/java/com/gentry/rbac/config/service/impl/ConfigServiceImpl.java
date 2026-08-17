@@ -61,7 +61,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public ConfigVO create(ConfigCreateDTO dto) {
         if (configMapper.countByKey(dto.getConfigKey()) > 0) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "参数键已存在");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.config.key.exists");
         }
         Config c = new Config();
         c.setConfigName(dto.getConfigName());

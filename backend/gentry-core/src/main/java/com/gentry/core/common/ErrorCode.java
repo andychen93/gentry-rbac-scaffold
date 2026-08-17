@@ -65,6 +65,19 @@ public enum ErrorCode {
     DUPLICATE_SUBMIT(40002, "重复提交"),
     CANNOT_DELETE_SELF(40003, "不能删除当前登录用户");
 
+    /**
+     * i18n key，由枚举名机械派生：{@code ROLE_NOT_FOUND} → {@code error.role.not.found}。
+     *
+     * <p>不用在每个枚举项手写 key —— 枚举常量名本身就是现成的语义 key，
+     * IDE 重命名即同步改 key。译文在 {@code i18n/error_{lang}.properties}。</p>
+     *
+     * <p>{@link #getMessage()} 的语义随之变为<b>兜底值</b>：语言包缺失时原样返回中文，
+     * 界面不会露出裸 key。完整兜底链：目标语言 → zh_CN → 本字段。</p>
+     */
+    public String i18nKey() {
+        return "error." + name().toLowerCase(java.util.Locale.ROOT).replace('_', '.');
+    }
+
     // 50001 起留给基于本脚手架派生的业务自行分配，脚手架自身不占用。
 
     private final int code;

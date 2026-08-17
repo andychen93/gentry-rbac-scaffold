@@ -65,7 +65,7 @@ public class DictServiceImpl implements DictService {
     @Transactional
     public void updateType(Long id, DictTypeUpdateDTO dto) {
         DictType existing = dictTypeMapper.selectOneById(id);
-        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.not.found");
         DictType entity = new DictType();
         entity.setId(id);
         entity.setDictName(dto.getDictName());
@@ -78,7 +78,7 @@ public class DictServiceImpl implements DictService {
     @Transactional
     public void removeType(Long id) {
         DictType existing = dictTypeMapper.selectOneById(id);
-        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.not.found");
         Long tenantId = UserContext.getTenantId();
         dictTypeMapper.logicDeleteById(id);
         dictDataMapper.logicDeleteByDictType(tenantId, existing.getDictType());
@@ -104,13 +104,13 @@ public class DictServiceImpl implements DictService {
         // 校验字典类型存在且启用
         DictType typeEntity = dictTypeMapper.selectByDictType(tenantId, dictType);
         if (typeEntity == null) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "字典类型不存在");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.not.found");
         }
         if (typeEntity.getStatus() != null && typeEntity.getStatus() != 1) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "字典类型已禁用，不能新增数据");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.disabled");
         }
         if (dictDataMapper.countByDictValue(tenantId, dictType, dto.getDictValue()) > 0) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "字典键值已存在");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.value.exists");
         }
         DictData entity = new DictData();
         entity.setDictType(dictType);
@@ -131,7 +131,7 @@ public class DictServiceImpl implements DictService {
     @Transactional
     public void updateData(Long id, DictDataUpdateDTO dto) {
         DictData existing = dictDataMapper.selectOneById(id);
-        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典数据不存在");
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.data.not.found");
         DictData entity = new DictData();
         entity.setId(id);
         entity.setDictLabel(dto.getDictLabel());
@@ -149,7 +149,7 @@ public class DictServiceImpl implements DictService {
     @Transactional
     public void removeData(Long id) {
         DictData existing = dictDataMapper.selectOneById(id);
-        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "字典数据不存在");
+        if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.data.not.found");
         dictDataMapper.logicDeleteById(id);
         invalidateCache(UserContext.getTenantId(), existing.getDictType());
     }

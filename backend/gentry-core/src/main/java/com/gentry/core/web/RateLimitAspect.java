@@ -84,11 +84,12 @@ public class RateLimitAspect {
         long current = entry.counter.incrementAndGet();
 
         if (current > rateLimit.count()) {
-            String msg = rateLimit.message() == null || rateLimit.message().isEmpty()
-                    ? ErrorCode.TOO_MANY_REQUESTS.getMessage()
+            // 注解上的 message 现在是 i18n key（可选）；为空则用 ErrorCode 派生的 key
+            String messageKey = rateLimit.message() == null || rateLimit.message().isEmpty()
+                    ? null
                     : rateLimit.message();
             log.warn("限流触发: key={}, count={}, limit={}", cacheKey, current, rateLimit.count());
-            throw new BizException(ErrorCode.TOO_MANY_REQUESTS, msg);
+            throw new BizException(ErrorCode.TOO_MANY_REQUESTS, messageKey);
         }
         return pjp.proceed();
     }

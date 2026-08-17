@@ -148,7 +148,7 @@ public class TenantServiceImpl implements TenantService {
         // 校验租户下仅允许存在 admin 用户
         int userCount = tenantMapper.countUsersByTenantId(id);
         if (userCount > 1) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "租户下存在用户，禁止删除");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.tenant.has.users");
         }
 
         tenantMapper.logicDeleteById(id);
@@ -182,7 +182,7 @@ public class TenantServiceImpl implements TenantService {
             String configJson = OBJECT_MAPPER.writeValueAsString(configMap);
             tenantMapper.updateConfig(id, configJson);
         } catch (JsonProcessingException e) {
-            throw new BizException(ErrorCode.SYSTEM_ERROR, "配置序列化失败");
+            throw new BizException(ErrorCode.SYSTEM_ERROR, "error.tenant.config.serialize.failed");
         }
     }
 

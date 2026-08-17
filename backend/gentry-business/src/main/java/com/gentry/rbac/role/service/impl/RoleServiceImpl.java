@@ -123,7 +123,7 @@ public class RoleServiceImpl implements RoleService {
 
         // 禁止使用内置编码
         if (BUILTIN_CODES.contains(dto.getRoleCode().toUpperCase())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统内置角色编码不可使用");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.role.builtin.code.reserved");
         }
 
         // 校验编码唯一
@@ -168,7 +168,7 @@ public class RoleServiceImpl implements RoleService {
 
         // 校验非内置角色
         if (BUILTIN_CODES.contains(role.getRoleCode().toUpperCase())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统内置角色不可删除");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.role.builtin.undeletable");
         }
 
         // 校验无关联用户
@@ -198,7 +198,7 @@ public class RoleServiceImpl implements RoleService {
                     .filter(id -> !allMenuIds.contains(id))
                     .collect(Collectors.toList());
             if (!invalidIds.isEmpty()) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "菜单ID不存在: " + invalidIds);
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.id.not.found", invalidIds);
             }
         }
 
@@ -226,12 +226,12 @@ public class RoleServiceImpl implements RoleService {
         // CUSTOM 时校验 deptIds 非空
         if (dataScope == DataScope.CUSTOM.getCode()) {
             if (dto.getDeptIds() == null || dto.getDeptIds().isEmpty()) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "自定义数据权限必须选择部门");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.role.custom.scope.dept.required");
             }
             // D-06: 校验 deptId 存在性
             for (Long deptId : dto.getDeptIds()) {
                 if (deptMapper.selectOneById(deptId) == null) {
-                    throw new BizException(ErrorCode.PARAM_ERROR, "部门ID不存在: " + deptId);
+                    throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.id.not.found", deptId);
                 }
             }
         }

@@ -52,7 +52,7 @@ public class LogServiceImpl implements LogService {
     public OperLogDetailVO getOperLogDetail(Long id) {
         // selectOneById() 已通过全局 tenantColumn 配置自动追加租户条件
         OperLog entity = operLogMapper.selectOneById(id);
-        if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "日志不存在");
+        if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.log.not.found");
         OperLogDetailVO vo = new OperLogDetailVO();
         vo.setId(entity.getId()); vo.setModule(entity.getModule()); vo.setModuleLabel(entity.getModule());
         vo.setType(entity.getType()); vo.setTypeLabel(i18nUtil.getOperLogTypeLabel(entity.getType()));
@@ -115,7 +115,7 @@ public class LogServiceImpl implements LogService {
     public LoginLogDetailVO getLoginLogDetail(Long id) {
         // selectOneById() 已通过 @Column(tenantId=true) 自动追加租户条件
         LoginLog entity = loginLogMapper.selectOneById(id);
-        if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "日志不存在");
+        if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.log.not.found");
         LoginLogDetailVO vo = new LoginLogDetailVO();
         vo.setId(entity.getId()); vo.setUsername(entity.getUsername()); vo.setLoginType(entity.getLoginType());
         vo.setLoginIp(entity.getLoginIp()); vo.setLocation(entity.getLocation()); vo.setBrowser(entity.getBrowser());

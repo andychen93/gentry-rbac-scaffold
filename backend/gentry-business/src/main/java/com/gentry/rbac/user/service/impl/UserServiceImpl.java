@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
 
         // 校验用户名不能是 admin
         if (ADMIN_USERNAME.equals(dto.getUsername())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统保留用户名不可使用");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.username.reserved");
         }
 
         // 校验用户名租户内唯一
@@ -79,7 +79,7 @@ public class UserServiceImpl implements UserService {
         // 校验手机号租户内唯一
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
             if (userMapper.countByPhone(tenantId, dto.getPhone(), null) > 0) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "手机号已被使用");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
 
@@ -116,18 +116,18 @@ public class UserServiceImpl implements UserService {
         // 校验手机号唯一（排除自身）
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
             if (userMapper.countByPhone(tenantId, dto.getPhone(), id) > 0) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "手机号已被使用");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
 
         // 不能将当前登录用户禁用
         if (dto.getStatus() != null && dto.getStatus() == 0 && id.equals(UserContext.getUserId())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "不能禁用当前登录用户");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.cannot.disable.self");
         }
 
         // 不能禁用 admin
         if (dto.getStatus() != null && dto.getStatus() == 0 && ADMIN_USERNAME.equals(existing.getUsername())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统管理员不可禁用");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.admin.cannot.disable");
         }
 
         User user = new User();
@@ -165,12 +165,12 @@ public class UserServiceImpl implements UserService {
 
         // 不能删除当前登录用户
         if (id.equals(UserContext.getUserId())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "不能删除当前登录用户");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.cannot.delete.self");
         }
 
         // 不能删除 admin
         if (ADMIN_USERNAME.equals(user.getUsername())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统管理员不可删除");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.admin.cannot.delete");
         }
 
         userMapper.logicDeleteById(id);
@@ -273,7 +273,7 @@ public class UserServiceImpl implements UserService {
         // 手机号唯一校验（排除自身）
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
             if (userMapper.countByPhone(tenantId, dto.getPhone(), userId) > 0) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "手机号已被使用");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
 
@@ -306,12 +306,12 @@ public class UserServiceImpl implements UserService {
 
         // 不能禁用当前登录用户
         if (dto.getStatus() == 0 && id.equals(UserContext.getUserId())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "不能禁用当前登录用户");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.cannot.disable.self");
         }
 
         // 不能禁用 admin
         if (dto.getStatus() == 0 && ADMIN_USERNAME.equals(user.getUsername())) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "系统管理员不可禁用");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.admin.cannot.disable");
         }
 
         userMapper.updateStatus(id, dto.getStatus());
@@ -348,7 +348,7 @@ public class UserServiceImpl implements UserService {
         if (roles.size() != roleIds.size()) {
             Set<Long> foundIds = roles.stream().map(Role::getId).collect(Collectors.toSet());
             List<Long> missing = roleIds.stream().filter(id -> !foundIds.contains(id)).toList();
-            throw new BizException(ErrorCode.ROLE_NOT_FOUND, "角色不存在: " + missing);
+            throw new BizException(ErrorCode.ROLE_NOT_FOUND, "error.role.not.found.detail", missing);
         }
     }
 
@@ -435,13 +435,13 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserImportResultVO importUsers(MultipartFile file) {
         if (file == null || file.isEmpty()) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "导入文件为空");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.import.file.empty");
         }
         List<UserImportDTO> rows;
         try (InputStream is = file.getInputStream()) {
             rows = EasyExcel.read(is).head(UserImportDTO.class).sheet().doReadSync();
         } catch (IOException e) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "文件读取失败");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.import.file.read.failed");
         }
         int success = 0, fail = 0;
         List<UserImportResultVO.ErrorItem> errors = new ArrayList<>();
@@ -452,7 +452,7 @@ public class UserServiceImpl implements UserService {
             String username = row.getUsername();
             try {
                 if (!StringUtils.hasText(username)) {
-                    throw new BizException(ErrorCode.PARAM_ERROR, "用户名为空");
+                    throw new BizException(ErrorCode.PARAM_ERROR, "error.user.import.username.blank");
                 }
                 UserCreateDTO dto = new UserCreateDTO();
                 dto.setUsername(username.trim());

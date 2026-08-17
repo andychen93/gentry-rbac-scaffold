@@ -99,7 +99,7 @@ public class DeptServiceImpl implements DeptService {
         // 校验层级不超过 5 级（ancestors 中逗号数量 + 1 = 当前层级）
         int depth = ancestors.split(",").length;
         if (depth >= MAX_DEPTH) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "部门层级不能超过5级");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.depth.exceeded");
         }
 
         // 查询负责人姓名（反范式）
@@ -146,7 +146,7 @@ public class DeptServiceImpl implements DeptService {
         if (parentChanged) {
             // 校验不能移动到自己的子部门下
             if (newParentId.equals(id)) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "不能将部门移动到自己的子部门下");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.cannot.move.into.descendant");
             }
             if (newParentId != 0L) {
                 Dept newParent = getExistingDept(newParentId);
@@ -155,7 +155,7 @@ public class DeptServiceImpl implements DeptService {
                 if (newParentAncestors.contains("," + id + ",")
                         || newParentAncestors.endsWith("," + id)
                         || newParentAncestors.equals(String.valueOf(id))) {
-                    throw new BizException(ErrorCode.PARAM_ERROR, "不能将部门移动到自己的子部门下");
+                    throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.cannot.move.into.descendant");
                 }
                 newAncestors = newParentAncestors + "," + newParentId;
             } else {
@@ -165,7 +165,7 @@ public class DeptServiceImpl implements DeptService {
             // 校验层级不超过 5 级
             int depth = newAncestors.split(",").length;
             if (depth >= MAX_DEPTH) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "部门层级不能超过5级");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.depth.exceeded");
             }
 
             // 递归更新子孙部门的 ancestors
@@ -205,7 +205,7 @@ public class DeptServiceImpl implements DeptService {
         // 校验部门下无用户
         int userCount = deptMapper.countUsersByDeptId(id);
         if (userCount > 0) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "部门下存在用户，禁止删除");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.has.users");
         }
 
         // 校验部门下无子部门
@@ -237,7 +237,7 @@ public class DeptServiceImpl implements DeptService {
     private Dept getExistingDept(Long id) {
         Dept dept = deptMapper.selectOneById(id);
         if (dept == null) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "部门不存在");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.dept.not.found");
         }
         return dept;
     }

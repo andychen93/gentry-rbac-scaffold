@@ -144,9 +144,17 @@ public abstract class BaseApiIT {
         return login(username, "NoPerm@123");
     }
 
-    /** 解析响应 JSON 树。 */
+    /**
+     * 解析响应 JSON 树。
+     *
+     * <p><b>必须显式指定 UTF-8。</b>Spring 的 JSON 转换器按规范不在 {@code Content-Type}
+     * 里写 charset，而 {@code MockHttpServletResponse.getContentAsString()} 在没有
+     * charset 时退回 ISO-8859-1 —— 中文会变成 {@code è§è²ä¸å­å¨} 这样的乱码。
+     * 此前没暴露只是因为没有用例断言过中文文案（i18n 用例第一次跑就踩到了）。</p>
+     */
     protected JsonNode parse(MvcResult result) throws Exception {
-        return objectMapper.readTree(result.getResponse().getContentAsString());
+        return objectMapper.readTree(
+                result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8));
     }
 
     /** 序列化请求体。 */

@@ -105,7 +105,7 @@ public class CaptchaServiceImpl implements CaptchaService {
             ImageIO.write(image, "png", bos);
             return "data:image/png;base64," + Base64.getEncoder().encodeToString(bos.toByteArray());
         } catch (Exception e) {
-            throw new BizException(ErrorCode.SYSTEM_ERROR, "验证码生成失败");
+            throw new BizException(ErrorCode.SYSTEM_ERROR, "error.captcha.generate.failed");
         } finally {
             g.dispose();
         }

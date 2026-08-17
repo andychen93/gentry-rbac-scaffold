@@ -65,7 +65,7 @@ public class OnlineController {
             if (session != null) {
                 Object uid = session.get("userId");
                 if (uid != null && ((Number) uid).longValue() == currentUserId) {
-                    throw new BizException(ErrorCode.PARAM_ERROR, "不能强制下线当前登录用户");
+                    throw new BizException(ErrorCode.PARAM_ERROR, "error.online.cannot.kickout.self");
                 }
             }
         } catch (BizException e) { throw e; } catch (Exception ignored) {}

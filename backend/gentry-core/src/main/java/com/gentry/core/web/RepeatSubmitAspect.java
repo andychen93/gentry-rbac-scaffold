@@ -79,11 +79,12 @@ public class RepeatSubmitAspect {
 
         Long existing = submitCache.getIfPresent(cacheKey);
         if (existing != null) {
-            String msg = repeatSubmit.message() == null || repeatSubmit.message().isEmpty()
-                    ? ErrorCode.DUPLICATE_SUBMIT.getMessage()
+            // 注解上的 message 现在是 i18n key（可选）；为空则用 ErrorCode 派生的 key
+            String messageKey = repeatSubmit.message() == null || repeatSubmit.message().isEmpty()
+                    ? null
                     : repeatSubmit.message();
             log.warn("重复提交拦截: key={}, interval={}s", cacheKey, repeatSubmit.interval());
-            throw new BizException(ErrorCode.DUPLICATE_SUBMIT, msg);
+            throw new BizException(ErrorCode.DUPLICATE_SUBMIT, messageKey);
         }
 
         submitCache.put(cacheKey, (long) repeatSubmit.interval());

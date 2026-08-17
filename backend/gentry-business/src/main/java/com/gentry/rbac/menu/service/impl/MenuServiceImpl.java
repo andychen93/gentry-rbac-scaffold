@@ -61,7 +61,7 @@ public class MenuServiceImpl implements MenuService {
 
         // 校验同级名称唯一
         if (menuMapper.countByName(parentId, dto.getName(), null) > 0) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "同级已存在同名菜单");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.name.duplicate.sibling");
         }
 
         Menu menu = new Menu();
@@ -100,18 +100,18 @@ public class MenuServiceImpl implements MenuService {
         // 校验不能移动到自己的子菜单下
         if (!newParentId.equals(existingMenu.getParentId()) && newParentId != 0L) {
             if (newParentId.equals(id)) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "不能将菜单移动到自己的子菜单下");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.cannot.move.into.descendant");
             }
             // 递归检查新父级是否是当前菜单的子孙
             Set<Long> childIds = collectChildIds(id);
             if (childIds.contains(newParentId)) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "不能将菜单移动到自己的子菜单下");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.cannot.move.into.descendant");
             }
         }
 
         // 校验同级名称唯一（排除自身）
         if (menuMapper.countByName(newParentId, dto.getName(), id) > 0) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "同级已存在同名菜单");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.name.duplicate.sibling");
         }
 
         Menu menu = new Menu();
@@ -157,14 +157,14 @@ public class MenuServiceImpl implements MenuService {
     private void validateByType(Integer type, String permission, String path, String component) {
         if (type == MenuType.BUTTON.getCode()) {
             if (permission == null || permission.isBlank()) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "按钮权限标识不能为空");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.button.permission.required");
             }
         } else if (type == MenuType.MENU.getCode()) {
             if (path == null || path.isBlank()) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "菜单路由地址不能为空");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.path.required");
             }
             if (component == null || component.isBlank()) {
-                throw new BizException(ErrorCode.PARAM_ERROR, "菜单组件路径不能为空");
+                throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.component.required");
             }
         }
     }
@@ -185,7 +185,7 @@ public class MenuServiceImpl implements MenuService {
     private Menu getExistingMenu(Long id) {
         Menu menu = menuMapper.selectOneById(id);
         if (menu == null) {
-            throw new BizException(ErrorCode.PARAM_ERROR, "菜单不存在");
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.not.found");
         }
         return menu;
     }
