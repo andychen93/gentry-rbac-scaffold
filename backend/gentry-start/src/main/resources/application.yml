@@ -12,6 +12,10 @@ spring:
   messages:
     basename: i18n/messages
     encoding: UTF-8
+    # 必须 false：为 true 时找不到 key 会退到「服务器系统语言」，
+    # 同一份代码在不同机器上行为不一致。兜底一律走 defaultLocale。
+    fallback-to-system-locale: false
+    cache-duration: 3600s
 
   flyway:
     enabled: true
@@ -83,6 +87,13 @@ management:
 
 # ==================== 业务配置（gentry 命名空间） ====================
 gentry:
+  # 国际化
+  i18n:
+    enabled: true             # false 则退回 Spring 默认 AcceptHeaderLocaleResolver
+    default-locale: zh_CN     # 用户偏好与请求头都给不出答案时兜底
+    # 语言白名单的唯一真源。加语言 = 改这里 + 补 i18n/*_{lang}.properties 资源文件；
+    # 不要在 DTO 的 @Pattern 里再写一份清单（注解读不到配置，两处必然漂移）
+    supported-locales: zh_CN,en_US
   # 登录验证码
   captcha:
     enabled: true

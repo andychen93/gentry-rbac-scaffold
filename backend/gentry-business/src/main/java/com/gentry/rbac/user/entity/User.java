@@ -34,5 +34,11 @@ public class User extends TenantEntity {
     private LocalDateTime loginDate;
     private LocalDateTime pwdUpdateTime;
     private String remark;
+    /**
+     * 语言偏好，三态：
+     * {@code null} = 从未选择过（跟随浏览器 Accept-Language）；
+     * {@code zh_CN} / {@code en_US} = 显式选择过，固定。
+     */
+    private String language;
     // tenantId, createBy, createTime, updateBy, updateTime, deleted 由 TenantEntity 基类提供
 }

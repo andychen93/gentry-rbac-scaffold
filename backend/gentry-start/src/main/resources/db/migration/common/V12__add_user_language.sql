@@ -1,0 +1,15 @@
+-- =============================================
+-- V12: 用户语言偏好
+-- =============================================
+-- 三态语义：
+--   NULL              = 用户从未选择过 → 跟随 Accept-Language（前端 localStorage / navigator.language）
+--   'zh_CN' / 'en_US' = 用户显式选择过 → 固定，跨设备一致
+--
+-- 为什么必须可空：若写成 NOT NULL DEFAULT 'zh_CN'，语言解析链的第 ② 级（请求头）
+-- 对已登录用户永远不会执行——浏览器是英文的用户在登录页看到英文、一登录就被切回
+-- 中文，而他没做过任何选择。存量用户全部为 NULL 即「跟随浏览器」，无需 UPDATE。
+--
+-- 可空列的 ADD COLUMN 三库（MySQL / PostgreSQL / SQLite）均支持，故放 common/。
+-- 不建索引：language 不作查询条件。
+-- =============================================
+ALTER TABLE sys_user ADD COLUMN language VARCHAR(20) NULL;

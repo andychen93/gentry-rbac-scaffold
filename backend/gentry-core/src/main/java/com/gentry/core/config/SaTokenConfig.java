@@ -4,11 +4,14 @@ import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
+import com.gentry.core.i18n.GentryLocaleResolver;
 import com.gentry.core.security.TokenBlacklistService;
 import com.gentry.core.security.UserContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -16,6 +19,13 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class SaTokenConfig implements WebMvcConfigurer {
+
+    /** gentry.i18n.enabled=false 时该 bean 不存在，故用 ObjectProvider 可选注入 */
+    private final ObjectProvider<GentryLocaleResolver> localeResolverProvider;
+
+    public SaTokenConfig(ObjectProvider<GentryLocaleResolver> localeResolverProvider) {
+        this.localeResolverProvider = localeResolverProvider;
+    }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -48,7 +58,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/actuator/**"
                 );
 
-        // 2. 从 Sa-Token Session 恢复 UserContext（登录校验通过后执行）
+        // 2. 从 Sa-Token Session 恢复 UserContext（登录校验通过后执行）+ 定稿请求语言
         registry.addInterceptor(new HandlerInterceptor() {
             @Override
             public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
@@ -58,10 +68,30 @@ public class SaTokenConfig implements WebMvcConfigurer {
                     Object tenantId = session.get("tenantId");
                     Object deptId = session.get("deptId");
                     Object platformAdmin = session.get("platformAdmin");
+                    Object language = session.get("language");
                     if (userId instanceof Number) UserContext.setUserId(((Number) userId).longValue());
                     if (tenantId instanceof Number) UserContext.setTenantId(((Number) tenantId).longValue());
                     if (deptId instanceof Number) UserContext.setDeptId(((Number) deptId).longValue());
                     UserContext.setPlatformAdmin(Boolean.TRUE.equals(platformAdmin));
+                    // language 为 null 表示用户从未选过 → 下面会退到 Accept-Language
+                    if (language instanceof String s) UserContext.setLanguage(s);
+                }
+                /*
+                 * 语言在此一次性定稿，而不是交给 LocaleResolver 自己被 DispatcherServlet 调用。
+                 *
+                 * 原因是时序：DispatcherServlet.buildLocaleContext 对 LocaleResolver 返回的是
+                 * 懒求值 lambda（每次 getLocale() 才执行），靠这个懒求值本拦截器写的 UserContext
+                 * 才「恰好」已经就位。但那意味着每次 getMessage() 都要重跑一遍 Accept-Language
+                 * 解析，且一旦有人把 GentryLocaleResolver 改成实现 LocaleContextResolver，
+                 * 求值会变成饿的、发生在本拦截器之前，sys_user.language 将静默失效。
+                 * 显式设置把解析点固定在这里：一次求值、时序明确、不依赖 Spring 内部实现细节。
+                 *
+                 * LocaleContextHolder 的 ThreadLocal 由 FrameworkServlet.processRequest 在
+                 * finally 里 resetContextHolders(...) 恢复，无需在 afterCompletion 手动清。
+                 */
+                GentryLocaleResolver resolver = localeResolverProvider.getIfAvailable();
+                if (resolver != null) {
+                    LocaleContextHolder.setLocale(resolver.resolve(UserContext.getLanguage(), request));
                 }
                 return true;
             }

@@ -274,6 +274,10 @@ public class AuthServiceImpl implements AuthService {
         }
         session.set("platformAdmin", platformAdmin);
         UserContext.setPlatformAdmin(platformAdmin);
+        // 语言偏好：null（用户从未选过）时不写 Session —— SaSession 底层是
+        // ConcurrentHashMap 不接受 null value，且「不存在」正是「跟随浏览器」的语义
+        putSession(session, "language", user.getLanguage());
+        UserContext.setLanguage(user.getLanguage());
 
         userMapper.updateLoginInfo(user.getId(), loginIp, LocalDateTime.now());
 
