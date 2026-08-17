@@ -2,14 +2,14 @@
 
 > **版本**：v1.0.0
 > **更新日期**：2026-05-05
-> **面向**：所有在 `precision-business` 及后续业务模块（vehicle / device / alarm / playback / report）上开发的工程师与 AI。
+> **面向**：所有在 `gentry-business` 及后续业务模块（vehicle / device / alarm / playback / report）上开发的工程师与 AI。
 > **阅读前提**：已熟悉 `CLAUDE.md` §4 全局基础设施章节。
 
 ---
 
 ## 0. 为什么有这份文档
 
-`precision-core` 承载了 10 个 P0/P1/P2 级别的横切关注（异常处理、多租户、自动填充、认证、数据权限、链路追踪、限流、防重复、请求日志、Jackson）。它们的作用就是让业务开发者"**专注写业务**"。
+`gentry-core` 承载了 10 个 P0/P1/P2 级别的横切关注（异常处理、多租户、自动填充、认证、数据权限、链路追踪、限流、防重复、请求日志、Jackson）。它们的作用就是让业务开发者"**专注写业务**"。
 
 但实际落地里最常见的反模式是：
 
@@ -200,7 +200,7 @@ Mapper XML：
 </sql>
 ```
 
-注意：`PrecisionTenantManager` 会自动追加 `tenant_id = ?`，不要手动写。
+注意：`GentryTenantManager` 会自动追加 `tenant_id = ?`，不要手动写。
 
 ### 3.3 场景 C：登录 / 认证
 
@@ -325,10 +325,10 @@ private static final Map<String, List<String>> SENSITIVE_PATHS = Map.of(
 
 ## 6. 加新 Redis 监控 Key 模板
 
-所有用 Redis 的组件要把自己的 Key 模板登记到 `RedisKeyDefines`（在 `precision-monitor`），便于运维在 `/monitor-center/redis` 页面看清楚：
+所有用 Redis 的组件要把自己的 Key 模板登记到 `RedisKeyDefines`（在 `gentry-monitor`），便于运维在 `/monitor-center/redis` 页面看清楚：
 
 ```java
-// backend/precision-monitor/.../RedisKeyDefines.java
+// backend/gentry-monitor/.../RedisKeyDefines.java
 private static final List<RedisKeyDefineVO> DEFINES = List.of(
     new RedisKeyDefineVO("token_mapping",  "Authorization:login:token:*",   "...", 1800L),
     new RedisKeyDefineVO("user_session",   "Authorization:login:session:*", "...", 1800L),
@@ -343,13 +343,13 @@ private static final List<RedisKeyDefineVO> DEFINES = List.of(
 
 ## 7. Core 模块修改守则
 
-- 修改 `precision-core` 任意类都视为"影响全平台"，提 PR 时必须：
+- 修改 `gentry-core` 任意类都视为"影响全平台"，提 PR 时必须：
   1. 补充单元测试
-  2. 跑通 `mvn -pl precision-core test`（54 个基线测试不能退）
-  3. 跑通 `mvn -pl precision-business test`（业务 48 个集成测试不能退）
+  2. 跑通 `mvn -pl gentry-core test`（54 个基线测试不能退）
+  3. 跑通 `mvn -pl gentry-business test`（业务 48 个集成测试不能退）
   4. 更新对应 `doc/design/modules/core/P*-*.md` 设计文档
 - 新增 Core 公共能力的两条路径：
-  - **确定通用**：写在 `precision-core` 里（如新拦截器、新工具类）
+  - **确定通用**：写在 `gentry-core` 里（如新拦截器、新工具类）
   - **仅当前业务用**：写在业务模块自己的 `xxx/common` 包下，不污染 core
 
 ---

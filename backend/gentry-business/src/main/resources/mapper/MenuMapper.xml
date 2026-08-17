@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.gentry.rbac.menu.mapper.MenuMapper">
+
+    <resultMap id="MenuResultMap" type="com.gentry.rbac.menu.entity.Menu">
+        <id property="id" column="id"/>
+        <result property="parentId" column="parent_id"/>
+        <result property="name" column="name"/>
+        <result property="icon" column="icon"/>
+        <result property="type" column="type"/>
+        <result property="sort" column="sort"/>
+        <result property="permission" column="permission"/>
+        <result property="path" column="path"/>
+        <result property="component" column="component"/>
+        <result property="visible" column="visible"/>
+        <result property="status" column="status"/>
+        <result property="isExternal" column="is_external"/>
+        <result property="isCache" column="is_cache"/>
+        <result property="active" column="active"/>
+        <result property="query" column="query"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="deleted" column="deleted"/>
+    </resultMap>
+
+    <sql id="queryCondition">
+        WHERE m.deleted = 0
+        <if test="query.name != null and query.name != ''">
+            AND m.name LIKE CONCAT('%', #{query.name}, '%')
+        </if>
+        <if test="query.status != null">
+            AND m.status = #{query.status}
+        </if>
+        <if test="query.type != null">
+            AND m.type = #{query.type}
+        </if>
+    </sql>
+
+    <select id="selectList" resultMap="MenuResultMap">
+        SELECT m.* FROM sys_menu m
+        <include refid="queryCondition"/>
+        ORDER BY m.sort ASC, m.create_time ASC
+    </select>
+
+
+
+    <update id="batchLogicDelete">
+        UPDATE sys_menu SET deleted = 1, update_time = CURRENT_TIMESTAMP
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+</mapper>

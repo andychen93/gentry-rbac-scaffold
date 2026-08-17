@@ -7,7 +7,7 @@
 | 组件名称 | StpInterface 权限接口实现 |
 | 版本 | v1.0.0 |
 | 日期 | 2026-04-12 |
-| 所属模块 | precision-business |
+| 所属模块 | gentry-business |
 | 优先级 | P0（全局基础设施，认证鉴权核心） |
 | 设计负责人 | 后端开发（AI辅助） |
 
@@ -121,7 +121,7 @@ classDiagram
 
 ### 2.2.1 StpInterfaceImpl
 
-**包路径：** `com.precision.rbac.security.StpInterfaceImpl`
+**包路径：** `com.gentry.rbac.security.StpInterfaceImpl`
 
 **职责：** 实现 Sa-Token 的 `StpInterface` 接口，提供用户的权限和角色数据。包含缓存逻辑和数据库查询逻辑。
 
@@ -289,7 +289,7 @@ private Long convertToLong(Object loginId) {
 
 #### UserRole
 
-**包路径：** `com.precision.rbac.user.entity.UserRole`（或 `com.precision.core.entity.UserRole`）
+**包路径：** `com.gentry.rbac.user.entity.UserRole`（或 `com.gentry.core.entity.UserRole`）
 
 ```java
 @Data
@@ -304,7 +304,7 @@ public class UserRole {
 
 #### Role
 
-**包路径：** `com.precision.business.entity.Role`
+**包路径：** `com.gentry.business.entity.Role`
 
 ```java
 @Data
@@ -322,7 +322,7 @@ public class Role extends TenantEntity {
 
 #### RoleMenu
 
-**包路径：** `com.precision.business.entity.RoleMenu`
+**包路径：** `com.gentry.business.entity.RoleMenu`
 
 ```java
 @Data
@@ -337,7 +337,7 @@ public class RoleMenu {
 
 #### Menu
 
-**包路径：** `com.precision.business.entity.Menu`
+**包路径：** `com.gentry.business.entity.Menu`
 
 ```java
 @Data
@@ -669,16 +669,16 @@ CREATE INDEX idx_role_menu_role_id ON sys_role_menu(role_id);
 
 | 内部类 | 用途 | 所在模块 |
 |--------|------|---------|
-| UserRole Entity | 查询用户-角色关联 | precision-business |
-| Role Entity | 查询角色信息 | precision-business |
-| RoleMenu Entity | 查询角色-菜单关联 | precision-business |
-| Menu Entity | 查询菜单权限标识 | precision-business |
-| TenantEntity | Role 的基类 | precision-core |
-| BaseEntity | Menu 的基类 | precision-core |
+| UserRole Entity | 查询用户-角色关联 | gentry-business |
+| Role Entity | 查询角色信息 | gentry-business |
+| RoleMenu Entity | 查询角色-菜单关联 | gentry-business |
+| Menu Entity | 查询菜单权限标识 | gentry-business |
+| TenantEntity | Role 的基类 | gentry-core |
+| BaseEntity | Menu 的基类 | gentry-core |
 
 **模块归属说明：**
 
-`StpInterfaceImpl` 实现类位于 `precision-business` 模块，原因：
+`StpInterfaceImpl` 实现类位于 `gentry-business` 模块，原因：
 1. 需要访问 UserRole、Role、RoleMenu、Menu 等 Entity，这些 Entity 在 business 模块
 2. 依赖方向正确：business 依赖 core，而非反向依赖
 3. Sa-Token 通过 Spring 自动扫描发现 `@Component`，不影响功能
@@ -690,7 +690,7 @@ CREATE INDEX idx_role_menu_role_id ON sys_role_menu(role_id);
 
 ## 7.1 单元测试用例
 
-**测试类：** `com.precision.rbac.security.StpInterfaceImplTest`
+**测试类：** `com.gentry.rbac.security.StpInterfaceImplTest`
 
 | 测试方法名 | 场景 | 前置条件 | 预期结果 |
 |-----------|------|---------|---------|
@@ -791,7 +791,7 @@ class StpInterfaceImplTest {
 
 ## 7.2 集成测试场景
 
-**测试类：** `com.precision.rbac.security.StpInterfaceIntegrationTest`
+**测试类：** `com.gentry.rbac.security.StpInterfaceIntegrationTest`
 
 | 场景 | 测试方法 | 说明 |
 |------|---------|------|

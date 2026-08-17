@@ -13,7 +13,7 @@ MySQL（默认）/ PostgreSQL / SQLite，用 Spring Profile 切换，一套业�
 ## 唯一权威位置
 
 ```
-backend/precision-start/src/main/resources/db/migration/
+backend/gentry-start/src/main/resources/db/migration/
 ├── common/       # 三库通用迁移（99% 的新迁移都放这里）
 ├── mysql/        # 仅 MySQL 需要方言的迁移
 ├── postgresql/   # 仅 PostgreSQL 需要方言的迁移
@@ -98,5 +98,5 @@ SELECT (60000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id = 5011;    
 
 删掉不用的两个厂商目录（比如只保留 `common/` + `postgresql/`），
 `application.yml` 的 `spring.profiles.active` 改成固定值，
-删掉 `precision-start/pom.xml` 里不需要的驱动依赖（`mysql-connector-j` / `postgresql` /
+删掉 `gentry-start/pom.xml` 里不需要的驱动依赖（`mysql-connector-j` / `postgresql` /
 `sqlite-jdbc` / `flyway-mysql`，flyway-core 内置支持 PostgreSQL 和 SQLite）。

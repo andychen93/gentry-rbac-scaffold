@@ -26,7 +26,7 @@ test.describe.serial('消息通知 (NTF)', () => {
     page = await browser.newPage();
     await login(page, 'chenli');
     await gotoPage(page, '/home');
-    token = (await page.evaluate(() => localStorage.getItem('precision_token'))) ?? '';
+    token = (await page.evaluate(() => localStorage.getItem('gentry_token'))) ?? '';
     expect(token).not.toBe('');
   });
 

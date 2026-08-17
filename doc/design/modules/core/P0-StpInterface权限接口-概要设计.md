@@ -9,7 +9,7 @@
 | 创建日期 | 2026-04-12 |
 | 最后更新 | 2026-04-12 |
 | 负责人 | 技术经理（AI辅助） |
-| 所属模块 | precision-business |
+| 所属模块 | gentry-business |
 | 优先级 | P0（核心） |
 
 ---
@@ -40,7 +40,7 @@ StpInterface 权限接口是 Sa-Token 框架的权限数据供给层。通过实
 
 ## 在哪里（Where）
 
-位于 `precision-business` 模块的 `com.precision.rbac.security` 包中，作为 Sa-Token 框架与业务数据库之间的桥梁。
+位于 `gentry-business` 模块的 `com.gentry.rbac.security` 包中，作为 Sa-Token 框架与业务数据库之间的桥梁。
 
 在权限校验链路中的位置：
 
@@ -232,12 +232,12 @@ public static void clearRoleCache(long userId) {
 
 | 类名 | 包路径 | 职责 |
 |------|--------|------|
-| `StpInterfaceImpl` | `com.precision.rbac.security` | 实现 Sa-Token StpInterface 接口 |
-| `PermissionCacheManager` | `com.precision.rbac.security` | 权限缓存管理（清除缓存） |
-| `UserRoleRelMapper` | `com.precision.business.mapper` | 用户角色关联查询 |
-| `RoleMapper` | `com.precision.business.mapper` | 角色查询 |
-| `MenuMapper` | `com.precision.business.mapper` | 菜单权限查询 |
-| `RoleMenuRelMapper` | `com.precision.business.mapper` | 角色菜单关联查询 |
+| `StpInterfaceImpl` | `com.gentry.rbac.security` | 实现 Sa-Token StpInterface 接口 |
+| `PermissionCacheManager` | `com.gentry.rbac.security` | 权限缓存管理（清除缓存） |
+| `UserRoleRelMapper` | `com.gentry.business.mapper` | 用户角色关联查询 |
+| `RoleMapper` | `com.gentry.business.mapper` | 角色查询 |
+| `MenuMapper` | `com.gentry.business.mapper` | 菜单权限查询 |
+| `RoleMenuRelMapper` | `com.gentry.business.mapper` | 角色菜单关联查询 |
 
 ## 与其他组件的协作关系
 

@@ -19,7 +19,7 @@
 
 | 文档 | 说明 |
 |------|------|
-| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | precision-core 整体设计 |
+| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | gentry-core 整体设计 |
 | `doc/design/architecture/全局基础设施架构图.drawio` | 架构图（drawio 打开） |
 | `doc/design/modules/core/P0-*.md` | 全局异常、多租户拦截、自动填充、StpInterface 权限接口 |
 | `doc/design/modules/core/P1-*.md` | Jackson 全局配置、请求日志过滤器、数据权限拦截器 |

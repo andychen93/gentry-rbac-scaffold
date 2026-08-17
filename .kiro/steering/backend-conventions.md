@@ -12,8 +12,8 @@ fileMatchPattern: 'backend/**/*.java'
 `Controller → Service → Manager → Mapper`。Controller 只做参数校验和结果封装，
 禁止直接调 Mapper，禁止循环依赖。Service 一律接口 + `impl` 实现类。
 
-新业务域在 `precision-business` 下加包，**不要**新建 Maven 模块。
-最小完整样例：`com.precision.rbac.dept`（树形 + 数据权限 + 操作日志）。
+新业务域在 `gentry-business` 下加包，**不要**新建 Maven 模块。
+最小完整样例：`com.gentry.rbac.dept`（树形 + 数据权限 + 操作日志）。
 
 ## 必须做
 
@@ -35,5 +35,5 @@ fileMatchPattern: 'backend/**/*.java'
 Service impl 行覆盖 ≥ 90%、分支 ≥ 80%；AOP 切面每个分支至少一个用例；
 Controller 至少一个集成测试。命名 `方法_场景_预期`。
 
-改动 `precision-core` 前先跑 `mvn -pl precision-core test` 拿绿色基线（60 个测试）；
-改动 RBAC 跑 `mvn -pl precision-business test`（49 个测试）。
+改动 `gentry-core` 前先跑 `mvn -pl gentry-core test` 拿绿色基线（60 个测试）；
+改动 RBAC 跑 `mvn -pl gentry-business test`（49 个测试）。

@@ -1,0 +1,103 @@
+server:
+  port: 9090
+
+spring:
+  # 数据库切换开关：mysql（默认） | postgresql | sqlite
+  # 命令行覆盖： java -jar app.jar --spring.profiles.active=postgresql
+  # 环境变量覆盖： SPRING_PROFILES_ACTIVE=sqlite
+  # 各 profile 的连接串 / 驱动 / Flyway 目录见同目录下 application-{profile}.yml
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:mysql}
+
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
+    # locations 由各 application-{profile}.yml 覆盖，格式固定为：
+    #   classpath:db/migration/common,classpath:db/migration/{profile}
+    # common/ 是三库通用迁移，{profile}/ 是该厂商的方言迁移（目前只有 V1 建表）
+
+  # Redis（Sa-Token JWT 模式依赖 Redis 存储 Session 与 Token 黑名单，与选哪个数据库无关）
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      database: 0
+      timeout: 3000
+      lettuce:
+        pool:
+          max-active: 200
+          max-idle: 10
+          min-idle: 0
+
+  # 禁用 Spring Security 默认登录页（我们用 Sa-Token）
+  security:
+    user:
+      name: disabled
+      password: disabled
+
+mybatis-flex:
+  mapper-locations: classpath*:mapper/**/*.xml
+  global-config:
+    print-banner: false
+  configuration:
+    map-underscore-to-camel-case: true
+
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: 1800               # AccessToken 有效期 30 分钟（JWT exp 字段）
+  active-timeout: -1          # 关闭活跃超时（JWT 自带 exp，无需额外活跃检查）
+  is-concurrent: true
+  is-share: false
+  token-style: jwt-simple     # Token 样式：jwt-simple（Sa-Token JWT 整合 Simple 模式，保留 Session 能力）
+  is-log: false
+  # JWT 签名密钥（256-bit 以上），生产环境通过环境变量 SA_TOKEN_JWT_SECRET_KEY 外置
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET_KEY:gentry-jwt-secret-key-2026-change-me}
+
+logging:
+  level:
+    com.gentry: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss.SSS} %-5level [%X{traceId:--}] [%thread] %logger{36} - %msg%n"
+
+# Actuator：暴露 Prometheus 指标端点（无 Token 认证）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: prometheus, health, info
+  endpoint:
+    prometheus:
+      enabled: true
+    health:
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: gentry-platform
+
+# ==================== 业务配置（gentry 命名空间） ====================
+gentry:
+  # 登录验证码
+  captcha:
+    enabled: true
+    type: math              # math=算术验证码 | char=字符验证码
+    length: 4
+    expire-seconds: 300     # 验证码有效期（秒）
+    width: 120
+    height: 40
+  # 登录失败锁定
+  login-security:
+    max-fail-count: 5       # 连续失败 N 次锁定
+    lock-minutes: 10        # 锁定时长（分钟），即失败计数 Redis TTL
+  # 密码策略
+  password:
+    expire-days: 90         # 密码过期天数（0 或负数表示不校验）
+  # 日志保留
+  log:
+    keep-days: 90           # 操作/登录日志保留天数，定时清理超出部分

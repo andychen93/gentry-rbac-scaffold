@@ -26,7 +26,7 @@ export default function ChangePasswordModal({ open, onSuccess, onCancel }: Props
       onSuccess();
       // 后端已踢下线（黑名单 + kickout），清 token 跳登录
       setTimeout(() => {
-        localStorage.removeItem('precision_token');
+        localStorage.removeItem('gentry_token');
         window.location.href = '/login';
       }, 1200);
     } catch (err: any) {

@@ -4,7 +4,7 @@ import { MemoryRouter } from 'react-router-dom';
 import AppLayout from './AppLayout';
 
 describe('AppLayout', () => {
-  it('渲染 PrecisionSidenav + PageShell + AppFooter', () => {
+  it('渲染 GentrySidenav + PageShell + AppFooter', () => {
     render(
       <AppLayout>
         <div data-testid="page">内容</div>

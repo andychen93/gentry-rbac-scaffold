@@ -41,7 +41,7 @@ async function downloadCsv(url: string, params: Record<string, unknown>, filenam
       query.append(key, String(value));
     }
   });
-  const token = localStorage.getItem('precision_token');
+  const token = localStorage.getItem('gentry_token');
   const response = await fetch(`${url}?${query.toString()}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });

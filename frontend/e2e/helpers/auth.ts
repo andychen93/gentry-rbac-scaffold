@@ -3,7 +3,7 @@ import type { Page } from '@playwright/test';
 import fs from 'node:fs';
 import { TOKENS_FILE, readCaptchaAnswer } from '../global-setup';
 
-const TOKEN_KEY = 'precision_token';
+const TOKEN_KEY = 'gentry_token';
 
 /**
  * 打开登录页，并在开启了验证码时取回正确答案。

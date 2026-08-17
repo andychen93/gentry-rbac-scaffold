@@ -72,7 +72,7 @@ const NotificationBell: React.FC = () => {
    */
   useEffect(() => {
     if (!canRead) return;
-    const authToken = localStorage.getItem('precision_token');
+    const authToken = localStorage.getItem('gentry_token');
     if (!authToken) return;
     if (typeof EventSource === 'undefined') return; // jsdom 等环境无 EventSource
 

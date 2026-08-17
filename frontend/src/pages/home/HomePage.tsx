@@ -116,7 +116,7 @@ const HomePage: React.FC = () => {
               message="开始一个新模块"
               description={
                 <span>
-                  后端：<Text code>backend/precision-business/src/main/java/com/precision/</Text> 下新建包，
+                  后端：<Text code>backend/gentry-business/src/main/java/com/gentry/</Text> 下新建包，
                   照 <Text code>rbac/dept</Text> 的 controller/service/mapper/entity/dto/vo 分层照抄；
                   前端：<Text code>src/pages/</Text> 下新建页面并在{' '}
                   <Text code>utils/menuMapper.ts</Text> 登记；

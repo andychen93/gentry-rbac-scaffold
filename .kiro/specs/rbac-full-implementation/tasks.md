@@ -59,7 +59,7 @@
   - 确保所有测试通过，询问用户是否有问题。
 
 - [ ] 3. Phase 2：部门管理（后端 + 前端）
-  - [x] 3.1 后端：创建 Dept Entity（`com.precision.rbac.dept.entity.Dept`）
+  - [x] 3.1 后端：创建 Dept Entity（`com.gentry.rbac.dept.entity.Dept`）
     - 继承 TenantEntity，映射 sys_dept 表
     - 字段：id、parentId、ancestors、name、leaderId、leaderName、phone、email、sort、status
     - _Requirements: 2.8_
@@ -383,7 +383,7 @@
 - [ ] 15. Phase 8：默认租户与登录模式联调
   - [ ] 15.1 后端：创建 TenantConstants 常量类
     - `DEFAULT_TENANT_ID = 1L`
-    - 放置在 `com.precision.core.constant` 包下
+    - 放置在 `com.gentry.core.constant` 包下
     - _Requirements: 8.10_
 
   - [ ] 15.2 后端：修改 LoginDTO，tenantId 替换为 tenantCode

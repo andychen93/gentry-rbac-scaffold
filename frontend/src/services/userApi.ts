@@ -207,7 +207,7 @@ async function downloadExcel(url: string, params: Record<string, unknown>, filen
   Object.entries(params || {}).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') query.append(k, String(v));
   });
-  const token = localStorage.getItem('precision_token');
+  const token = localStorage.getItem('gentry_token');
   const sep = url.includes('?') ? '&' : '?';
   const response = await fetch(`${url}${sep}${query.toString()}`, {
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
@@ -228,7 +228,7 @@ async function downloadExcel(url: string, params: Record<string, unknown>, filen
 async function uploadFile<T>(url: string, file: File): Promise<T> {
   const form = new FormData();
   form.append('file', file);
-  const token = localStorage.getItem('precision_token');
+  const token = localStorage.getItem('gentry_token');
   const response = await fetch(url, {
     method: 'POST',
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,

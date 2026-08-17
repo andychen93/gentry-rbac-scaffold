@@ -11,7 +11,7 @@
 | 创建日期 | 2026-04-12 |
 | 最后更新 | 2026-04-12 |
 | 负责人 | 技术经理（AI辅助） |
-| 所属模块 | precision-core |
+| 所属模块 | gentry-core |
 | 优先级 | P1（必要） |
 
 ---
@@ -42,7 +42,7 @@ Jackson 全局配置是平台级的 JSON 序列化/反序列化统一规则。�
 
 ## 在哪里（Where）
 
-位于 `precision-core` 模块的 `com.precision.core.config` 包中，作为 Spring Boot 的全局 `ObjectMapper` 配置，影响所有使用 Jackson 的场景。
+位于 `gentry-core` 模块的 `com.gentry.core.config` 包中，作为 Spring Boot 的全局 `ObjectMapper` 配置，影响所有使用 Jackson 的场景。
 
 在系统架构中的位置：
 
@@ -217,8 +217,8 @@ public class LongToStringSerializer extends JsonSerializer<Long> {
 
 | 类名 | 包路径 | 职责 |
 |------|--------|------|
-| `JacksonConfig` | `com.precision.core.config` | 全局 ObjectMapper 配置 |
-| `LongToStringSerializer` | `com.precision.core.config` | Long→String 自定义序列化器 |
+| `JacksonConfig` | `com.gentry.core.config` | 全局 ObjectMapper 配置 |
+| `LongToStringSerializer` | `com.gentry.core.config` | Long→String 自定义序列化器 |
 
 ## 与其他组件的协作关系
 

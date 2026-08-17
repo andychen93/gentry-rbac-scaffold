@@ -1,5 +1,5 @@
 # 本地开发依赖：MySQL / PostgreSQL（二选一，用 profile 隔离）+ Redis（两种数据库都要）
-# SQLite 不需要容器，是文件型库，见 backend/precision-start/src/main/resources/application-sqlite.yml
+# SQLite 不需要容器，是文件型库，见 backend/gentry-start/src/main/resources/application-sqlite.yml
 #
 # 起停：
 #   bash scripts/deps_up.sh              # 默认起 MySQL + Redis

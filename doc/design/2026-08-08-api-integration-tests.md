@@ -23,7 +23,7 @@
 ## 3. 架构
 
 ### 3.1 模块与启动
-- 所有 IT 放 `backend/precision-start/src/test/java/com/precision/start/api/**`。启动模块持有 `@SpringBootApplication`，上下文最全，business+monitor 控制器均在 classpath。
+- 所有 IT 放 `backend/gentry-start/src/test/java/com/gentry/start/api/**`。启动模块持有 `@SpringBootApplication`，上下文最全，business+monitor 控制器均在 classpath。
 - 注解：`@SpringBootTest(webEnvironment = MOCK)` + `@AutoConfigureMockMvc` + `@ActiveProfiles("mysql")` + `@Transactional`。
 - MockMvc 在测试线程内派发，`@Transactional` 边界包裹 controller 调用，用例结束自动回滚 DB 写。
 
@@ -41,7 +41,7 @@
 - caveat：极个别 `REQUIRES_NEW` 事务的写不回滚——遇到改用"建唯一测试数据 + 清理"，在该用例注释标注。
 
 ### 3.4 公共端点
-`/api/v1/auth/login`、`/api/v1/tenants/options`、`/api/v1/monitor/locations/stream`、`/api/v1/notifications/stream`、`/actuator/**` 已在 SaInterceptor 排除清单（[SaTokenConfig:38-44](../../backend/precision-core/src/main/java/com/precision/core/config/SaTokenConfig.java)），无需 token 即可访问。
+`/api/v1/auth/login`、`/api/v1/tenants/options`、`/api/v1/monitor/locations/stream`、`/api/v1/notifications/stream`、`/actuator/**` 已在 SaInterceptor 排除清单（[SaTokenConfig:38-44](../../backend/gentry-core/src/main/java/com/gentry/core/config/SaTokenConfig.java)），无需 token 即可访问。
 
 ## 4. 测试矩阵
 
@@ -60,7 +60,7 @@
 ## 5. 文件布局
 
 ```
-backend/precision-start/src/test/java/com/precision/start/api/
+backend/gentry-start/src/test/java/com/gentry/start/api/
 ├── BaseApiIT.java              # 抽象基类：MockMvc、login()、authed 辅助、登出清理
 ├── AuthApiIT.java
 ├── UserApiIT.java
@@ -76,14 +76,14 @@ backend/precision-start/src/test/java/com/precision/start/api/
 
 ## 6. 依赖变更
 
-`backend/precision-start/pom.xml` 增加（test scope）：
+`backend/gentry-start/pom.xml` 增加（test scope）：
 - `spring-boot-starter-test`（提供 `@SpringBootTest`/`MockMvc`/JsonPath）
 
 ## 7. 运行方式
 
 ```bash
 export SPRING_DATASOURCE_PASSWORD='CHENLIchenli321!'   # 本机原生 MySQL
-mvn -pl precision-start -am test -Dspring.profiles.active=mysql
+mvn -pl gentry-start -am test -Dspring.profiles.active=mysql
 ```
 MySQL(:3306) + Redis(:6379) 已起；Flyway 对已迁移库仅校验不改动。
 
@@ -100,5 +100,5 @@ MySQL(:3306) + Redis(:6379) 已起；Flyway 对已迁移库仅校验不改动。
 ## 9. 验收标准
 
 - 10 个 IT 类就位，65 端点 happy-path 全覆盖，401/403/400/业务异常按矩阵覆盖。
-- `mvn -pl precision-start -am test -Dspring.profiles.active=mysql` 在本机全绿。
+- `mvn -pl gentry-start -am test -Dspring.profiles.active=mysql` 在本机全绿。
 - `npm test` + `npx tsc -b`（前端）保持绿（本变更不动前端）。

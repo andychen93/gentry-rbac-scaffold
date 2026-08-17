@@ -72,12 +72,12 @@ TanStack Query 5 / Less
 
 | 模块 | 职责 | 依赖 |
 |------|------|------|
-| `precision-core` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单） | 无 |
-| `precision-business` | 业务逻辑，按业务域分包（现有 `rbac`，新业务平级新增） | core |
-| `precision-monitor` | 运维监控（Redis 监控） | core |
-| `precision-start` | 启动入口 + Flyway 迁移（3 种数据库方言）+ 配置 | 全部 |
+| `gentry-core` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单） | 无 |
+| `gentry-business` | 业务逻辑，按业务域分包（现有 `rbac`，新业务平级新增） | core |
+| `gentry-monitor` | 运维监控（Redis 监控） | core |
+| `gentry-start` | 启动入口 + Flyway 迁移（3 种数据库方言）+ 配置 | 全部 |
 
-新业务域**不要**新建 Maven 模块，在 `precision-business` 下加包即可；
+新业务域**不要**新建 Maven 模块，在 `gentry-business` 下加包即可；
 只有独立部署诉求出现时才拆模块。
 
 ### 分层规则
@@ -94,16 +94,16 @@ Controller → Service → Manager → Mapper
 ### 包结构
 
 ```
-com.precision.{domain}.{module}/
+com.gentry.{domain}.{module}/
 ├── controller/  service/  service/impl/  mapper/
 ├── entity/  dto/  vo/  enums/
 ```
 
-照抄 `com.precision.rbac.dept`（最小完整样例：树形 + 数据权限 + 操作日志）。
+照抄 `com.gentry.rbac.dept`（最小完整样例：树形 + 数据权限 + 操作日志）。
 
 ---
 
-## 四、横切基础设施（precision-core）
+## 四、横切基础设施（gentry-core）
 
 > 架构文档：`doc/design/architecture/全局基础设施架构设计.md`
 > 详细设计：`doc/design/modules/core/P0-*.md` ~ `P2-*.md`
@@ -113,7 +113,7 @@ com.precision.{domain}.{module}/
 | P0 | 全局异常处理 | `GlobalExceptionHandler` |
 | P0 | 实体基类 | `BaseEntity`, `TenantEntity` |
 | P0 | 自动填充 | `AutoFillHandler` |
-| P0 | 多租户拦截 | `PrecisionTenantManager`, `@IgnoreTenant` |
+| P0 | 多租户拦截 | `GentryTenantManager`, `@IgnoreTenant` |
 | P0 | 权限接口 | `StpInterfaceImpl`（在 business/rbac/security） |
 | P1 | Jackson 配置 | `JacksonConfig`（Long→String、日期格式、NON_NULL、Asia/Shanghai） |
 | P1 | 请求日志 | `RequestLogFilter`（慢请求告警、敏感字段脱敏） |
@@ -269,7 +269,7 @@ bash scripts/dev_up.sh --db=sqlite     # 文件型库，不需要起容器
   （三库语法和函数都不一样，没有跨库收益就不引入方言依赖）
 
 只想固定用一种数据库？删掉不用的两个厂商目录，`application.yml` 的
-`spring.profiles.active` 写死，`precision-start/pom.xml` 删掉不需要的驱动依赖。
+`spring.profiles.active` 写死，`gentry-start/pom.xml` 删掉不需要的驱动依赖。
 
 ---
 
@@ -305,8 +305,8 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 | Controller | 至少 1 个集成测试 |
 | AOP 切面 | 每个分支至少 1 个用例 |
 | 前端组件 | Pro 组件与布局组件必须有 Vitest 用例 |
-| 改动 core | 先跑 `mvn -pl precision-core test`（基线 60 个测试全绿） |
-| 改动 RBAC | 先跑 `mvn -pl precision-business test`（基线 49 个测试全绿） |
+| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 60 个测试全绿） |
+| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 49 个测试全绿） |
 
 TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → 重构。
 测试命名 `方法_场景_预期`。

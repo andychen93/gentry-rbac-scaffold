@@ -1,6 +1,6 @@
 # Jackson 全局配置 详细设计
 
-> **实现状态：✅ 已实现** — 代码位于 `precision-core/src/main/java/com/precision/core/config/JacksonConfig.java`，覆盖 8 个单元测试 + 后端实跑验证。
+> **实现状态：✅ 已实现** — 代码位于 `gentry-core/src/main/java/com/gentry/core/config/JacksonConfig.java`，覆盖 8 个单元测试 + 后端实跑验证。
 
 ## 文档信息
 
@@ -8,7 +8,7 @@
 |------|------|
 | 模块名称 | Jackson 全局配置 |
 | 模块标识 | jackson-config |
-| 所属系统 | precision-core 公共基础设施 |
+| 所属系统 | gentry-core 公共基础设施 |
 | 文档版本 | v1.0.0 |
 | 设计负责人 | 后端开发（AI辅助） |
 | 最后更新时间 | 2026-04-12 |
@@ -113,7 +113,7 @@ classDiagram
 
 ### 2.2.1 JacksonConfig
 
-**包路径**：`com.precision.core.config.JacksonConfig`
+**包路径**：`com.gentry.core.config.JacksonConfig`
 
 **注解**：`@Configuration`
 
@@ -151,7 +151,7 @@ classDiagram
 
 ### 2.2.2 LongToStringSerializer
 
-**包路径**：`com.precision.core.config.serializer.LongToStringSerializer`
+**包路径**：`com.gentry.core.config.serializer.LongToStringSerializer`
 
 **继承**：`JsonSerializer<Long>`
 
@@ -177,7 +177,7 @@ serialize(Long value, JsonGenerator gen, SerializerProvider serializers):
 
 ### 2.2.3 LongToStringDeserializer
 
-**包路径**：`com.precision.core.config.serializer.LongToStringDeserializer`
+**包路径**：`com.gentry.core.config.serializer.LongToStringDeserializer`
 
 **继承**：`JsonDeserializer<Long>`
 
@@ -194,7 +194,7 @@ deserialize(JsonParser p, DeserializationContext ctxt):
 
 ### 2.2.4 LocalDateTimeSerializer
 
-**包路径**：`com.precision.core.config.serializer.LocalDateTimeSerializer`
+**包路径**：`com.gentry.core.config.serializer.LocalDateTimeSerializer`
 
 **继承**：`JsonSerializer<LocalDateTime>`
 
@@ -214,7 +214,7 @@ serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers
 
 ### 2.2.5 LocalDateTimeDeserializer
 
-**包路径**：`com.precision.core.config.serializer.LocalDateTimeDeserializer`
+**包路径**：`com.gentry.core.config.serializer.LocalDateTimeDeserializer`
 
 **继承**：`JsonDeserializer<LocalDateTime>`
 
@@ -242,7 +242,7 @@ deserialize(JsonParser p, DeserializationContext ctxt):
 
 ### 2.2.6 LocalDateSerializer / LocalDateDeserializer
 
-**包路径**：`com.precision.core.config.serializer.LocalDateSerializer` / `LocalDateDeserializer`
+**包路径**：`com.gentry.core.config.serializer.LocalDateSerializer` / `LocalDateDeserializer`
 
 **格式**：`yyyy-MM-dd`
 
@@ -433,7 +433,7 @@ flowchart TD
 
 ```mermaid
 flowchart TB
-    subgraph precision-core
+    subgraph gentry-core
         A[JacksonConfig] --> B[LongToStringSerializer]
         A --> C[LongToStringDeserializer]
         A --> D[LocalDateTimeSerializer]
@@ -476,7 +476,7 @@ flowchart TB
 
 ### 7.1.1 LongToStringSerializer / LongToStringDeserializer 测试
 
-**测试类**：`com.precision.core.config.serializer.LongToStringSerializerTest`
+**测试类**：`com.gentry.core.config.serializer.LongToStringSerializerTest`
 
 | 编号 | 测试方法 | 场景 | 预期结果 |
 |------|---------|------|----------|
@@ -485,7 +485,7 @@ flowchart TB
 | UT-003 | `serialize_null值_输出Null` | 序列化 `null` | 输出 `null` |
 | UT-004 | `serialize_zero_输出String` | 序列化 `0L` | 输出 `"0"` |
 
-**测试类**：`com.precision.core.config.serializer.LongToStringDeserializerTest`
+**测试类**：`com.gentry.core.config.serializer.LongToStringDeserializerTest`
 
 | 编号 | 测试方法 | 场景 | 预期结果 |
 |------|---------|------|----------|
@@ -495,14 +495,14 @@ flowchart TB
 
 ### 7.1.2 LocalDateTimeSerializer / LocalDateTimeDeserializer 测试
 
-**测试类**：`com.precision.core.config.serializer.LocalDateTimeSerializerTest`
+**测试类**：`com.gentry.core.config.serializer.LocalDateTimeSerializerTest`
 
 | 编号 | 测试方法 | 场景 | 预期结果 |
 |------|---------|------|----------|
 | UT-008 | `serialize_正常日期` | `LocalDateTime.of(2026, 4, 12, 10, 30, 0)` | `"2026-04-12 10:30:00"` |
 | UT-009 | `serialize_null值` | `null` | 不输出 |
 
-**测试类**：`com.precision.core.config.serializer.LocalDateTimeDeserializerTest`
+**测试类**：`com.gentry.core.config.serializer.LocalDateTimeDeserializerTest`
 
 | 编号 | 测试方法 | 场景 | 预期结果 |
 |------|---------|------|----------|
@@ -513,7 +513,7 @@ flowchart TB
 
 ### 7.1.3 JacksonConfig 集成测试
 
-**测试类**：`com.precision.core.config.JacksonConfigTest`
+**测试类**：`com.gentry.core.config.JacksonConfigTest`
 
 | 编号 | 测试方法 | 场景 | 预期结果 |
 |------|---------|------|----------|
@@ -527,7 +527,7 @@ flowchart TB
 
 ## 7.2 集成测试场景
 
-**测试类**：`com.precision.core.config.JacksonConfigIntegrationTest`
+**测试类**：`com.gentry.core.config.JacksonConfigIntegrationTest`
 
 | 编号 | 测试场景 | 操作步骤 | 验证点 |
 |------|---------|---------|--------|

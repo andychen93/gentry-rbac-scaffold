@@ -12,11 +12,11 @@
 
 | 模块 | 完成内容 | 代码位置 |
 |------|---------|---------|
-| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/precision-core/` |
-| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/precision-business/src/main/java/com/precision/rbac/user/` |
-| **RBAC 后端 - 租户管理** | Controller/Entity/Mapper/VO | `backend/precision-business/src/main/java/com/precision/rbac/tenant/` |
-| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/precision-business/src/main/java/com/precision/rbac/role/` + `menu/` |
-| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/precision-business/src/main/java/com/precision/rbac/security/` |
+| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/gentry-core/` |
+| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/user/` |
+| **RBAC 后端 - 租户管理** | Controller/Entity/Mapper/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/tenant/` |
+| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/gentry-business/src/main/java/com/gentry/rbac/role/` + `menu/` |
+| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/gentry-business/src/main/java/com/gentry/rbac/security/` |
 | **前端 - 登录页面** | LoginPage | `frontend/src/pages/login/` |
 | **前端 - 用户管理页面** | UserPage + 弹窗组件 | `frontend/src/pages/user/` |
 

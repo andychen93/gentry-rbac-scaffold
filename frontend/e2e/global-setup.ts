@@ -78,7 +78,7 @@ export default async function globalSetup() {
 
   try {
     for (const [username, password] of Object.entries(ACCOUNTS)) {
-      // 先按无验证码登录（precision.captcha.enabled=false 的部署）
+      // 先按无验证码登录（gentry.captcha.enabled=false 的部署）
       let res = await ctx.post('/api/v1/auth/login', { data: { username, password } });
       let body = await res.json();
 
@@ -95,7 +95,7 @@ export default async function globalSetup() {
           throw new Error(
             `未能从 Redis 读到验证码答案（key=captcha:${uuid}）。\n` +
               '确认 redis-cli 可用且连的是后端所用的那个 Redis；' +
-              '或把后端以 -Dprecision.captcha.enabled=false 启动。',
+              '或把后端以 -Dgentry.captcha.enabled=false 启动。',
           );
         }
         res = await ctx.post('/api/v1/auth/login', {

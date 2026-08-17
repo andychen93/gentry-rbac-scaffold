@@ -6,7 +6,7 @@ import { toSidebarItems } from '../../utils/menuMapper';
 import type { MenuItem, MenuNavItem } from '../../types/menu';
 import AppHeader from './AppHeader';
 import AppFooter from './AppFooter';
-import PrecisionSidenav from './PrecisionSidenav';
+import GentrySidenav from './GentrySidenav';
 import PageShell from './PageShell';
 
 const BREAKPOINT_MOBILE = 768;
@@ -204,7 +204,7 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   return (
     <div className="ps-app">
       <AppHeader />
-      <PrecisionSidenav
+      <GentrySidenav
         items={menuItems}
         selectedKey={selectedKey}
         openKeys={openKeys}

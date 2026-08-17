@@ -29,13 +29,13 @@
 
 | 文件 | 路径 | 职责 |
 |------|------|------|
-| SaTokenConfig | `backend/precision-core/.../config/SaTokenConfig.java` | 拦截器注册、CORS、UserContext 恢复 |
-| UserContext | `backend/precision-core/.../security/UserContext.java` | ThreadLocal（userId, tenantId） |
-| AuthController | `backend/precision-business/.../user/controller/AuthController.java` | 登录/登出/用户信息/改密码 API |
-| AuthService | `backend/precision-business/.../user/service/AuthService.java` | 认证服务接口 |
-| AuthServiceImpl | `backend/precision-business/.../user/service/impl/AuthServiceImpl.java` | 登录核心逻辑（StpUtil.login + Session 写入） |
-| LoginDTO | `backend/precision-business/.../user/dto/LoginDTO.java` | 登录请求（tenantCode, username, password） |
-| LoginVO | `backend/precision-business/.../user/vo/LoginVO.java` | 登录响应（token, userInfo） |
+| SaTokenConfig | `backend/gentry-core/.../config/SaTokenConfig.java` | 拦截器注册、CORS、UserContext 恢复 |
+| UserContext | `backend/gentry-core/.../security/UserContext.java` | ThreadLocal（userId, tenantId） |
+| AuthController | `backend/gentry-business/.../user/controller/AuthController.java` | 登录/登出/用户信息/改密码 API |
+| AuthService | `backend/gentry-business/.../user/service/AuthService.java` | 认证服务接口 |
+| AuthServiceImpl | `backend/gentry-business/.../user/service/impl/AuthServiceImpl.java` | 登录核心逻辑（StpUtil.login + Session 写入） |
+| LoginDTO | `backend/gentry-business/.../user/dto/LoginDTO.java` | 登录请求（tenantCode, username, password） |
+| LoginVO | `backend/gentry-business/.../user/vo/LoginVO.java` | 登录响应（token, userInfo） |
 | Sa-Token 版本 | `backend/pom.xml` 中 `sa-token.version=1.38.0` | |
 
 ---
@@ -44,7 +44,7 @@
 
 ### Phase 1：基础设施 — 引入 JWT 依赖 + 配置开关
 
-**1.1 添加 Maven 依赖**（`precision-core/pom.xml`）
+**1.1 添加 Maven 依赖**（`gentry-core/pom.xml`）
 
 ```xml
 <!-- Sa-Token JWT 整合 -->
@@ -95,10 +95,10 @@ spring:
 
 **1.3 Token 模式切换配置类**
 
-创建 `precision-core` 中的 `TokenModeConfig.java`：
+创建 `gentry-core` 中的 `TokenModeConfig.java`：
 
 ```java
-package com.precision.core.config;
+package com.gentry.core.config;
 
 import cn.dev33.satoken.jwt.StpLogicJwtForSimple;
 import cn.dev33.satoken.stp.StpLogic;
@@ -127,10 +127,10 @@ public class TokenModeConfig {
 
 **2.1 自定义 Payload 填充**
 
-创建 `precision-core` 中的 `JwtPayloadHandler.java`：
+创建 `gentry-core` 中的 `JwtPayloadHandler.java`：
 
 ```java
-package com.precision.core.security;
+package com.gentry.core.security;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.dev33.satoken.listener.SaTokenListener;
@@ -175,10 +175,10 @@ public class JwtPayloadHandler implements SaTokenListener {
 
 **3.1 Token 黑名单服务**
 
-创建 `precision-core` 中的 `TokenBlacklistService.java`：
+创建 `gentry-core` 中的 `TokenBlacklistService.java`：
 
 ```java
-package com.precision.core.security;
+package com.gentry.core.security;
 
 import cn.dev33.satoken.SaManager;
 import cn.dev33.satoken.stp.StpUtil;

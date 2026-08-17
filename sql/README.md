@@ -5,7 +5,7 @@
 数据库结构与初始化数据由 Flyway 管理，脚本在：
 
 ```
-backend/precision-start/src/main/resources/db/migration/
+backend/gentry-start/src/main/resources/db/migration/
 ├── common/                         # 三库通用迁移（版本号统一编号，与厂商目录穿插执行）
 │   ├── V2__init_data.sql           # 默认租户 + 菜单/权限点 + 角色 + 部门 + 用户 + 字典
 │   ├── V3__init_monitor_redis.sql  # 监控中心目录 + Redis 监控菜单与权限
@@ -26,7 +26,7 @@ backend/precision-start/src/main/resources/db/migration/
 ## 只想留一种数据库？
 
 删掉不用的两个厂商目录，`application.yml` 的 `spring.profiles.active` 写死，
-`precision-start/pom.xml` 里删掉不需要的驱动（`flyway-mysql` 只有用 MySQL 才需要，
+`gentry-start/pom.xml` 里删掉不需要的驱动（`flyway-mysql` 只有用 MySQL 才需要，
 PostgreSQL/SQLite 是 `flyway-core` 内置支持）。
 
 ## reference/

@@ -3,10 +3,10 @@ import type { SystemMode, ViewMode, ThemeMode } from '../types/layout';
 import type { MenuItem } from '../types/menu';
 
 /** 本地存储 key 常量 */
-export const LAYOUT_SIDEBAR_PINNED_KEY = 'precision_sidebar_pinned';
-export const LAYOUT_SYSTEM_MODE_KEY = 'precision_system_mode';
-export const LAYOUT_VIEW_MODE_KEY = 'precision_view_mode';
-export const LAYOUT_THEME_KEY = 'precision_theme';
+export const LAYOUT_SIDEBAR_PINNED_KEY = 'gentry_sidebar_pinned';
+export const LAYOUT_SYSTEM_MODE_KEY = 'gentry_system_mode';
+export const LAYOUT_VIEW_MODE_KEY = 'gentry_view_mode';
+export const LAYOUT_THEME_KEY = 'gentry_theme';
 
 /** Layout Store 接口 */
 interface LayoutStore {

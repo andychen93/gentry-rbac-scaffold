@@ -42,8 +42,8 @@ else
 fi
 
 # SQLite（文件型库，检查后端工作目录下有没有落盘文件）
-if [[ -f "$ROOT_DIR/backend/precision-start/precision.db" ]]; then
-  row "SQLite" "UP" "backend/precision-start/precision.db"
+if [[ -f "$ROOT_DIR/backend/gentry-start/precision.db" ]]; then
+  row "SQLite" "UP" "backend/gentry-start/precision.db"
 else
   row "SQLite" "DOWN" "未找到 precision.db（尚未用 --db=sqlite 启动过）"
 fi

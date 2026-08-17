@@ -45,7 +45,7 @@ bash scripts/deps_up.sh --db=postgresql   # 起 PostgreSQL 而不是 MySQL
 bash scripts/dev_up.sh --db=postgresql    # 后端跟着切到 PostgreSQL profile
 
 bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
-                                           # 数据文件落在 backend/precision-start/precision.db
+                                           # 数据文件落在 backend/gentry-start/precision.db
 ```
 
 三种数据库跑的是同一套业务代码，区别只在 Flyway 迁移的建表方言和 `application-{db}.yml`
@@ -80,10 +80,10 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 ├── DOC_INDEX.md              # 文档索引
 ├── backend/
 │   ├── pom.xml               # 父 POM，聚合下面 4 个模块
-│   ├── precision-core/       # 横切基础设施（无业务依赖）
-│   ├── precision-business/   # 业务模块，现有 rbac 包，新业务平级新增
-│   ├── precision-monitor/    # 运维监控（Redis 监控）
-│   └── precision-start/      # 启动入口 + application-{mysql,postgresql,sqlite}.yml
+│   ├── gentry-core/       # 横切基础设施（无业务依赖）
+│   ├── gentry-business/   # 业务模块，现有 rbac 包，新业务平级新增
+│   ├── gentry-monitor/    # 运维监控（Redis 监控）
+│   └── gentry-start/      # 启动入口 + application-{mysql,postgresql,sqlite}.yml
 │       └── src/main/resources/db/migration/
 │           ├── common/       # 三库通用迁移（99% 的新迁移放这里）
 │           ├── mysql/        # MySQL 方言迁移（目前只有 V1 建表）
@@ -110,12 +110,12 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 
 以「订单管理」为例，五个动作：
 
-**① 后端代码** —— 照抄 `backend/precision-business/src/main/java/com/precision/rbac/dept`
-（最小完整样例：树形 + 数据权限 + 操作日志），在 `com/precision/order` 下建
+**① 后端代码** —— 照抄 `backend/gentry-business/src/main/java/com/gentry/rbac/dept`
+（最小完整样例：树形 + 数据权限 + 操作日志），在 `com/gentry/order` 下建
 `controller / service / service/impl / mapper / entity / dto / vo`。
 实体继承 `TenantEntity`，Controller 加 `@SaCheckPermission("biz:order:add")`。
 
-**② 数据库** —— 新增 `backend/precision-start/src/main/resources/db/migration/common/V6__create_order.sql`
+**② 数据库** —— 新增 `backend/gentry-start/src/main/resources/db/migration/common/V6__create_order.sql`
 （放 `common/` 不是三个厂商目录，建表 + 插菜单是纯 DML/标准 DDL，三库通用）：
 
 ```sql
@@ -157,15 +157,15 @@ Service 单测覆盖 ≥ 90%。
 
 ## 5. 把脚手架改成你的项目
 
-脚手架保留 `com.precision` / `precision-*` 命名，全套文档也按这个命名写的。
+脚手架保留 `com.gentry` / `precision-*` 命名，全套文档也按这个命名写的。
 要改成自己的名字，按这个顺序动：
 
 1. `backend/**/pom.xml` 的 `groupId` / `artifactId` / `name`
-2. Java 包名 `com.precision` → `com.yourcompany`（IDE 的 Rename Package 一次到位）
-3. `application.yml` 里 `logging.level.com.precision`、`mybatis-flex` 扫描路径
+2. Java 包名 `com.gentry` → `com.yourcompany`（IDE 的 Rename Package 一次到位）
+3. `application.yml` 里 `logging.level.com.gentry`、`mybatis-flex` 扫描路径
    （`application-{mysql,postgresql,sqlite}.yml` 三个数据库连接配置不含包名，不用动）
-4. `PrecisionApplication` 类名与 `@MapperScan("com.precision.**.mapper")`
-5. 前端 `package.json` 的 `name`，`localStorage` 的 token key（`userStore.ts` 里 `precision_token`）
+4. `GentryApplication` 类名与 `@MapperScan("com.gentry.**.mapper")`
+5. 前端 `package.json` 的 `name`，`localStorage` 的 token key（`userStore.ts` 里 `gentry_token`）
 6. `doc/` 里的示例包路径
 
 改**显示名称**不用动这些，只改两处：`frontend/src/config/app.ts` 的 `APP_NAME` / `APP_INITIAL`，
@@ -185,7 +185,7 @@ Service 单测覆盖 ≥ 90%。
 | Redis | 开启密码认证，`spring.data.redis.password` 外置 |
 | Actuator | `/actuator/prometheus` 等端点当前无认证，需限制为内网访问或加认证 |
 | CORS / HTTPS | 按部署形态配置反向代理 |
-| 日志级别 | `logging.level.com.precision` 从 `DEBUG` 调到 `INFO` |
+| 日志级别 | `logging.level.com.gentry` 从 `DEBUG` 调到 `INFO` |
 
 `application.yml` 里的数据库口令、JWT 密钥都是本地开发默认值，**直接上生产等于没有认证**。
 

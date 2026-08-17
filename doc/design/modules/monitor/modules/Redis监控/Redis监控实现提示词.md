@@ -11,12 +11,12 @@
 - Redis 已接入：`sa-token-redis-jackson` + `spring-boot-starter-data-redis`（Lettuce 连接池）
 - Redis 配置：`application.yml` 中 `spring.data.redis.*` 已配好（127.0.0.1:6379）
 - 认证：Sa-Token JWT（jwt-simple），拦截器在 `SaTokenConfig`
-- 父 POM：`backend/pom.xml`，现有模块 precision-core / precision-business / precision-protocol / precision-start
+- 父 POM：`backend/pom.xml`，现有模块 gentry-core / gentry-business / precision-protocol / gentry-start
 
 ### 目标状态
-- 新建 `precision-monitor` 模块，作为监控功能的独立承载模块
-- Redis 监控功能包路径：`com.precision.monitor.redis`
-- 通过 `precision-start` 聚合启动
+- 新建 `gentry-monitor` 模块，作为监控功能的独立承载模块
+- Redis 监控功能包路径：`com.gentry.monitor.redis`
+- 通过 `gentry-start` 聚合启动
 
 ### 设计文档（必读）
 - 后端详细设计：`doc/design/modules/monitor/modules/Redis监控/后端详细设计.md`
@@ -28,16 +28,16 @@
 
 ### 新增 Maven 模块
 
-在 `backend/` 下新建 `precision-monitor` 子模块：
+在 `backend/` 下新建 `gentry-monitor` 子模块：
 
 ```
 backend/
-├── precision-core/              # 已有：全局基础设施
-├── precision-business/          # 已有：业务模块（RBAC 等）
+├── gentry-core/              # 已有：全局基础设施
+├── gentry-business/          # 已有：业务模块（RBAC 等）
 ├── precision-protocol/          # 已有：协议模块
-├── precision-monitor/           # 🆕 新建：监控模块
+├── gentry-monitor/           # 🆕 新建：监控模块
 │   ├── pom.xml
-│   └── src/main/java/com/precision/monitor/
+│   └── src/main/java/com/gentry/monitor/
 │       └── redis/
 │           ├── controller/
 │           │   └── RedisMonitorController.java
@@ -55,7 +55,7 @@ backend/
 │           │   └── RedisKeyVO.java
 │           └── enums/
 │               └── RedisKeyDataType.java
-├── precision-start/             # 已有：需要新增 precision-monitor 依赖
+├── gentry-start/             # 已有：需要新增 gentry-monitor 依赖
 └── pom.xml                      # 已有：需要新增 module 声明
 ```
 
@@ -65,7 +65,7 @@ backend/
 
 ### Phase 1：Maven 模块骨架
 
-**1.1 创建 `precision-monitor/pom.xml`**
+**1.1 创建 `gentry-monitor/pom.xml`**
 
 ```xml
 <?xml version="1.0.0" encoding="UTF-8"?>
@@ -75,20 +75,20 @@ backend/
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.precision</groupId>
-        <artifactId>precision-parent</artifactId>
+        <groupId>com.gentry</groupId>
+        <artifactId>gentry-parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>precision-monitor</artifactId>
-    <name>Precision Monitor</name>
+    <artifactId>gentry-monitor</artifactId>
+    <name>Gentry Monitor</name>
 
     <dependencies>
         <dependency>
-            <groupId>com.precision</groupId>
-            <artifactId>precision-core</artifactId>
+            <groupId>com.gentry</groupId>
+            <artifactId>gentry-core</artifactId>
         </dependency>
-        <!-- Spring Data Redis（已由 precision-core 传递 sa-token-redis-jackson，但显式声明用于直接操作 Redis） -->
+        <!-- Spring Data Redis（已由 gentry-core 传递 sa-token-redis-jackson，但显式声明用于直接操作 Redis） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>
@@ -118,31 +118,31 @@ backend/
 
 在 `<modules>` 中新增：
 ```xml
-<module>precision-monitor</module>
+<module>gentry-monitor</module>
 ```
 
 在 `<dependencyManagement>` 中新增：
 ```xml
 <dependency>
-    <groupId>com.precision</groupId>
-    <artifactId>precision-monitor</artifactId>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-monitor</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```
 
-**1.3 修改 `precision-start/pom.xml`**
+**1.3 修改 `gentry-start/pom.xml`**
 
 新增依赖：
 ```xml
 <dependency>
-    <groupId>com.precision</groupId>
-    <artifactId>precision-monitor</artifactId>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-monitor</artifactId>
 </dependency>
 ```
 
 ### Phase 2：VO 对象（纯数据结构，无依赖）
 
-创建以下 VO 类，包路径 `com.precision.monitor.redis.vo`：
+创建以下 VO 类，包路径 `com.gentry.monitor.redis.vo`：
 
 **RedisInfoVO.java**
 ```java
@@ -612,7 +612,7 @@ void getKeyValue_largeValue_truncated() {
 ### 核心依赖关系
 
 ```
-precision-monitor  →  precision-core
+gentry-monitor  →  gentry-core
                   →  spring-boot-starter-data-redis
                   →  lombok
 ```
@@ -647,8 +647,8 @@ Redis `INFO all` 命令返回格式为 `key:value` 文本行，Spring Data Redis
 
 ## 六、不要做的事情
 
-- **不要**修改 `precision-core` 或 `precision-business` 中的任何现有代码
-- **不要**在 `precision-business` 中添加监控相关代码（监控是独立模块）
+- **不要**修改 `gentry-core` 或 `gentry-business` 中的任何现有代码
+- **不要**在 `gentry-business` 中添加监控相关代码（监控是独立模块）
 - **不要**引入额外的 Redis 客户端（如 Jedis、Lettuce 直接使用），统一用 `StringRedisTemplate`
 - **不要**做 Redis 配置修改功能（只读监控）
 - **不要**做历史数据存储和趋势图（后续接入 Prometheus + Grafana）
@@ -658,8 +658,8 @@ Redis `INFO all` 命令返回格式为 `key:value` 文本行，Spring Data Redis
 
 ## 七、验收标准
 
-- [ ] `precision-monitor` 模块创建并编译通过
-- [ ] `precision-start` 依赖 `precision-monitor` 并正常启动
+- [ ] `gentry-monitor` 模块创建并编译通过
+- [ ] `gentry-start` 依赖 `gentry-monitor` 并正常启动
 - [ ] `GET /api/v1/monitor/redis/info` 返回 Redis 监控信息（含 info、dbSize、commandStats）
 - [ ] `GET /api/v1/monitor/redis/key-defines` 返回系统预定义的 Key 模板列表
 - [ ] `GET /api/v1/monitor/redis/keys?pattern=blacklist:*` 返回匹配的 Key 列表（含 type、ttl）

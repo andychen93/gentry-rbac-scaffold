@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { message } from 'antd';
 
-const TOKEN_KEY = 'precision_token';
+const TOKEN_KEY = 'gentry_token';
 
 const request = axios.create({
   baseURL: '',

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { authApi, LoginDTO, LoginVO } from '../services/userApi';
 import type { MenuNavItem } from '../types/menu';
 
-const TOKEN_KEY = 'precision_token';
+const TOKEN_KEY = 'gentry_token';
 
 interface UserInfo {
   userId: number;

@@ -5,7 +5,7 @@ import { login, gotoPage } from './helpers/auth';
 const TS = Date.now().toString().slice(-6);
 
 async function getToken(page: Page): Promise<string> {
-  return await page.evaluate(() => localStorage.getItem('precision_token') || '');
+  return await page.evaluate(() => localStorage.getItem('gentry_token') || '');
 }
 
 test.describe.serial('用户管理 CRUD', () => {

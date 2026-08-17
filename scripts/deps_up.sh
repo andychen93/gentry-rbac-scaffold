@@ -6,7 +6,7 @@
 #   bash scripts/deps_up.sh --db=mysql       # 同上，显式指定
 #   bash scripts/deps_up.sh --db=postgresql  # PostgreSQL + Redis
 #
-# SQLite 不需要这个脚本：它是文件型库，backend/precision-start 目录下
+# SQLite 不需要这个脚本：它是文件型库，backend/gentry-start 目录下
 # 切 profile=sqlite 直接跑就有，见 application-sqlite.yml。
 set -e
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"

@@ -11,18 +11,18 @@
         <relativePath/>
     </parent>
 
-    <groupId>com.precision</groupId>
-    <artifactId>precision-parent</artifactId>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-parent</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
-    <name>Precision RBAC Scaffold</name>
+    <name>Gentry RBAC Scaffold</name>
     <description>多租户 RBAC 权限脚手架（Spring Boot 3 + MyBatis-Flex + Sa-Token + PostgreSQL）</description>
 
     <modules>
-        <module>precision-core</module>
-        <module>precision-business</module>
-        <module>precision-monitor</module>
-        <module>precision-start</module>
+        <module>gentry-core</module>
+        <module>gentry-business</module>
+        <module>gentry-monitor</module>
+        <module>gentry-start</module>
     </modules>
 
     <properties>
@@ -43,18 +43,18 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.precision</groupId>
-                <artifactId>precision-core</artifactId>
+                <groupId>com.gentry</groupId>
+                <artifactId>gentry-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.precision</groupId>
-                <artifactId>precision-business</artifactId>
+                <groupId>com.gentry</groupId>
+                <artifactId>gentry-business</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.precision</groupId>
-                <artifactId>precision-monitor</artifactId>
+                <groupId>com.gentry</groupId>
+                <artifactId>gentry-monitor</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
