@@ -48,8 +48,8 @@ case "$DB" in
       -c "DROP DATABASE IF EXISTS $DB_NAME;" -c "CREATE DATABASE $DB_NAME;"
     ;;
   sqlite)
-    rm -f "$ROOT_DIR/backend/gentry-start/precision.db"
-    echo "已删除 backend/gentry-start/precision.db"
+    rm -f "$ROOT_DIR/backend/gentry-start/gentry.db"
+    echo "已删除 backend/gentry-start/gentry.db"
     ;;
   *)
     echo -e "${RED}--db 只支持 mysql | postgresql | sqlite（当前: $DB）${NC}"; exit 1 ;;

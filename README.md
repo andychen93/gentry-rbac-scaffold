@@ -45,7 +45,7 @@ bash scripts/deps_up.sh --db=postgresql   # 起 PostgreSQL 而不是 MySQL
 bash scripts/dev_up.sh --db=postgresql    # 后端跟着切到 PostgreSQL profile
 
 bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
-                                           # 数据文件落在 backend/gentry-start/precision.db
+                                           # 数据文件落在 backend/gentry-start/gentry.db
 ```
 
 三种数据库跑的是同一套业务代码，区别只在 Flyway 迁移的建表方言和 `application-{db}.yml`

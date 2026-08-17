@@ -42,10 +42,10 @@ else
 fi
 
 # SQLite（文件型库，检查后端工作目录下有没有落盘文件）
-if [[ -f "$ROOT_DIR/backend/gentry-start/precision.db" ]]; then
-  row "SQLite" "UP" "backend/gentry-start/precision.db"
+if [[ -f "$ROOT_DIR/backend/gentry-start/gentry.db" ]]; then
+  row "SQLite" "UP" "backend/gentry-start/gentry.db"
 else
-  row "SQLite" "DOWN" "未找到 precision.db（尚未用 --db=sqlite 启动过）"
+  row "SQLite" "DOWN" "未找到 gentry.db（尚未用 --db=sqlite 启动过）"
 fi
 
 # Redis

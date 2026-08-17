@@ -53,7 +53,7 @@ for i in $(seq 1 90); do
   dbh=$(docker inspect -f '{{.State.Health.Status}}' "$CONTAINER" 2>/dev/null || echo starting)
   rd=$(docker inspect -f '{{.State.Health.Status}}' rbac-redis 2>/dev/null || echo starting)
   if [[ "$dbh" == "healthy" && "$rd" == "healthy" ]]; then
-    ok "$DBNAME   localhost:$PORT/precision"
+    ok "$DBNAME   localhost:$PORT/gentry"
     ok "Redis      localhost:6379"
     echo ""
     echo "下一步： bash scripts/dev_up.sh --db=$DB   （或不传 --db，默认 mysql）"

@@ -2,11 +2,11 @@
 # 定位：本地体验 / 单元测试 / demo，不建议在多进程并发写场景下用于生产
 # （SQLite 文件级锁，写并发能力弱于 MySQL/PostgreSQL）。
 #
-# 无需起容器，数据文件直接落在 backend/gentry-start/ 下的 precision.db，
+# 无需起容器，数据文件直接落在 backend/gentry-start/ 下的 gentry.db，
 # 首次启动 Flyway 会自动建表。删掉这个文件就是清库重来。
 spring:
   datasource:
-    url: jdbc:sqlite:precision.db
+    url: jdbc:sqlite:gentry.db
     driver-class-name: org.sqlite.JDBC
     # SQLite 单文件写锁：连接池开大了并发写会直接报 "database is locked"，
     # 限制为 1 让所有写操作排队，规避这个问题（读也走这一个连接，够本地/demo 场景用）

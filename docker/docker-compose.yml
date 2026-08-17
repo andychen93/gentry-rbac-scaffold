@@ -14,7 +14,7 @@ services:
     container_name: rbac-mysql
     profiles: ["mysql"]
     environment:
-      MYSQL_DATABASE: precision
+      MYSQL_DATABASE: gentry
       MYSQL_ROOT_PASSWORD: "123456"
       TZ: Asia/Shanghai
     command:
@@ -37,7 +37,7 @@ services:
     container_name: rbac-postgres
     profiles: ["postgresql"]
     environment:
-      POSTGRES_DB: precision
+      POSTGRES_DB: gentry
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: "123456"
       # 与 application-postgresql.yml 的 datasource 保持一致；生产环境务必换掉
@@ -47,7 +47,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d precision"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gentry"]
       interval: 5s
       timeout: 3s
       retries: 20

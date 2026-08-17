@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class UserManagementIntegrationTest {
 
     private static final String DB_URL = System.getProperty(
-            "gentry.test.db.url", "jdbc:postgresql://localhost:5432/precision");
+            "gentry.test.db.url", "jdbc:postgresql://localhost:5432/gentry");
     private static final String DB_USER = System.getProperty("gentry.test.db.user", "postgres");
     private static final String DB_PASS = System.getProperty("gentry.test.db.password", "123456");
     private static final long TENANT_ID = 1L;

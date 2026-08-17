@@ -35,7 +35,7 @@ PostgreSQL/SQLite 是 `flyway-core` 内置支持）。
 初始化脚本，仅用于「不想跑应用、只想手动灌一个库看看」的场景：
 
 ```bash
-psql -h localhost -U postgres -d precision -f sql/reference/rbac_full_init.sql
+psql -h localhost -U postgres -d gentry -f sql/reference/rbac_full_init.sql
 ```
 
 它不参与构建，也不被 Flyway 读取，且只覆盖 PostgreSQL 这一种方言。**如果你改了迁移文件，

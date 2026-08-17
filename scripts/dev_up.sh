@@ -74,7 +74,7 @@ error() { echo -e "${RED}[ERR ]${NC} $*"; }
 # ============ 依赖检查 ============
 check_database() {
   if [[ "$DB_PROFILE" == "sqlite" ]]; then
-    info "SQLite 是文件型库，无需连通性检查（首次启动 Flyway 自动建 precision.db）"
+    info "SQLite 是文件型库，无需连通性检查（首次启动 Flyway 自动建 gentry.db）"
     return 0
   fi
 
