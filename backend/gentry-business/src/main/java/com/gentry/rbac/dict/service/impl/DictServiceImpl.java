@@ -3,6 +3,7 @@ package com.gentry.rbac.dict.service.impl;
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
+import com.gentry.core.i18n.DictI18nKeyResolver;
 import com.gentry.core.security.UserContext;
 import com.gentry.rbac.dict.dto.*;
 import com.gentry.rbac.dict.cache.DictCacheManager;
@@ -42,6 +43,8 @@ public class DictServiceImpl implements DictService {
         Long tenantId = UserContext.getTenantId();
         long total = dictTypeMapper.selectCount(query, tenantId);
         List<DictTypeListVO> list = total > 0 ? dictTypeMapper.selectList(query, tenantId) : List.of();
+        // DictTypeListVO 由 XML 的 resultType 直接映射，不经组装方法，i18nKey 只能在这里补
+        list.forEach(vo -> vo.setI18nKey(DictI18nKeyResolver.resolveType(vo.getDictType())));
         return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
     }
 
@@ -168,6 +171,7 @@ public class DictServiceImpl implements DictService {
         DictTypeVO vo = new DictTypeVO();
         vo.setId(entity.getId());
         vo.setDictName(entity.getDictName());
+        vo.setI18nKey(DictI18nKeyResolver.resolveType(entity.getDictType()));
         vo.setDictType(entity.getDictType());
         vo.setStatus(entity.getStatus());
         vo.setRemark(entity.getRemark());
@@ -180,6 +184,7 @@ public class DictServiceImpl implements DictService {
         vo.setId(entity.getId());
         vo.setDictType(entity.getDictType());
         vo.setDictLabel(entity.getDictLabel());
+        vo.setI18nKey(DictI18nKeyResolver.resolveData(entity.getDictType(), entity.getDictValue()));
         vo.setDictValue(entity.getDictValue());
         vo.setCssClass(entity.getCssClass());
         vo.setListClass(entity.getListClass());

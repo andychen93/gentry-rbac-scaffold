@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 public class DictTypeVO {
     private Long id;
     private String dictName;
+    /** i18n key，由 dict_type 派生（dict.type.*），可为 null。不落库，属 API 契约。 */
+    private String i18nKey;
     private String dictType;
     private Integer status;
     private String remark;
@@ -14,6 +16,8 @@ public class DictTypeVO {
     public void setId(Long id) { this.id = id; }
     public String getDictName() { return dictName; }
     public void setDictName(String dictName) { this.dictName = dictName; }
+    public String getI18nKey() { return i18nKey; }
+    public void setI18nKey(String i18nKey) { this.i18nKey = i18nKey; }
     public String getDictType() { return dictType; }
     public void setDictType(String dictType) { this.dictType = dictType; }
     public Integer getStatus() { return status; }

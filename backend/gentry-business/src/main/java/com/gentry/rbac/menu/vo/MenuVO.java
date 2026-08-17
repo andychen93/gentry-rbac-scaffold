@@ -10,6 +10,14 @@ public class MenuVO {
     private Long id;
     private Long parentId;
     private String name;
+    /**
+     * i18n key，由 permission/path 派生，可为 null。
+     *
+     * <p>不落库：{@code sys_menu} 没有这一列，本字段是<b>API 契约</b>的一部分，
+     * 由 {@code MenuI18nKeyResolver} 在组装 VO 时计算。前端渲染时
+     * {@code label = t(i18nKey) ?? name}，为 null 或语言包缺 key 时回退 name。</p>
+     */
+    private String i18nKey;
     private String icon;
     private Integer type;
     private Integer sort;
@@ -28,6 +36,8 @@ public class MenuVO {
     public void setParentId(Long parentId) { this.parentId = parentId; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    public String getI18nKey() { return i18nKey; }
+    public void setI18nKey(String i18nKey) { this.i18nKey = i18nKey; }
     public String getIcon() { return icon; }
     public void setIcon(String icon) { this.icon = icon; }
     public Integer getType() { return type; }

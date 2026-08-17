@@ -12,6 +12,7 @@ import com.gentry.rbac.role.mapper.RoleMapper;
 import com.gentry.rbac.role.mapper.RoleMenuMapper;
 import com.gentry.rbac.menu.entity.Menu;
 import com.gentry.rbac.menu.mapper.MenuMapper;
+import com.gentry.core.i18n.MenuI18nKeyResolver;
 import com.gentry.rbac.menu.vo.MenuTreeVO;
 import com.gentry.rbac.tenant.entity.Tenant;
 import com.gentry.rbac.tenant.mapper.TenantMapper;
@@ -297,6 +298,7 @@ public class AuthServiceImpl implements AuthService {
         vo.setUserId(user.getId());
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
+        vo.setLanguage(user.getLanguage());   // 三态：null = 从未选过，前端保持当前 locale
         vo.setAvatar(user.getAvatar());
         vo.setDeptId(user.getDeptId());
 
@@ -400,6 +402,8 @@ public class AuthServiceImpl implements AuthService {
         vo.setId(menu.getId());
         vo.setParentId(menu.getParentId());
         vo.setName(menu.getName());
+        // 派生 i18n key 供前端翻译；permission 不下发（导航树不需要），但要用它算 key
+        vo.setI18nKey(MenuI18nKeyResolver.resolve(menu.getPermission(), menu.getPath()));
         vo.setIcon(menu.getIcon());
         vo.setType(menu.getType());
         vo.setSort(menu.getSort());

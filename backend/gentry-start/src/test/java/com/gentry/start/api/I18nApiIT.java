@@ -9,6 +9,7 @@ import com.gentry.rbac.user.mapper.UserMapper;
 import org.springframework.context.MessageSource;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -201,6 +202,148 @@ class I18nApiIT extends BaseApiIT {
             User u = userMapper.selectByUsername(1L, seed);
             assertThat(u).as("种子用户 %s 应存在", seed).isNotNull();
             assertThat(u.getLanguage()).as("种子用户 %s 的 language 应为 NULL", seed).isNull();
+        }
+    }
+
+    // ==================== B 类 key 下发 ====================
+
+    /** 递归收集菜单树上的 (name, i18nKey) */
+    private void collectMenus(JsonNode nodes, List<String[]> out) {
+        for (JsonNode n : nodes) {
+            out.add(new String[]{n.path("name").asText(), n.path("i18nKey").asText(null)});
+            if (n.has("children") && n.get("children").isArray()) {
+                collectMenus(n.get("children"), out);
+            }
+        }
+    }
+
+    @Test
+    @DisplayName("登录响应带language与菜单树i18nKey")
+    void 登录响应带language与菜单树i18nKey() throws Exception {
+        MvcResult result = mockMvc.perform(bareGet("/api/v1/auth/user-info")
+                        .header("Authorization", superAuth()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        JsonNode data = parse(result).at("/data");
+
+        // 全局 Jackson 配了 NON_NULL，language 为 null（种子用户从未选过）时字段整个不出现。
+        // 语义上等价：缺失 = null = 未设置 = 前端保持当前 locale。
+        assertThat(data.has("language"))
+                .as("种子用户 language 为 NULL，NON_NULL 下该字段应被省略")
+                .isFalse();
+
+        List<String[]> menus = new ArrayList<>();
+        collectMenus(data.get("menus"), menus);
+        assertThat(menus).as("SUPER_ADMIN 应能看到导航菜单").isNotEmpty();
+
+        List<String> missing = menus.stream()
+                .filter(m -> m[1] == null || m[1].isBlank())
+                .map(m -> m[0])
+                .toList();
+        assertThat(missing)
+                .as("这些菜单派生不出 i18nKey（permission 与 path 都为空？）")
+                .isEmpty();
+
+        // key 必须是 menu.* 且无重复
+        List<String> keys = menus.stream().map(m -> m[1]).toList();
+        assertThat(keys).allMatch(k -> k.startsWith("menu."));
+        assertThat(new java.util.HashSet<>(keys))
+                .as("派生 key 不应重复，重复意味着两个菜单共用一条译文")
+                .hasSameSizeAs(keys);
+    }
+
+    @Test
+    @DisplayName("用户设置过语言时_UserInfoVO下发language字段")
+    void 用户设置过语言时_UserInfoVO下发language字段() throws Exception {
+        String userAuth = loginWithLanguage("en_US");
+        MvcResult result = mockMvc.perform(bareGet("/api/v1/auth/user-info")
+                        .header("Authorization", userAuth))
+                .andExpect(status().isOk())
+                .andReturn();
+        assertThat(parse(result).at("/data/language").asText())
+                .as("显式选过语言的用户，前端要据此在渲染业务页面前切好语言，避免闪一下")
+                .isEqualTo("en_US");
+    }
+
+    @Test
+    @DisplayName("permission与path皆空的菜单_i18nKey为null且接口不报错")
+    void permission与path皆空的菜单_i18nKey为null且接口不报错() throws Exception {
+        // 建一个目录菜单，permission 与 path 都不填 → 派生不出 key → 前端回退显示 name
+        Map<String, Object> body = new HashMap<>();
+        body.put("parentId", 0);
+        body.put("name", "无编码目录" + SEQ.incrementAndGet());
+        body.put("type", 1);
+        body.put("sort", 900);
+        MvcResult created = mockMvc.perform(authedPost("/api/v1/menus").content(json(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+
+        JsonNode vo = parse(created).at("/data");
+        assertThat(vo.path("i18nKey").isNull() || vo.path("i18nKey").asText("").isEmpty())
+                .as("派生不出 key 时必须是 null，而不是空串或畸形 key")
+                .isTrue();
+        assertThat(vo.path("name").asText()).startsWith("无编码目录");
+    }
+
+    @Test
+    @DisplayName("菜单树接口下发i18nKey_与permission派生一致")
+    void 菜单树接口下发i18nKey_与permission派生一致() throws Exception {
+        MvcResult result = mockMvc.perform(bareGet("/api/v1/menus/tree")
+                        .header("Authorization", auth))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode data = parse(result).at("/data");
+
+        int checked = 0;
+        for (JsonNode node : flatten(data)) {
+            String perm = node.path("permission").asText(null);
+            String path = node.path("path").asText(null);
+            String expected = com.gentry.core.i18n.MenuI18nKeyResolver.resolve(perm, path);
+            String actual = node.path("i18nKey").asText(null);
+            assertThat(actual)
+                    .as("菜单 %s 的 i18nKey 与派生规则不一致", node.path("name").asText())
+                    .isEqualTo(expected);
+            checked++;
+        }
+        assertThat(checked).as("菜单树不应为空").isPositive();
+    }
+
+    private List<JsonNode> flatten(JsonNode nodes) {
+        List<JsonNode> out = new ArrayList<>();
+        for (JsonNode n : nodes) {
+            out.add(n);
+            if (n.has("children") && n.get("children").isArray()) {
+                out.addAll(flatten(n.get("children")));
+            }
+        }
+        return out;
+    }
+
+    @Test
+    @DisplayName("字典接口下发i18nKey")
+    void 字典接口下发i18nKey() throws Exception {
+        MvcResult types = mockMvc.perform(authedGet("/api/v1/dict/types?pageNum=1&pageSize=50"))
+                .andExpect(status().isOk())
+                .andReturn();
+        JsonNode list = parse(types).at("/data/list");
+        assertThat(list.isArray()).isTrue();
+        for (JsonNode t : list) {
+            assertThat(t.path("i18nKey").asText())
+                    .as("字典类型 %s 的 i18nKey", t.path("dictType").asText())
+                    .isEqualTo("dict.type." + t.path("dictType").asText());
+        }
+
+        if (list.size() > 0) {
+            String dictType = list.get(0).path("dictType").asText();
+            MvcResult data = mockMvc.perform(authedGet("/api/v1/dict/types/{dictType}/data", dictType))
+                    .andExpect(status().isOk())
+                    .andReturn();
+            for (JsonNode d : parse(data).at("/data")) {
+                assertThat(d.path("i18nKey").asText())
+                        .isEqualTo("dict." + dictType + "." + d.path("dictValue").asText());
+            }
         }
     }
 

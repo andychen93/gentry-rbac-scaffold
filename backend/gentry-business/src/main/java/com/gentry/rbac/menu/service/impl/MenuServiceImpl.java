@@ -9,6 +9,7 @@ import com.gentry.rbac.menu.entity.Menu;
 import com.gentry.rbac.menu.enums.MenuType;
 import com.gentry.rbac.menu.mapper.MenuMapper;
 import com.gentry.rbac.menu.service.MenuService;
+import com.gentry.core.i18n.MenuI18nKeyResolver;
 import com.gentry.rbac.menu.vo.MenuTreeVO;
 import com.gentry.rbac.menu.vo.MenuVO;
 import com.gentry.rbac.role.mapper.RoleMenuMapper;
@@ -209,6 +210,7 @@ public class MenuServiceImpl implements MenuService {
         vo.setId(menu.getId());
         vo.setParentId(menu.getParentId());
         vo.setName(menu.getName());
+        vo.setI18nKey(MenuI18nKeyResolver.resolve(menu.getPermission(), menu.getPath()));
         vo.setIcon(menu.getIcon());
         vo.setType(menu.getType());
         vo.setSort(menu.getSort());
@@ -228,6 +230,7 @@ public class MenuServiceImpl implements MenuService {
         vo.setId(menu.getId());
         vo.setParentId(menu.getParentId());
         vo.setName(menu.getName());
+        vo.setI18nKey(MenuI18nKeyResolver.resolve(menu.getPermission(), menu.getPath()));
         vo.setIcon(menu.getIcon());
         vo.setType(menu.getType());
         vo.setSort(menu.getSort());
