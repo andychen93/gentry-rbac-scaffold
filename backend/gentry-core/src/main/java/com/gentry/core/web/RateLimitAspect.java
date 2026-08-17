@@ -88,7 +88,7 @@ public class RateLimitAspect {
             String messageKey = rateLimit.message() == null || rateLimit.message().isEmpty()
                     ? null
                     : rateLimit.message();
-            log.warn("限流触发: key={}, count={}, limit={}", cacheKey, current, rateLimit.count());
+            log.warn("Rate limit exceeded: key={}, count={}, limit={}", cacheKey, current, rateLimit.count());
             throw new BizException(ErrorCode.TOO_MANY_REQUESTS, messageKey);
         }
         return pjp.proceed();

@@ -12,7 +12,7 @@ spring:
   messages:
     # 按用途拆多个 basename，避免单文件几百行。加新文件时必须在此登记，
     # 否则资源文件存在但 MessageSource 找不到 —— 症状是全量走 defaultValue（显示中文兜底）
-    basename: i18n/messages,i18n/error,i18n/validation
+    basename: i18n/messages,i18n/error,i18n/validation,i18n/export
     encoding: UTF-8
     # 必须 false：为 true 时找不到 key 会退到「服务器系统语言」，
     # 同一份代码在不同机器上行为不一致。兜底一律走 defaultLocale。

@@ -49,6 +49,10 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/api/v1/auth/login",
                         "/api/v1/auth/captcha",
                         "/api/v1/tenants/options",
+                        // 语言列表：登录页就要渲染语言选择器，必须放行。
+                        // 只加 @RestController 不放行是不够的 —— 本拦截器覆盖 /api/**，
+                        // 未登录访问会拿到 401（实测踩过）。
+                        "/api/v1/i18n/locales",
                         /*
                          * SSE 通知流：浏览器 EventSource 不能自定义请求头，token 只能走 query 参数，
                          * 拦截器读不到头会直接 401。故在此放行，改由

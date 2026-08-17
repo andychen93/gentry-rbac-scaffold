@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.gentry.rbac.user.entity.User;
 import com.gentry.rbac.user.mapper.UserMapper;
 import org.springframework.context.MessageSource;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -202,6 +204,201 @@ class I18nApiIT extends BaseApiIT {
             User u = userMapper.selectByUsername(1L, seed);
             assertThat(u).as("种子用户 %s 应存在", seed).isNotNull();
             assertThat(u.getLanguage()).as("种子用户 %s 的 language 应为 NULL", seed).isNull();
+        }
+    }
+
+    // ==================== 导出 / 导入 ====================
+
+    @Test
+    @DisplayName("导出Excel表头随语言变化")
+    void 导出Excel表头随语言变化() throws Exception {
+        byte[] en = mockMvc.perform(authedGet("/api/v1/users/export?pageNum=1&pageSize=10")
+                        .header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        byte[] zh = mockMvc.perform(authedGet("/api/v1/users/export?pageNum=1&pageSize=10")
+                        .header("Accept-Language", "zh-CN"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+
+        assertThat(readFirstRow(en))
+                .as("英文表头必须是译文，不能是 @ExcelProperty 里的中文常量")
+                .containsExactly("Username", "Nickname", "Phone", "Email",
+                        "Gender", "Department", "Job title", "Status", "Created at");
+        assertThat(readFirstRow(zh))
+                .containsExactly("用户名", "昵称", "手机号", "邮箱",
+                        "性别", "部门", "职务", "状态", "创建时间");
+    }
+
+    @Test
+    @DisplayName("英文导出的Excel能原样导回来_按列序匹配")
+    void 英文导出的Excel能原样导回来_按列序匹配() throws Exception {
+        // 这条是批次 6「内部不可拆」的证据：只做导出本地化而不改导入的列绑定方式，
+        // 英文文件导回来会因为表头对不上而静默得到全 null。
+        String username = "imp" + SEQ.incrementAndGet();
+        byte[] xlsx = buildImportFile(new String[]{
+                "Username", "Nickname", "Phone", "Email", "Gender", "Job title"},
+                new String[]{username, "导入昵称", "", "", "1", "工程师"});
+
+        MvcResult result = mockMvc.perform(multipart("/api/v1/users/import")
+                        .file(new MockMultipartFile("file", "users_en.xlsx",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", xlsx))
+                        .header("Authorization", auth)
+                        .header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        JsonNode data = parse(result).at("/data");
+        assertThat(data.path("successCount").asInt() + data.path("success").asInt())
+                .as("英文表头的文件应能成功导入 1 行，得到 0 说明列没匹配上。响应=%s", data)
+                .isPositive();
+    }
+
+    @Test
+    @DisplayName("导入错误项按语言本地化_不露裸key")
+    void 导入错误项按语言本地化_不露裸key() throws Exception {
+        // 第一列留空触发 error.user.import.username.blank
+        byte[] xlsx = buildImportFile(
+                new String[]{"Username", "Nickname", "Phone", "Email", "Gender", "Job title"},
+                new String[]{"", "无用户名", "", "", "0", ""});
+
+        MvcResult result = mockMvc.perform(multipart("/api/v1/users/import")
+                        .file(new MockMultipartFile("file", "bad.xlsx",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", xlsx))
+                        .header("Authorization", auth)
+                        .header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andReturn();
+        String body = result.getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        assertThat(body)
+                .as("BizException.getMessage() 现在返回 i18n key，导入错误项必须先本地化再给用户")
+                .doesNotContain("error.user.import");
+    }
+
+    @Test
+    @DisplayName("导入模板表头随语言变化")
+    void 导入模板表头随语言变化() throws Exception {
+        byte[] en = mockMvc.perform(authedGet("/api/v1/users/import/template")
+                        .header("Accept-Language", "en-US"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsByteArray();
+        assertThat(readFirstRow(en)).contains("Username", "Nickname");
+    }
+
+    /** 读 xlsx 首行（表头） */
+    private List<String> readFirstRow(byte[] xlsx) {
+        List<String> head = new ArrayList<>();
+        com.alibaba.excel.EasyExcel.read(new java.io.ByteArrayInputStream(xlsx))
+                .sheet()
+                .headRowNumber(0)
+                .registerReadListener(new com.alibaba.excel.read.listener.ReadListener<Map<Integer, String>>() {
+                    private boolean captured = false;
+
+                    @Override
+                    public void invoke(Map<Integer, String> row,
+                                       com.alibaba.excel.context.AnalysisContext ctx) {
+                        if (!captured) {
+                            new java.util.TreeMap<>(row).values().forEach(head::add);
+                            captured = true;
+                        }
+                    }
+
+                    @Override
+                    public void doAfterAllAnalysed(com.alibaba.excel.context.AnalysisContext ctx) {
+                    }
+                })
+                .doRead();
+        return head;
+    }
+
+    /** 用给定表头与一行数据造一个 xlsx */
+    private byte[] buildImportFile(String[] head, String[] row) {
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        List<List<String>> heads = new ArrayList<>();
+        for (String h : head) {
+            heads.add(List.of(h));
+        }
+        List<List<Object>> data = new ArrayList<>();
+        data.add(new ArrayList<>(java.util.Arrays.asList((Object[]) row)));
+        com.alibaba.excel.EasyExcel.write(out).head(heads).sheet("Sheet1").doWrite(data);
+        return out.toByteArray();
+    }
+
+    // ==================== 语言偏好接口 ====================
+
+    @Test
+    @DisplayName("切换语言_落库并同步Session_后续请求立即生效")
+    void 切换语言_落库并同步Session_后续请求立即生效() throws Exception {
+        String userAuth = loginWithLanguage(null);   // 初始未设置，跟随请求头
+
+        mockMvc.perform(barePut("/api/v1/users/me/language")
+                        .header("Authorization", userAuth)
+                        .content(json(Map.of("language", "en_US"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        // 不重新登录，直接发下一个请求：Session 已同步则 ① 生效，即使请求头是 zh-CN
+        assertThat(deleteAbsentRole("zh-CN", userAuth).at("/message").asText())
+                .as("Session 不同步的话，导出/定时通知会一直用旧语言直到重新登录")
+                .isEqualTo("Role not found");
+
+        // 落库校验
+        MvcResult info = mockMvc.perform(bareGet("/api/v1/auth/user-info")
+                        .header("Authorization", userAuth))
+                .andReturn();
+        assertThat(parse(info).at("/data/language").asText()).isEqualTo("en_US");
+    }
+
+    @Test
+    @DisplayName("切换语言_白名单外的值被拒绝")
+    void 切换语言_白名单外的值被拒绝() throws Exception {
+        // 格式合法（@Pattern 通过）但不在 gentry.i18n.supported-locales 里
+        MvcResult result = mockMvc.perform(authedPut("/api/v1/users/me/language")
+                        .header("Accept-Language", "en-US")
+                        .content(json(Map.of("language", "ja_JP"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(10002))
+                .andReturn();
+        assertThat(parse(result).at("/message").asText())
+                .as("消息应本地化且带上非法值")
+                .isEqualTo("Unsupported language: ja_JP");
+    }
+
+    @Test
+    @DisplayName("切换语言_格式非法被DTO拦下")
+    void 切换语言_格式非法被DTO拦下() throws Exception {
+        mockMvc.perform(authedPut("/api/v1/users/me/language")
+                        .content(json(Map.of("language", "not-a-locale!!"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(10002));
+    }
+
+    @Test
+    @DisplayName("语言列表接口_未登录也可访问")
+    void 语言列表接口_未登录也可访问() throws Exception {
+        // 登录页就要渲染语言选择器。只写 @RestController 是不够的 ——
+        // SaTokenConfig 的登录校验拦截器覆盖 /api/**，必须加进 excludePathPatterns。
+        // 实测漏加时这里返回 401 + code 30001。
+        mockMvc.perform(bareGet("/api/v1/i18n/locales"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+    }
+
+    @Test
+    @DisplayName("语言列表接口_返回自称且不随locale变化")
+    void 语言列表接口_返回自称且不随locale变化() throws Exception {
+        for (String lang : new String[]{"zh-CN", "en-US"}) {
+            MvcResult result = mockMvc.perform(bareGet("/api/v1/i18n/locales")
+                            .header("Accept-Language", lang))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.code").value(0))
+                    .andReturn();
+            JsonNode list = parse(result).at("/data");
+            assertThat(list).hasSize(2);
+            // label 是自称，不翻译：英文用户看到「中文」反而不认识
+            assertThat(list.get(0).path("code").asText()).isEqualTo("zh_CN");
+            assertThat(list.get(0).path("label").asText()).isEqualTo("简体中文");
+            assertThat(list.get(1).path("label").asText()).isEqualTo("English");
         }
     }
 

@@ -4,6 +4,8 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
+import com.gentry.core.i18n.I18nProperties;
+import com.gentry.core.i18n.I18nUtil;
 import com.gentry.core.security.TokenBlacklistService;
 import com.gentry.core.security.UserContext;
 import com.gentry.core.util.IdGenerator;
@@ -48,17 +50,23 @@ public class UserServiceImpl implements UserService {
     private final DeptMapper deptMapper;
     private final DeptService deptService;
     private final PasswordEncoder passwordEncoder;
+    private final I18nProperties i18nProperties;
+    private final I18nUtil i18nUtil;
 
     public UserServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, DeptMapper deptMapper,
                            DeptService deptService,
-                           PasswordEncoder passwordEncoder) {
+                           PasswordEncoder passwordEncoder,
+                           I18nProperties i18nProperties,
+                           I18nUtil i18nUtil) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
         this.deptMapper = deptMapper;
         this.deptService = deptService;
         this.passwordEncoder = passwordEncoder;
+        this.i18nProperties = i18nProperties;
+        this.i18nUtil = i18nUtil;
     }
 
     @Override
@@ -317,6 +325,32 @@ public class UserServiceImpl implements UserService {
         userMapper.updateStatus(id, dto.getStatus());
     }
 
+    @Override
+    @Transactional
+    public void updateMyLanguage(String language) {
+        Long userId = UserContext.getUserId();
+        if (userId == null) {
+            throw new BizException(ErrorCode.TOKEN_INVALID);
+        }
+        // 白名单校验放在这里而不是 DTO 的 @Pattern：注解常量读不到配置，
+        // 语言清单的单一真源是 gentry.i18n.supported-locales
+        if (!i18nProperties.getSupportedLocales().contains(language)) {
+            throw new BizException(ErrorCode.PARAM_ERROR, "error.user.language.unsupported", language);
+        }
+        int n = userMapper.updateLanguage(userId, language);
+        if (n == 0) {
+            throw new BizException(ErrorCode.USER_NOT_FOUND);
+        }
+        /*
+         * 同步 Sa-Token Session。不同步的后果很隐蔽：语言落库了，但 Session 里还是旧值，
+         * 于是「导出 Excel / 定时通知」这些后端场景仍按旧语言走，直到用户重新登录 ——
+         * 而那两个场景正是当初选用户级偏好（而非纯请求头）的全部理由。
+         */
+        StpUtil.getSession().set("language", language);
+        UserContext.setLanguage(language);
+        log.info("User {} switched language to {}", userId, language);
+    }
+
     // ========== 私有方法 ==========
 
     private User getExistingUser(Long id) {
@@ -429,7 +463,12 @@ public class UserServiceImpl implements UserService {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
-        EasyExcel.write(response.getOutputStream(), UserExportVO.class).sheet("用户列表").doWrite(rows);
+        // 表头随 locale 现场构建；.head(...) 会覆盖类上的 @ExcelProperty，
+        // 所以 UserExportVO 只留 index 不留文案
+        EasyExcel.write(response.getOutputStream(), UserExportVO.class)
+                .head(buildHead(UserExportVO.HEAD_KEYS))
+                .sheet(i18nUtil.getMessage("export.user.sheet", "用户列表"))
+                .doWrite(rows);
     }
 
     @Override
@@ -439,7 +478,10 @@ public class UserServiceImpl implements UserService {
         }
         List<UserImportDTO> rows;
         try (InputStream is = file.getInputStream()) {
-            rows = EasyExcel.read(is).head(UserImportDTO.class).sheet().doReadSync();
+            // headRowNumber(1)：跳过表头行，之后按 @ExcelProperty(index) 对列，
+            // 与表头是中文还是英文无关 —— 这是「英文导出的文件能导回来」的关键
+            rows = EasyExcel.read(is).head(UserImportDTO.class).headRowNumber(1)
+                    .sheet().doReadSync();
         } catch (IOException e) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.user.import.file.read.failed");
         }
@@ -467,7 +509,11 @@ public class UserServiceImpl implements UserService {
                 success++;
             } catch (BizException e) {
                 fail++;
-                errors.add(new UserImportResultVO.ErrorItem(i + 2, username, e.getMessage()));
+                // e.getMessage() 现在是 i18n key（BizException 的 super 存 key 便于日志溯源），
+                // 这里是给用户看的，必须按请求 locale 翻译，否则会把 error.xxx 露到界面上
+                String localized = i18nUtil.getMessage(
+                        e.resolveI18nKey(), e.getFallbackMessage(), e.getArgs());
+                errors.add(new UserImportResultVO.ErrorItem(i + 2, username, localized));
             }
         }
         return new UserImportResultVO(success, fail, errors);
@@ -479,7 +525,16 @@ public class UserServiceImpl implements UserService {
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=user_import_template.xlsx");
         EasyExcel.write(response.getOutputStream(), UserImportDTO.class)
-                .sheet("用户导入模板").doWrite(Collections.emptyList());
+                .head(buildHead(UserImportDTO.HEAD_KEYS))
+                .sheet(i18nUtil.getMessage("export.user.template.sheet", "用户导入模板"))
+                .doWrite(Collections.emptyList());
+    }
+
+    /** 按当前 locale 现场构建 Excel 表头。EasyExcel 的 head 是 List<List<String>>，每列一个 List */
+    private List<List<String>> buildHead(List<String> headKeys) {
+        return headKeys.stream()
+                .map(k -> List.of(i18nUtil.getMessage(k, k)))
+                .collect(Collectors.toList());
     }
 
     private UserExportVO toExportVO(User user) {
@@ -489,16 +544,18 @@ public class UserServiceImpl implements UserService {
         vo.setPhone(user.getPhone());
         vo.setEmail(user.getEmail());
         vo.setGender(switch (user.getGender() == null ? 0 : user.getGender()) {
-            case 1 -> "男";
-            case 2 -> "女";
-            default -> "未知";
+            case 1 -> i18nUtil.getMessage("export.user.gender.male", "男");
+            case 2 -> i18nUtil.getMessage("export.user.gender.female", "女");
+            default -> i18nUtil.getMessage("export.user.gender.unknown", "未知");
         });
         if (user.getDeptId() != null) {
             var dept = deptMapper.selectOneById(user.getDeptId());
             if (dept != null) vo.setDeptName(dept.getName());
         }
         vo.setPostName(user.getPostName());
-        vo.setStatus(user.getStatus() != null && user.getStatus() == 1 ? "启用" : "禁用");
+        vo.setStatus(user.getStatus() != null && user.getStatus() == 1
+                ? i18nUtil.getMessage("export.user.status.enabled", "启用")
+                : i18nUtil.getMessage("export.user.status.disabled", "禁用"));
         vo.setCreateTime(user.getCreateTime() == null ? "" : user.getCreateTime().toString());
         return vo;
     }

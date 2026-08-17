@@ -18,10 +18,10 @@ public class LoggingSmsGateway implements SmsGateway {
     @Override
     public int send(List<String> recipients, String content) {
         if (recipients == null || recipients.isEmpty()) {
-            log.warn("[SMS-STUB] 无接收人，跳过短信发送: content={}", content);
+            log.warn("[SMS-STUB] No recipients, skipping SMS: content={}", content);
             return 0;
         }
-        log.info("[SMS-STUB] 模拟发送短信 -> {} 个接收人: {}", recipients.size(), content);
+        log.info("[SMS-STUB] Simulated SMS -> {} recipient(s): {}", recipients.size(), content);
         return recipients.size();
     }
 }

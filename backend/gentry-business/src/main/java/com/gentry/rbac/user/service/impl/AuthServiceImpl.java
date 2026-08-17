@@ -105,15 +105,21 @@ public class AuthServiceImpl implements AuthService {
         try {
             tenantId = resolveTenantId(dto.getTenantCode());
         } catch (BizException e) {
-            logService.saveLoginLog(dto.getUsername(), 0L, "password", loginIp, userAgent, 0, e.getMessage());
+            // 登录日志用 getFallbackMessage()（ErrorCode 里的中文常量）而不是 e.getMessage()：
+            // 后者现在返回 i18n key，会把 error.tenant.not.found 写进日志表给运维看。
+            // 与「@Log 推迟、操作/登录日志保持中文」的决定一致（概要设计 §4.8.1）。
+            logService.saveLoginLog(dto.getUsername(), 0L, "password", loginIp, userAgent, 0, e.getFallbackMessage());
             throw e;
         }
 
         // 2. 账号锁定前置检查（连续失败达上限则拒绝，等 TTL 到期自动解锁）
         if (loginFailCounterService.isLocked(tenantId, dto.getUsername())) {
-            String msg = "账号已被锁定，请 " + loginFailCounterService.lockMinutes() + " 分钟后再试";
+            int lockMinutes = loginFailCounterService.lockMinutes();
+            // 登录日志保持中文（运维视角，与「日志不参与 i18n」一致）
+            String msg = "账号已被锁定，请 " + lockMinutes + " 分钟后再试";
             logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, msg);
-            throw new BizException(ErrorCode.ACCOUNT_LOCKED);
+            // 给用户的消息带上具体分钟数：原来抛的是无参的「请稍后再试」，用户看不到还要等多久
+            throw BizException.of(ErrorCode.ACCOUNT_LOCKED, lockMinutes);
         }
 
         // 3. 校验用户
@@ -125,7 +131,7 @@ public class AuthServiceImpl implements AuthService {
             if (e.getCode() == ErrorCode.LOGIN_FAILED.getCode()) {
                 loginFailCounterService.recordFail(tenantId, dto.getUsername());
             }
-            logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, e.getMessage());
+            logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, e.getFallbackMessage());
             throw e;
         }
 

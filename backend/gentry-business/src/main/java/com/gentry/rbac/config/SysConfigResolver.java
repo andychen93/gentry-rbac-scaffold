@@ -71,7 +71,7 @@ public class SysConfigResolver {
         try {
             return Integer.parseInt(raw.trim());
         } catch (NumberFormatException e) {
-            log.warn("sys_config[{}]='{}' 不是合法整数，回退到默认值 {}", key, raw, fallback);
+            log.warn("sys_config[{}]='{}' is not a valid integer; falling back to default {}", key, raw, fallback);
             return fallback;
         }
     }
@@ -92,7 +92,7 @@ public class SysConfigResolver {
         if ("false".equalsIgnoreCase(v)) {
             return false;
         }
-        log.warn("sys_config[{}]='{}' 不是合法布尔值，回退到默认值 {}", key, raw, fallback);
+        log.warn("sys_config[{}]='{}' is not a valid boolean; falling back to default {}", key, raw, fallback);
         return fallback;
     }
 
@@ -105,7 +105,7 @@ public class SysConfigResolver {
             return (v == null || v.isBlank()) ? null : v;
         } catch (Exception e) {
             // 读配置失败不能影响主流程（例如库瞬断），退回 yml
-            log.warn("读取 sys_config[{}] 失败，回退到默认值: {}", key, e.getMessage());
+            log.warn("Failed to read sys_config[{}]; falling back to default: {}", key, e.getMessage());
             return null;
         }
     }

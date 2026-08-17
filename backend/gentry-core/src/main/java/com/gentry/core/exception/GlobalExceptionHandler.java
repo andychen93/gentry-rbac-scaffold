@@ -73,7 +73,7 @@ public class GlobalExceptionHandler {
         String key = e.resolveI18nKey();
         String message = i18nUtil.getMessage(key, e.getFallbackMessage(), e.getArgs());
         // 日志记 key 而非译文：便于 grep，且不受阅读者语言影响
-        log.warn("业务异常: code={}, key={}", e.getCode(), key);
+        log.warn("Business exception: code={}, key={}", e.getCode(), key);
         return R.fail(e.getCode(), message);
     }
 
@@ -85,7 +85,7 @@ public class GlobalExceptionHandler {
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .collect(Collectors.toList());
         String message = String.join("; ", errors);
-        log.warn("参数校验失败: {}", message);
+        log.warn("Validation failed: {}", message);
         // 字段提示已由 LocalValidatorFactoryBean 接 MessageSource 本地化（见批次 3）
         return R.fail(ErrorCode.PARAM_ERROR.getCode(), message);
     }
@@ -99,7 +99,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<?> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
-        log.warn("HTTP消息不可读: {}", e.getMessage());
+        log.warn("HTTP message not readable: {}", e.getMessage());
         return R.fail(ErrorCode.HTTP_MESSAGE_NOT_READABLE.getCode(),
                 localize(ErrorCode.HTTP_MESSAGE_NOT_READABLE));
     }
@@ -108,13 +108,13 @@ public class GlobalExceptionHandler {
     public R<?> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         String message = i18nUtil.getMessage("error.param.type.mismatch.detail",
                 "参数 '" + e.getName() + "' 类型不匹配", e.getName());
-        log.warn("参数类型不匹配: name={}", e.getName());
+        log.warn("Parameter type mismatch: name={}", e.getName());
         return R.fail(ErrorCode.PARAM_TYPE_MISMATCH.getCode(), message);
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public R<?> handleMethodNotAllowed(HttpRequestMethodNotSupportedException e) {
-        log.warn("请求方法不允许: {}", e.getMethod());
+        log.warn("Request method not allowed: {}", e.getMethod());
         return R.fail(ErrorCode.METHOD_NOT_ALLOWED.getCode(), localize(ErrorCode.METHOD_NOT_ALLOWED));
     }
 
@@ -125,22 +125,22 @@ public class GlobalExceptionHandler {
     public R<?> handleNotLoginException(NotLoginException e) {
         String type = e.getType();
         if (NotLoginException.TOKEN_TIMEOUT.equals(type)) {
-            log.warn("Token已过期: {}", e.getMessage());
+            log.warn("Token expired: {}", e.getMessage());
             return R.fail(ErrorCode.TOKEN_EXPIRED.getCode(), localize(ErrorCode.TOKEN_EXPIRED));
         }
         if (NotLoginException.BE_REPLACED.equals(type) || NotLoginException.KICK_OUT.equals(type)) {
-            log.warn("账号已在其他设备登录: {}", e.getMessage());
+            log.warn("Account signed in on another device: {}", e.getMessage());
             return R.fail(ErrorCode.TOKEN_INVALID.getCode(),
                     i18nUtil.getMessage("error.token.replaced", "账号已在其他设备登录"));
         }
-        log.warn("未登录或Token无效: type={}, msg={}", type, e.getMessage());
+        log.warn("Not logged in or invalid token: type={}, msg={}", type, e.getMessage());
         return R.fail(ErrorCode.TOKEN_INVALID.getCode(), localize(ErrorCode.TOKEN_INVALID));
     }
 
     @ExceptionHandler(NotRoleException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public R<?> handleNotRoleException(NotRoleException e) {
-        log.warn("角色不足: role={}", e.getRole());
+        log.warn("Missing role: role={}", e.getRole());
         return R.fail(ErrorCode.PERMISSION_DENIED.getCode(), i18nUtil.getMessage(
                 "error.permission.denied.role", "缺少角色: " + e.getRole(), e.getRole()));
     }
@@ -148,7 +148,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotPermissionException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public R<?> handleNotPermissionException(NotPermissionException e) {
-        log.warn("权限不足: permission={}", e.getPermission());
+        log.warn("Missing permission: permission={}", e.getPermission());
         return R.fail(ErrorCode.PERMISSION_DENIED.getCode(), i18nUtil.getMessage(
                 "error.permission.denied.permission", "缺少权限: " + e.getPermission(), e.getPermission()));
     }
@@ -158,7 +158,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(DuplicateKeyException.class)
     public R<?> handleDuplicateKeyException(DuplicateKeyException e) {
         ErrorCode ec = resolveDuplicateErrorCode(e.getMessage());
-        log.warn("数据重复: code={}", ec.getCode());
+        log.warn("Duplicate key: code={}", ec.getCode());
         return R.fail(ec.getCode(), localize(ec));
     }
 
@@ -175,7 +175,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public R<?> handleException(Exception e) {
-        log.error("系统异常: ", e);
+        log.error("Unhandled exception: ", e);
         return R.fail(ErrorCode.SYSTEM_ERROR.getCode(), localize(ErrorCode.SYSTEM_ERROR));
     }
 

@@ -35,6 +35,9 @@ public interface UserService {
 
     void updateStatus(Long id, UserStatusDTO dto);
 
+    /** 更新当前登录用户的语言偏好。白名单校验在实现里查 I18nProperties。 */
+    void updateMyLanguage(String language);
+
     /** 导出当前查询条件的用户为 Excel */
     void exportUsers(UserQueryDTO query, HttpServletResponse response) throws IOException;
 

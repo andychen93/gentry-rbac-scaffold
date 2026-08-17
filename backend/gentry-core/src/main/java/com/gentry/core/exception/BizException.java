@@ -38,6 +38,21 @@ public class BizException extends RuntimeException {
         this(errorCode, null, EMPTY_ARGS);
     }
 
+    /**
+     * 用 {@link ErrorCode} 派生的 key + 参数。
+     *
+     * <p>写成静态工厂而不是构造器 {@code BizException(ErrorCode, Object...)}：后者与
+     * {@code BizException(ErrorCode, String)} 在传单个字符串时会重载歧义。</p>
+     *
+     * <pre>
+     * throw BizException.of(ErrorCode.ACCOUNT_LOCKED, lockMinutes);
+     * // error.account.locked=账号已被锁定，请 {0} 分钟后再试
+     * </pre>
+     */
+    public static BizException of(ErrorCode errorCode, Object... args) {
+        return new BizException(errorCode, null, args);
+    }
+
     public BizException(ErrorCode errorCode, String messageKey) {
         this(errorCode, messageKey, EMPTY_ARGS);
     }

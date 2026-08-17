@@ -237,6 +237,37 @@ class ErrorMessageConstraintTest {
                 .isEmpty();
     }
 
+    /**
+     * 应用日志一律英文固定文本，不参与 i18n。
+     *
+     * <p>理由是确定性：日志的读者是运维，若 {@code log.info("用户 {} 登录成功")} 参与 i18n，
+     * grep 日志得先知道当时哪个 locale 生效。固定英文让 grep 有唯一答案。</p>
+     */
+    @Test
+    @DisplayName("日志语句不得包含中文")
+    void 日志语句不得包含中文() throws IOException {
+        Pattern logCall = Pattern.compile("\\blog\\s*\\.\\s*(info|debug|warn|error|trace)\\s*\\(\\s*\"([^\"]*)\"");
+        Pattern cjk = Pattern.compile("[\\u4e00-\\u9fff]");
+        Path root = locateBackendRoot();
+
+        List<String> violations = new ArrayList<>();
+        for (Path java : sourceFiles(root)) {
+            List<String> lines = Files.readAllLines(java, StandardCharsets.UTF_8);
+            for (int i = 0; i < lines.size(); i++) {
+                if (isComment(lines.get(i))) continue;
+                Matcher m = logCall.matcher(lines.get(i));
+                while (m.find()) {
+                    if (cjk.matcher(m.group(2)).find()) {
+                        violations.add(root.relativize(java) + ":" + (i + 1) + "  " + m.group(2));
+                    }
+                }
+            }
+        }
+        assertThat(violations)
+                .as("这些日志语句还是中文；日志固定英文以保证 grep 的确定性")
+                .isEmpty();
+    }
+
     @Test
     @DisplayName("译文非空且无TODO残留")
     void 译文非空且无TODO残留() throws IOException {

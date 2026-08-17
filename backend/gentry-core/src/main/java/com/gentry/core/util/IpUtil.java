@@ -24,12 +24,12 @@ public final class IpUtil {
     private static Searcher loadSearcher() {
         try (InputStream in = IpUtil.class.getClassLoader().getResourceAsStream("ip2region/ip2region.xdb")) {
             if (in == null) {
-                log.warn("ip2region/ip2region.xdb 未找到，公网 IP 归属地解析将返回 null");
+                log.warn("ip2region/ip2region.xdb not found; public IP geolocation will return null");
                 return null;
             }
             return Searcher.newWithBuffer(in.readAllBytes());
         } catch (Exception e) {
-            log.warn("加载 ip2region.xdb 失败，IP 归属地解析不可用: {}", e.getMessage());
+            log.warn("Failed to load ip2region.xdb; IP geolocation unavailable: {}", e.getMessage());
             return null;
         }
     }

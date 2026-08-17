@@ -73,7 +73,7 @@ public class RequestLogFilter extends OncePerRequestFilter {
             try {
                 logEntry(wrappedReq, wrappedResp, duration);
             } catch (Exception e) {
-                log.warn("请求日志输出失败: {}", e.getMessage());
+                log.warn("Failed to write request log: {}", e.getMessage());
             }
             // 必须回写响应体，否则客户端收不到响应
             wrappedResp.copyBodyToResponse();

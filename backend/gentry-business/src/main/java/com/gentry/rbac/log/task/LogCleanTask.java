@@ -49,7 +49,7 @@ public class LogCleanTask {
             TenantManager.ignoreTenantCondition();
             int oper = operLogMapper.cleanExpiredBefore(cutoff);
             int login = loginLogMapper.cleanExpiredBefore(cutoff);
-            log.info("日志清理完成：保留 {} 天，删除操作日志 {} 条、登录日志 {} 条", keepDays, oper, login);
+            log.info("Log cleanup done: kept {} days, deleted {} oper logs and {} login logs", keepDays, oper, login);
         } finally {
             TenantManager.restoreTenantCondition();
         }

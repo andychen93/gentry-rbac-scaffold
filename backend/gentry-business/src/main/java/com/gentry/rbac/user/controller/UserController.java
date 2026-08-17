@@ -112,6 +112,21 @@ public class UserController {
     }
 
     /** USER-009 导出用户（Excel，按当前查询条件） */
+    /**
+     * 更新当前登录用户的语言偏好。
+     *
+     * <p>刻意<b>不加 {@code @SaCheckPermission}</b>：改自己的语言偏好不该需要权限点，
+     * 任何登录用户都应能改。也刻意不走 {@code PUT /users/{id}}，避免管理员误改他人语言、
+     * 也避免这个高频小接口占用用户更新的权限点。</p>
+     */
+    @PutMapping("/me/language")
+    @RepeatSubmit(interval = 1)
+    @Log(module = "个人中心", type = "UPDATE", title = "切换语言")
+    public R<Void> updateMyLanguage(@Valid @RequestBody LanguageUpdateDTO dto) {
+        userService.updateMyLanguage(dto.getLanguage());
+        return R.ok();
+    }
+
     @GetMapping("/export")
     @SaCheckPermission("system:user:export")
     @Log(module = "用户管理", type = "EXPORT", title = "导出用户")

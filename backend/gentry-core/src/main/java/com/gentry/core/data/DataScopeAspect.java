@@ -65,7 +65,7 @@ public class DataScopeAspect {
         }
         UserDataScopeResolver scopeResolver = scopeResolverProvider.getIfAvailable();
         if (scopeResolver == null) {
-            log.debug("UserDataScopeResolver 未配置，DataScope 切面跳过");
+            log.debug("UserDataScopeResolver not configured; DataScope aspect skipped");
             return null;
         }
         Integer scope = scopeResolver.resolveDataScope(userId, tenantId);

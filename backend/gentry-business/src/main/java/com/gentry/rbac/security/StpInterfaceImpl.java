@@ -82,7 +82,7 @@ public class StpInterfaceImpl implements StpInterface {
         if (session != null) {
             session.delete("permissionList");
             session.delete("roleList");
-            log.debug("已清除用户 [{}] 的权限缓存", userId);
+            log.debug("Cleared permission cache for user [{}]", userId);
         }
     }
 }

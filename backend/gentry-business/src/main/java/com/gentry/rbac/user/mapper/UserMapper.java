@@ -50,6 +50,9 @@ public interface UserMapper extends BaseMapper<User> {
     @Update("UPDATE sys_user SET status = #{status}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
 
+    @Update("UPDATE sys_user SET language = #{language}, update_time = CURRENT_TIMESTAMP WHERE id = #{id} AND deleted = 0")
+    int updateLanguage(@Param("id") Long id, @Param("language") String language);
+
     @Update("UPDATE sys_user SET login_ip = #{loginIp}, login_date = #{loginDate}, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int updateLoginInfo(@Param("id") Long id, @Param("loginIp") String loginIp, @Param("loginDate") LocalDateTime loginDate);
 

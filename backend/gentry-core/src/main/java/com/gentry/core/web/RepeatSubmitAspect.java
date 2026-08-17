@@ -83,7 +83,7 @@ public class RepeatSubmitAspect {
             String messageKey = repeatSubmit.message() == null || repeatSubmit.message().isEmpty()
                     ? null
                     : repeatSubmit.message();
-            log.warn("重复提交拦截: key={}, interval={}s", cacheKey, repeatSubmit.interval());
+            log.warn("Duplicate submit blocked: key={}, interval={}s", cacheKey, repeatSubmit.interval());
             throw new BizException(ErrorCode.DUPLICATE_SUBMIT, messageKey);
         }
 

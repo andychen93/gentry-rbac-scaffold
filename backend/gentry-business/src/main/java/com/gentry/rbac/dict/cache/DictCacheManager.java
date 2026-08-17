@@ -78,7 +78,7 @@ public class DictCacheManager {
             }
         } catch (Exception e) {
             // Redis 不可用或反序列化失败时降级为「未命中」，让调用方查库，不影响功能
-            log.warn("字典 L2 读取失败，降级查库: key={}, {}", key, e.getMessage());
+            log.warn("Dict L2 read failed, falling back to DB: key={}, {}", key, e.getMessage());
         }
         return null;
     }
@@ -90,7 +90,7 @@ public class DictCacheManager {
         try {
             redis.opsForValue().set(key, objectMapper.writeValueAsString(data), L2_TTL_MINUTES, TimeUnit.MINUTES);
         } catch (Exception e) {
-            log.warn("字典 L2 写入失败（仅本地生效）: key={}, {}", key, e.getMessage());
+            log.warn("Dict L2 write failed (local cache only): key={}, {}", key, e.getMessage());
         }
     }
 
@@ -102,7 +102,7 @@ public class DictCacheManager {
             redis.delete(key);
             redis.convertAndSend(INVALIDATE_CHANNEL, key);
         } catch (Exception e) {
-            log.warn("字典缓存失效广播失败（本地已清）: key={}, {}", key, e.getMessage());
+            log.warn("Dict cache invalidation broadcast failed (local already cleared): key={}, {}", key, e.getMessage());
         }
     }
 
@@ -116,7 +116,7 @@ public class DictCacheManager {
             }
             redis.convertAndSend(INVALIDATE_CHANNEL, PAYLOAD_ALL);
         } catch (Exception e) {
-            log.warn("字典缓存全量失效广播失败（本地已清）: {}", e.getMessage());
+            log.warn("Dict cache full invalidation broadcast failed (local already cleared): {}", e.getMessage());
         }
         log.info("Dict cache refreshed (L1+L2)");
     }
@@ -135,7 +135,7 @@ public class DictCacheManager {
             l1.invalidate(payload);
         }
         if (log.isDebugEnabled()) {
-            log.debug("收到字典缓存失效广播: {}", payload);
+            log.debug("Received dict cache invalidation broadcast: {}", payload);
         }
     }
 

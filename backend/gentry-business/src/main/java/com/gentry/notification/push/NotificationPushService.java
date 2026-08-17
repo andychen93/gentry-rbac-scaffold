@@ -69,7 +69,7 @@ public class NotificationPushService {
                 emitter.send(SseEmitter.event().name("notification").data(payload, MediaType.APPLICATION_JSON));
             } catch (Exception e) {
                 if (log.isDebugEnabled()) {
-                    log.debug("通知 SSE 推送失败，移除 emitter: {}", e.getMessage());
+                    log.debug("Notification SSE push failed, removing emitter: {}", e.getMessage());
                 }
                 remove(tenantId, emitter);
             }

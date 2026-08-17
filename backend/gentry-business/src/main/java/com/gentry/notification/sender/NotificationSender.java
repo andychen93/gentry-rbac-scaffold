@@ -73,20 +73,20 @@ public class NotificationSender {
         try {
             pushService.push(saved.getTenantId(), saved);
         } catch (Exception e) {
-            log.warn("通知 SSE 推送失败: id={}, {}", saved.getId(), e.getMessage());
+            log.warn("Notification SSE push failed: id={}, {}", saved.getId(), e.getMessage());
         }
 
         if (withSms) {
             try {
                 List<String> phones = recipientResolver.resolve(saved.getTenantId());
                 if (phones.isEmpty()) {
-                    log.warn("高级别通知无短信接收人: tenantId={}, title={}",
+                    log.warn("High-severity notification has no SMS recipient: tenantId={}, title={}",
                             saved.getTenantId(), saved.getTitle());
                 } else {
                     smsGateway.send(phones, buildSmsContent(saved));
                 }
             } catch (Exception e) {
-                log.error("通知短信下发失败: id={}", saved.getId(), e);
+                log.error("Notification SMS delivery failed: id={}", saved.getId(), e);
             }
         }
         return saved;
