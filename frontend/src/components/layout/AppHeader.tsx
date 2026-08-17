@@ -6,6 +6,7 @@ import { useLayoutStore } from '../../stores/layoutStore';
 import { useUserStore } from '../../stores/userStore';
 import SidebarToggle from './SidebarToggle';
 import ThemeToggle from './ThemeToggle';
+import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
 
 /** 路径 → 面包屑名称映射（新增业务页面时在此登记） */
@@ -90,6 +91,7 @@ const AppHeader: React.FC = () => {
             onClick={toggleMode}
           />
         </Tooltip>
+        <NotificationBell />
         <ThemeToggle value={theme} onChange={setTheme} />
         <UserMenu
           username={userInfo?.nickname || userInfo?.username}

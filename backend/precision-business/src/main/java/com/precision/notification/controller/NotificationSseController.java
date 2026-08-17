@@ -1,0 +1,65 @@
+package com.precision.notification.controller;
+
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.stp.StpUtil;
+import com.precision.notification.push.NotificationPushService;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+
+/**
+ * 通知实时推送 SSE 端点。
+ *
+ * <p>浏览器 EventSource 无法设置请求头，因此 token 走 query 参数并在此手动校验，
+ * 不能依赖 Sa-Token 拦截器。</p>
+ */
+@RestController
+@RequestMapping("/api/v1/notifications")
+public class NotificationSseController {
+
+    private final NotificationPushService pushService;
+
+    public NotificationSseController(NotificationPushService pushService) {
+        this.pushService = pushService;
+    }
+
+    @GetMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
+    public SseEmitter stream(@RequestParam(required = false) String token) {
+        if (token == null || token.isBlank()) {
+            throw NotLoginException.newInstance(StpUtil.getLoginType(),
+                    NotLoginException.NOT_TOKEN, "未提供token", "");
+        }
+        Object loginId = StpUtil.getLoginIdByToken(token);
+        if (loginId == null) {
+            throw NotLoginException.newInstance(StpUtil.getLoginType(),
+                    NotLoginException.INVALID_TOKEN, "token无效", token);
+        }
+        Long tenantId = resolveTenantId(loginId);
+        if (tenantId == null) {
+            throw NotLoginException.newInstance(StpUtil.getLoginType(),
+                    NotLoginException.INVALID_TOKEN, "token缺少租户信息", token);
+        }
+        return pushService.subscribe(tenantId);
+    }
+
+    private Long resolveTenantId(Object loginId) {
+        try {
+            Object tid = StpUtil.getSessionByLoginId(loginId).get("tenantId");
+            if (tid instanceof Long l) {
+                return l;
+            }
+            if (tid instanceof Number n) {
+                return n.longValue();
+            }
+            if (tid instanceof String s && !s.isBlank()) {
+                return Long.parseLong(s);
+            }
+        } catch (Exception ignored) {
+            // 解析失败按未携带租户处理
+        }
+        return null;
+    }
+}

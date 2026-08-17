@@ -39,6 +39,12 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/api/v1/auth/login",
                         "/api/v1/auth/captcha",
                         "/api/v1/tenants/options",
+                        /*
+                         * SSE 通知流：浏览器 EventSource 不能自定义请求头，token 只能走 query 参数，
+                         * 拦截器读不到头会直接 401。故在此放行，改由
+                         * NotificationSseController 自己用 StpUtil.getLoginIdByToken 手动校验。
+                         */
+                        "/api/v1/notifications/stream",
                         "/actuator/**"
                 );
 
