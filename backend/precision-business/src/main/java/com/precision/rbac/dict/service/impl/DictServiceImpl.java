@@ -1,12 +1,11 @@
 package com.precision.rbac.dict.service.impl;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.precision.core.common.ErrorCode;
 import com.precision.core.common.PageResult;
 import com.precision.core.exception.BizException;
 import com.precision.core.security.UserContext;
 import com.precision.rbac.dict.dto.*;
+import com.precision.rbac.dict.cache.DictCacheManager;
 import com.precision.rbac.dict.entity.DictData;
 import com.precision.rbac.dict.entity.DictType;
 import com.precision.rbac.dict.mapper.DictDataMapper;
@@ -19,24 +18,23 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Service
 public class DictServiceImpl implements DictService {
 
     private static final Logger log = LoggerFactory.getLogger(DictServiceImpl.class);
-    private final Cache<String, List<DictDataVO>> cache = Caffeine.newBuilder()
-            .maximumSize(500)
-            .expireAfterWrite(30, TimeUnit.MINUTES)
-            .build();
-
     private final DictTypeMapper dictTypeMapper;
     private final DictDataMapper dictDataMapper;
+    /** L1 Caffeine + L2 Redis + 跨节点失效广播，见 DictCacheManager */
+    private final DictCacheManager cache;
 
-    public DictServiceImpl(DictTypeMapper dictTypeMapper, DictDataMapper dictDataMapper) {
+    public DictServiceImpl(DictTypeMapper dictTypeMapper,
+                           DictDataMapper dictDataMapper,
+                           DictCacheManager cache) {
         this.dictTypeMapper = dictTypeMapper;
         this.dictDataMapper = dictDataMapper;
+        this.cache = cache;
     }
 
     @Override
@@ -90,13 +88,12 @@ public class DictServiceImpl implements DictService {
     @Override
     public List<DictDataVO> listDataByType(String dictType) {
         Long tenantId = UserContext.getTenantId();
-        String cacheKey = "dict:" + tenantId + ":" + dictType;
-        List<DictDataVO> cached = cache.getIfPresent(cacheKey);
+        List<DictDataVO> cached = cache.get(tenantId, dictType);
         if (cached != null) return cached;
 
         List<DictData> dataList = dictDataMapper.selectByDictType(tenantId, dictType);
         List<DictDataVO> voList = dataList.stream().map(this::toDataVO).collect(Collectors.toList());
-        cache.put(cacheKey, voList);
+        cache.put(tenantId, dictType, voList);
         return voList;
     }
 
@@ -159,12 +156,12 @@ public class DictServiceImpl implements DictService {
 
     @Override
     public void refreshCache() {
+        // 清 L1 + 删 L2 + 广播，其它节点收到广播后清各自的 L1
         cache.invalidateAll();
-        log.info("Dict cache refreshed");
     }
 
     private void invalidateCache(Long tenantId, String dictType) {
-        cache.invalidate("dict:" + tenantId + ":" + dictType);
+        cache.invalidate(tenantId, dictType);
     }
 
     private DictTypeVO toTypeVO(DictType entity) {

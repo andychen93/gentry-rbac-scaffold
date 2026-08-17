@@ -1,6 +1,8 @@
 package com.precision.rbac.user.service;
 
 import com.precision.core.config.LoginSecurityProperties;
+import com.precision.rbac.config.SysConfigResolver;
+import com.precision.rbac.config.service.ConfigService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -26,12 +28,15 @@ class LoginFailCounterServiceTest {
 
     @Mock private StringRedisTemplate redis;
     @Mock private ValueOperations<String, String> valueOps;
+    @Mock private ConfigService configService;
 
     private LoginFailCounterService service;
 
     @BeforeEach
     void setup() {
-        service = new LoginFailCounterService(redis, new LoginSecurityProperties()); // maxFail=5, lockMin=10
+        // configService 未打桩 → getConfigValue 返回 null → 回退 yml 默认值（maxFail=5, lockMin=10）
+        service = new LoginFailCounterService(
+                redis, new LoginSecurityProperties(), new SysConfigResolver(configService, true));
     }
 
     @Test

@@ -25,6 +25,7 @@ import com.precision.rbac.user.service.LoginFailCounterService;
 import com.precision.core.config.CaptchaProperties;
 import com.precision.core.config.LoginSecurityProperties;
 import com.precision.core.config.PasswordProperties;
+import com.precision.rbac.config.SysConfigResolver;
 import com.precision.rbac.user.vo.LoginVO;
 import com.precision.rbac.user.vo.UserInfoVO;
 import com.precision.rbac.log.service.LogService;
@@ -59,6 +60,8 @@ public class AuthServiceImpl implements AuthService {
     private final CaptchaProperties captchaProperties;
     private final LoginSecurityProperties loginSecurityProperties;
     private final PasswordProperties passwordProperties;
+    /** 运行时参数（sys_config 优先，yml 兜底） */
+    private final SysConfigResolver sysConfigResolver;
 
     public AuthServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, RoleMenuMapper roleMenuMapper,
@@ -70,7 +73,8 @@ public class AuthServiceImpl implements AuthService {
                            LoginFailCounterService loginFailCounterService,
                            CaptchaProperties captchaProperties,
                            LoginSecurityProperties loginSecurityProperties,
-                           PasswordProperties passwordProperties) {
+                           PasswordProperties passwordProperties,
+                           SysConfigResolver sysConfigResolver) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
@@ -85,12 +89,13 @@ public class AuthServiceImpl implements AuthService {
         this.captchaProperties = captchaProperties;
         this.loginSecurityProperties = loginSecurityProperties;
         this.passwordProperties = passwordProperties;
+        this.sysConfigResolver = sysConfigResolver;
     }
 
     @Override
     public LoginVO login(LoginDTO dto, String loginIp, String userAgent) {
         // 0. 验证码校验（可配置开关；关闭时不校验）
-        if (captchaProperties.isEnabled()) {
+        if (sysConfigResolver.getBoolean(SysConfigResolver.KEY_CAPTCHA_ENABLED, captchaProperties.isEnabled())) {
             captchaService.validate(dto.getUuid(), dto.getCaptcha());
         }
 
@@ -105,7 +110,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. 账号锁定前置检查（连续失败达上限则拒绝，等 TTL 到期自动解锁）
         if (loginFailCounterService.isLocked(tenantId, dto.getUsername())) {
-            String msg = "账号已被锁定，请 " + loginSecurityProperties.getLockMinutes() + " 分钟后再试";
+            String msg = "账号已被锁定，请 " + loginFailCounterService.lockMinutes() + " 分钟后再试";
             logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, msg);
             throw new BizException(ErrorCode.ACCOUNT_LOCKED);
         }
@@ -206,7 +211,8 @@ public class AuthServiceImpl implements AuthService {
      * </ul>
      */
     private boolean isPasswordExpired(LocalDateTime pwdUpdateTime) {
-        int expireDays = passwordProperties.getExpireDays();
+        int expireDays = sysConfigResolver.getInt(
+                SysConfigResolver.KEY_PASSWORD_EXPIRE_DAYS, passwordProperties.getExpireDays());
         if (expireDays <= 0) return false;
         if (pwdUpdateTime == null) return false;
         return pwdUpdateTime.plusDays(expireDays).isBefore(LocalDateTime.now());

@@ -34,6 +34,11 @@ public final class RedisKeyDefines {
                     "token_timeout",
                     "Authorization:timeout:*",
                     "Token 过期时间辅助 Key（Sa-Token）",
+                    1800L),
+            new RedisKeyDefineVO(
+                    "dict_cache",
+                    "dict:*",
+                    "字典数据二级缓存 L2（L1 为各节点本地 Caffeine，失效经 dict:invalidate 频道广播）",
                     1800L)
     );
 

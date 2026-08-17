@@ -10,6 +10,10 @@ spring:
 # - login-security 放大阈值：错误密码用例不会意外触发账号锁定
 # - password 关闭过期：种子用户 pwd_update_time 为 null 已容错为未过期，再显式关闭
 precision:
+  # 关闭 sys_config 对 yml 的覆盖：否则下面这些开关会被库里的 sys_config 值盖掉，
+  # IT 结果将取决于当前库内容而非本文件（实测开启时所有 *IT 登录都挂在 20020 验证码错误）
+  config:
+    db-override: false
   captcha:
     enabled: false
   login-security:

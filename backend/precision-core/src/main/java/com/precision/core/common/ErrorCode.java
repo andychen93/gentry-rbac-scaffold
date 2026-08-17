@@ -6,10 +6,14 @@ package com.precision.core.common;
  * 编号规范（见 CLAUDE.md 附录 A）：
  * 0           = SUCCESS
  * 10001-10099 = 系统错误
- * 20001-20099 = RBAC 业务错误
+ * 20001-20099 = RBAC 与脚手架自带能力（含消息通知）
  * 30001-30099 = 认证/数据错误
  * 40001-40099 = 安全控制
- * 50001-50099 = 设备错误（预留）
+ * 50001+      = 派生业务自行分配（脚手架不占用）
+ *
+ * <p>本枚举只允许出现权限脚手架自身的错误码。此前混入的设备/厂商/车辆/司机/
+ * 报警/位置/轨迹导出等码段（50001~53013，共 27 个）是从高精度定位平台整体
+ * 拷贝时带进来的，全部零引用，已清除 —— RBAC 脚手架里不该出现业务领域概念。</p>
  */
 public enum ErrorCode {
 
@@ -46,6 +50,9 @@ public enum ErrorCode {
     CAPTCHA_ERROR(20020, "验证码错误或已过期"),
     PASSWORD_EXPIRED(20021, "密码已过期，请修改密码"),
 
+    // ==================== 消息通知 20030-20039 ====================
+    NOTIFICATION_NOT_FOUND(20030, "通知不存在"),
+
     // ==================== 认证/数据错误 30001-30099 ====================
     TOKEN_INVALID(30001, "Token无效"),
     TOKEN_EXPIRED(30002, "Token已过期"),
@@ -56,58 +63,9 @@ public enum ErrorCode {
     // ==================== 安全控制 40001-40099 ====================
     TOO_MANY_REQUESTS(40001, "请求过于频繁"),
     DUPLICATE_SUBMIT(40002, "重复提交"),
-    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户"),
+    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户");
 
-    // ==================== 设备错误 50001-50099 ====================
-    DEVICE_NOT_FOUND(50001, "设备不存在"),
-    DEVICE_SN_EXISTS(50002, "设备SN已存在"),
-    DEVICE_SIM_EXISTS(50003, "SIM卡号已存在"),
-    DEVICE_ALREADY_BOUND(50004, "设备已绑定"),
-    DEVICE_NOT_BOUND(50005, "设备未绑定"),
-    VEHICLE_ALREADY_BOUND(50006, "车辆已绑定其他设备"),
-    DEVICE_DISABLED(50007, "设备已停用"),
-
-    // ==================== 厂商/鉴权错误 50020-50049 ====================
-    VENDOR_NOT_FOUND(50020, "厂商不存在"),
-    VENDOR_CODE_EXISTS(50021, "厂商CODE已存在"),
-    VENDOR_DISABLED(50022, "厂商已禁用"),
-    VENDOR_STRATEGY_NOT_FOUND(50023, "厂商对应的解析策略不存在"),
-    VENDOR_CODE_MISMATCH(50024, "厂商CODE与解析策略不一致"),
-    VENDOR_PROTOCOL_MISMATCH(50025, "厂商协议类型与解析策略不匹配"),
-    VENDOR_IN_USE(50026, "厂商下存在设备，无法删除"),
-    DEVICE_AUTH_EXISTS(50030, "设备已注册鉴权码"),
-    DEVICE_AUTH_NOT_FOUND(50031, "设备鉴权信息不存在"),
-
-    // ==================== 车辆错误 51001-51099 ====================
-    VEHICLE_NOT_FOUND(51001, "车辆不存在"),
-    VEHICLE_PLATE_EXISTS(51002, "车牌号已存在"),
-    VEHICLE_HAS_DEVICE(51003, "车辆已绑定设备，请先解绑"),
-    FLEET_NOT_FOUND(51004, "车队不存在"),
-    FLEET_NAME_EXISTS(51005, "同级车队名称已存在"),
-    FLEET_HAS_CHILDREN(51006, "车队存在子车队，无法删除"),
-    FLEET_HAS_VEHICLES(51007, "车队下存在车辆，无法删除"),
-
-    // ==================== 司机错误 51101-51199 ====================
-    DRIVER_NOT_FOUND(51101, "司机不存在"),
-    DRIVER_PHONE_EXISTS(51102, "司机手机号已存在"),
-
-    // ==================== 报警错误 52001-52099 ====================
-    ALARM_NOT_FOUND(52001, "报警记录不存在"),
-    ALARM_ALREADY_HANDLED(52002, "报警已处理"),
-
-    // ==================== 通知 52050-52069 ====================
-    NOTIFICATION_NOT_FOUND(52050, "通知不存在"),
-
-    // ==================== 位置错误 53001-53099 ====================
-    LOCATION_TIME_RANGE_EXCEEDED(53001, "轨迹查询时间范围不能超过7天"),
-    LOCATION_TRACK_EMPTY(53002, "未查询到轨迹数据"),
-    LOCATION_NO_DATA(53003, "设备暂无位置数据"),
-
-    // ==================== 轨迹导出 53010-53019 ====================
-    EXPORT_RANGE_EXCEEDED(53010, "导出时间范围超过上限"),
-    EXPORT_NOT_READY(53011, "导出任务尚未完成"),
-    EXPORT_EXPIRED(53012, "导出文件已过期"),
-    EXPORT_FILE_MISSING(53013, "导出文件不存在");
+    // 50001 起留给基于本脚手架派生的业务自行分配，脚手架自身不占用。
 
     private final int code;
     private final String message;
