@@ -29,6 +29,16 @@ export default function DictPage() {
 
   const refreshTypes = () => qc.invalidateQueries({ queryKey: ['dictTypes'] });
 
+  /*
+   * 字典改动后必须连带失效 ['dict'] 前缀。
+   *
+   * DictTag 用 useQuery(['dict', dictType]) 且 staleTime=5min 缓存字典项，
+   * 只清后端 Caffeine 是不够的：后端刷新成功了，其它页面上的 DictTag
+   * 在 5 分钟内仍显示旧标签，看起来就像「刷新缓存没生效」。
+   * 用前缀失效一次性覆盖所有 dictType。
+   */
+  const invalidateDictConsumers = () => qc.invalidateQueries({ queryKey: ['dict'] });
+
   const fetchData = async (dictType: string) => {
     setDataLoading(true);
     try {
@@ -53,17 +63,32 @@ export default function DictPage() {
     await dictApi.removeType(id);
     message.success('删除成功');
     refreshTypes();
+    invalidateDictConsumers();   // 删类型会连带逻辑删除其数据项
   };
 
   const handleDeleteData = async (id: number) => {
     await dictApi.removeData(id);
     message.success('删除成功');
     if (activeDict) fetchData(activeDict.dictType);
+    invalidateDictConsumers();
   };
 
+  const [refreshing, setRefreshing] = useState(false);
+
   const handleRefreshCache = async () => {
-    await dictApi.refreshCache();
-    message.success('缓存刷新成功');
+    setRefreshing(true);
+    try {
+      await dictApi.refreshCache();
+      message.success('缓存刷新成功');
+      // 后端缓存清完，把前端两层消费方也一起刷新，否则界面看不出任何变化
+      invalidateDictConsumers();
+      refreshTypes();
+      if (activeDict) await fetchData(activeDict.dictType);
+    } catch {
+      /* 错误提示由 request 拦截器统一弹 */
+    } finally {
+      setRefreshing(false);
+    }
   };
 
   const typeColumns: ColumnsType<DictTypeListVO> = [
@@ -153,7 +178,7 @@ export default function DictPage() {
               >
                 新增数据项
               </Button>
-              <Button icon={<ReloadOutlined />} onClick={handleRefreshCache}>刷新缓存</Button>
+              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>刷新缓存</Button>
             </Space>
           </div>
           <Table<DictDataVO>
@@ -169,7 +194,7 @@ export default function DictPage() {
           mode={dataModalMode}
           dictType={activeDict.dictType}
           record={editingData}
-          onSuccess={() => { setDataModalOpen(false); fetchData(activeDict.dictType); }}
+          onSuccess={() => { setDataModalOpen(false); fetchData(activeDict.dictType); invalidateDictConsumers(); }}
           onCancel={() => setDataModalOpen(false)}
         />
       </>
@@ -202,7 +227,7 @@ export default function DictPage() {
             >
               新增类型
             </Button>
-            <Button icon={<ReloadOutlined />} onClick={handleRefreshCache}>刷新缓存</Button>
+            <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>刷新缓存</Button>
           </Space>
         }
       />
@@ -210,7 +235,7 @@ export default function DictPage() {
         open={typeModalOpen}
         mode={typeModalMode}
         record={editingType}
-        onSuccess={() => { setTypeModalOpen(false); refreshTypes(); }}
+        onSuccess={() => { setTypeModalOpen(false); refreshTypes(); invalidateDictConsumers(); }}
         onCancel={() => setTypeModalOpen(false)}
       />
     </>
