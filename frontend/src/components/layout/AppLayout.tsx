@@ -2,7 +2,9 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useUserStore } from '../../stores/userStore';
+import { useTranslation } from 'react-i18next';
 import { toSidebarItems } from '../../utils/menuMapper';
+import { makeNavLabel } from '../../locales/navLabel';
 import type { MenuItem, MenuNavItem } from '../../types/menu';
 import AppHeader from './AppHeader';
 import AppFooter from './AppFooter';
@@ -101,6 +103,7 @@ interface AppLayoutProps {
 const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation('nav');
 
   // layoutStore 状态
   const sidebarPinned = useLayoutStore((s) => s.sidebarPinned);
@@ -153,14 +156,17 @@ const AppLayout: React.FC<AppLayoutProps> = ({ children }) => {
   const systemMode = SYSTEM_ROUTE_PREFIXES.some((p) => location.pathname.startsWith(p))
     ? 'admin' : 'app';
 
-  // 将后端 MenuNavItem[] 按模式分流为侧边栏 MenuItem[]
+  // 将后端 MenuNavItem[] 按模式分流为侧边栏 MenuItem[]。
+  // 依赖里必须有 t：label 是渲染时才算的，语言一变就要重建 items。
+  // 少了这个依赖，切语言侧边栏不会更新，而且中文环境下永远发现不了。
   const menuItems = useMemo(() => {
     if (!isLoggedIn) return [];
+    const labelOf = makeNavLabel(t);
     if (systemMode === 'admin') {
-      return toSidebarItems(navMenus.filter(isSystemMenu));
+      return toSidebarItems(navMenus.filter(isSystemMenu), labelOf);
     }
-    return toSidebarItems(navMenus.filter((m) => !isSystemMenu(m)));
-  }, [navMenus, isLoggedIn, systemMode]);
+    return toSidebarItems(navMenus.filter((m) => !isSystemMenu(m)), labelOf);
+  }, [navMenus, isLoggedIn, systemMode, t]);
 
   // 展开的子菜单 keys
   const [openKeys, setOpenKeys] = useState<string[]>([]);

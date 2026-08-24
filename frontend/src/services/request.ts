@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { message } from 'antd';
+import i18n from '../locales';
+import { DEFAULT_LOCALE } from '../locales/config';
 
 const TOKEN_KEY = 'gentry_token';
 
@@ -8,12 +10,21 @@ const request = axios.create({
   timeout: 15000,
 });
 
-// 请求拦截器：自动携带 Token
+// 请求拦截器：自动携带 Token 与语言
 request.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  /*
+   * Accept-Language 是**登录前唯一的语言通道** —— 此时后端拿不到 sys_user.language，
+   * 只能靠这个头决定「用户名或密码错误」用哪种语言返回。
+   *
+   * 直接读 i18n.language 而不是 localStorage：用户切过语言但还没刷新页面时，
+   * i18n 实例才是当前语言的唯一真源。后端 GentryLocaleResolver 同时接受
+   * zh-CN 与 zh_CN 两种写法，这里发 BCP47 原样即可。
+   */
+  config.headers['Accept-Language'] = i18n.language || DEFAULT_LOCALE;
   return config;
 });
 

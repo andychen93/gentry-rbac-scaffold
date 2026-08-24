@@ -5,6 +5,7 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useLayoutStore } from '../../stores/layoutStore';
 import { useUserStore } from '../../stores/userStore';
 import SidebarToggle from './SidebarToggle';
+import LocaleSwitcher from './LocaleSwitcher';
 import ThemeToggle from './ThemeToggle';
 import NotificationBell from './NotificationBell';
 import UserMenu from './UserMenu';
@@ -92,6 +93,7 @@ const AppHeader: React.FC = () => {
           />
         </Tooltip>
         <NotificationBell />
+        <LocaleSwitcher />
         <ThemeToggle value={theme} onChange={setTheme} />
         <UserMenu
           username={userInfo?.nickname || userInfo?.username}

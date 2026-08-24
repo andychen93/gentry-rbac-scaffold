@@ -94,6 +94,13 @@ export interface LoginVO {
     roles: { id: number; roleCode: string; roleName: string; dataScope: number }[];
     permissions: string[];
     menus: MenuNavItem[];
+    /**
+     * 用户语言偏好。**可选而非 `| null`**：后端全局 Jackson `NON_NULL`，
+     * 用户从未选过语言时这个字段整个不出现在 JSON 里。
+     *
+     * 语义：缺失 = 未设置 = 跟随浏览器（前端保持当前 locale 不动）。
+     */
+    language?: string;
   };
 }
 
@@ -159,6 +166,14 @@ export const userApi = {
   updateStatus: (id: number | string, data: { status: number }) =>
     request.put(`/api/v1/users/${id}/status`, data),
 
+  /**
+   * 更新当前登录用户的语言偏好。language 用后端格式（`zh_CN` / `en_US`）。
+   *
+   * 后端会同步 Sa-Token Session，所以下一个请求就按新语言走 ——
+   * 导出 Excel、定时通知这些后端场景不用等重新登录。
+   */
+  updateMyLanguage: (language: string) =>
+    request.put('/api/v1/users/me/language', { language }),
   // 导出用户（Excel，按当前查询条件）
   exportUsers: (params: Record<string, unknown>) =>
     downloadExcel('/api/v1/users/export', params, 'users.xlsx'),

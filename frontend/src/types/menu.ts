@@ -23,6 +23,16 @@ export interface MenuNavItem {
   id: number;
   parentId: number;
   name: string;
+  /**
+   * i18n key，由后端从 `permission` / `path` 派生（`menu.system.user` 这样）。
+   *
+   * **可选而非 `| null`**：后端全局配了 Jackson `NON_NULL`，派生不出 key 时
+   * 这个字段整个不出现在 JSON 里，而不是 `null`。类型写成 `| null` 会让
+   * strictNullChecks 下拿到 `undefined` 却以为是 `null`，`tsc` 就给不出保护。
+   *
+   * 渲染一律 `label = t(i18nKey) ?? name`，`undefined` 与缺译文都走回退。
+   */
+  i18nKey?: string;
   path: string | null;
   component: string | null;
   icon: string | null;

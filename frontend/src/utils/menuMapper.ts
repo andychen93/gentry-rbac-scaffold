@@ -76,20 +76,27 @@ const ICON_NAME_MAP: Record<string, string> = {
 };
 
 /**
- * 将后端菜单树 MenuNavItem[] 转换为侧边栏 MenuItem[]
+ * 将后端菜单树 MenuNavItem[] 转换为侧边栏 MenuItem[]。
+ *
+ * @param labelOf 标签解析函数，默认直接用库里的 `name`。传 `makeNavLabel(t)` 即启用 i18n。
+ *   调用方**必须**把它放在依赖了 `t` 的 `useMemo` 里，否则切语言菜单不更新
+ *   —— 见 `locales/navLabel.ts` 的说明。
  */
-export function toSidebarItems(menus: MenuNavItem[]): MenuItem[] {
+export function toSidebarItems(
+  menus: MenuNavItem[],
+  labelOf: (m: MenuNavItem) => string = (m) => m.name,
+): MenuItem[] {
   return menus.map((menu) => {
     const item: MenuItem = {
       id: String(menu.id),
-      label: menu.name,
+      label: labelOf(menu),
       icon: menu.icon ? ICON_NAME_MAP[menu.icon] ?? menu.icon : undefined,
       path: menu.path ?? undefined,
       order: menu.sort,
       visible: menu.visible === 1,
     };
     if (menu.children?.length) {
-      item.children = toSidebarItems(menu.children);
+      item.children = toSidebarItems(menu.children, labelOf);
     }
     return item;
   });
