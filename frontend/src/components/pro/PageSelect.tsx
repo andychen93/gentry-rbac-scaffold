@@ -157,7 +157,7 @@ function PageSelectInner<T>(props: PageSelectProps<T>) {
     >
       <Input
         value={text}
-        placeholder={placeholder}
+        placeholder={placeholder ?? t('placeholder.keyword')}
         /*
          * 输入框即搜索框：不能再设 readOnly（否则没法打字，
          * 而且 antd 会给 allowClear 的清除按钮加 hidden 类，点不到）。

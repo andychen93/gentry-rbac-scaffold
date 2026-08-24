@@ -1,1 +1,17 @@
-{}
+{
+    "features": "脚手架自带能力",
+    "features.summary": "多租户隔离 · RBAC 权限（用户/角色/菜单/部门/字典）· 数据权限五档 · 操作与登录日志 · 在线用户强制下线 · JWT + Redis 黑名单 · 限流 / 防重提交 / 全链路 TraceId · Redis 监控",
+    "identity.account": "账号",
+    "identity.name": "姓名",
+    "identity.perms": "权限点",
+    "identity.permsCount": "共 {{count}} 个",
+    "identity.title": "当前登录身份",
+    "newModule": "开始一个新模块",
+    "newModule.desc": "后端：<c>backend/gentry-business/src/main/java/com/gentry/</c> 下新建包，照 <c>rbac/dept</c> 的 controller/service/mapper/entity/dto/vo 分层照抄；前端：<c>src/pages/</c> 下新建页面并在 <c>utils/menuMapper.ts</c> 登记；权限点：写一条 Flyway 迁移插 <c>sys_menu</c> + <c>sys_role_menu</c>。详见 <c>doc/guide/RBAC模块开发指南.md</c>。",
+    "quickLinks": "系统管理快捷入口",
+    "quickLinks.hint": "顶栏齿轮图标可切换到系统管理布局",
+    "stat.depts": "部门数",
+    "stat.menus": "菜单/权限点",
+    "stat.roles": "角色数",
+    "stat.users": "用户数"
+}

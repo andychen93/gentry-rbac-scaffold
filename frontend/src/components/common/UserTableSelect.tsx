@@ -50,7 +50,8 @@ const UserTableSelect: React.FC<Props> = ({ value, onChange, placeholder }) => {
       searchField="nickname"
       value={pseudoRecord}
       onChange={(record) => onChange?.(record ? record.username : undefined)}
-      placeholder={placeholder}
+      // 兜底值放函数体、不放默认参数：默认参数在组件外求值，那里没有 t
+      placeholder={placeholder ?? t('placeholder.searchUser')}
       allowClear
       popoverWidth={460}
     />

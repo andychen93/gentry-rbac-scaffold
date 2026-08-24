@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import MenuList from './MenuList';
 import type { MenuItem } from '../../types/menu';
-import { APP_NAME } from '../../config/app';
+import { APP_NAME_KEY } from '../../config/app';
 import { useTranslation } from 'react-i18next';
 
 export interface GentrySidenavProps {
@@ -30,7 +30,7 @@ const GentrySidenav: React.FC<GentrySidenavProps> = ({
     >
       <div className="ps-sidenav__brand">
         <span className="ps-sidenav__logo">P</span>
-        <span className="ps-sidenav__brand-text">{APP_NAME}</span>
+        <span className="ps-sidenav__brand-text">{t(APP_NAME_KEY)}</span>
       </div>
       <nav aria-label={t('sidebar.nav')}>
         <MenuList

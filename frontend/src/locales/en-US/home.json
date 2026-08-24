@@ -1,1 +1,17 @@
-{}
+{
+    "features": "Built-in capabilities",
+    "features.summary": "Tenant isolation · RBAC (users / roles / menus / departments / dictionaries) · five data-scope levels · operation and login logs · force logout of online users · JWT + Redis blacklist · rate limiting / duplicate-submit guard / end-to-end TraceId · Redis monitoring",
+    "identity.account": "Account",
+    "identity.name": "Name",
+    "identity.perms": "Permissions",
+    "identity.permsCount": "{{count}} in total",
+    "identity.title": "Signed in as",
+    "newModule": "Start a new module",
+    "newModule.desc": "Backend: create a package under <c>backend/gentry-business/src/main/java/com/gentry/</c>, following the controller/service/mapper/entity/dto/vo layering of <c>rbac/dept</c>. Frontend: add a page under <c>src/pages/</c> and register it in <c>utils/menuMapper.ts</c>. Permissions: add a Flyway migration inserting <c>sys_menu</c> + <c>sys_role_menu</c> rows. See <c>doc/guide/RBAC模块开发指南.md</c> for details.",
+    "quickLinks": "System shortcuts",
+    "quickLinks.hint": "Use the gear icon in the header to switch to the system layout",
+    "stat.depts": "Departments",
+    "stat.menus": "Menus / permissions",
+    "stat.roles": "Roles",
+    "stat.users": "Users"
+}

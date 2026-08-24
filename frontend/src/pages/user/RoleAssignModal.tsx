@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Transfer, message } from 'antd';
 import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -17,6 +18,7 @@ interface TransferItem {
 }
 
 export default function RoleAssignModal({ open, userId, currentRoleIds, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['user', 'common']);
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
   const [dataSource, setDataSource] = useState<TransferItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,7 +44,7 @@ export default function RoleAssignModal({ open, userId, currentRoleIds, onSucces
       // 不能 map(Number) —— 会精度丢失变成一个不存在的 ID。
       // 后端 Long 字段能正确反序列化数字型字符串，原样传字符串即可。
       await userApi.assignRoles(userId, { roleIds: targetKeys });
-      message.success('角色分配成功');
+      message.success(t('roleAssign.success'));
       onSuccess();
     } catch {
       // handled
@@ -52,14 +54,14 @@ export default function RoleAssignModal({ open, userId, currentRoleIds, onSucces
   };
 
   return (
-    <Modal title="分配角色" open={open} onOk={handleOk} onCancel={onCancel}
+    <Modal title={t('roleAssign.title')} open={open} onOk={handleOk} onCancel={onCancel}
       confirmLoading={loading} destroyOnHidden width={600}>
       <Transfer
         dataSource={dataSource}
         targetKeys={targetKeys}
         onChange={(keys) => setTargetKeys(keys as string[])}
         render={(item) => item.title}
-        titles={['可选角色', '已选角色']}
+        titles={[t('form.roleTransfer'), t('form.roleTransferPicked')]}
         listStyle={{ width: 240, height: 300 }}
         showSearch
         filterOption={(input, item) =>

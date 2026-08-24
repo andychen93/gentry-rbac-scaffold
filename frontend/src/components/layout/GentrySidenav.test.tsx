@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import GentrySidenav from './GentrySidenav';
-import { APP_NAME } from '../../config/app';
+import commonZh from '../../locales/zh-CN/common.json';
 
 const baseProps = {
   items: [{ id: '1', label: '首页', path: '/dashboard' }],
@@ -27,9 +27,9 @@ describe('GentrySidenav', () => {
     fireEvent.mouseLeave(container.querySelector('.ps-sidenav')!);
     expect(container.querySelector('.ps-sidenav')).not.toHaveClass('is-hover');
   });
-  it('渲染 logo 文案（取自 APP_NAME 配置）', () => {
+  it('渲染 logo 文案（取自语言包 common:app.name）', () => {
     render(<GentrySidenav {...baseProps} />);
-    expect(screen.getByText(APP_NAME)).toBeInTheDocument();
+    expect(screen.getByText(commonZh['app.name'])).toBeInTheDocument();
   });
   it('有无障碍 aria-label', () => {
     render(<GentrySidenav {...baseProps} />);

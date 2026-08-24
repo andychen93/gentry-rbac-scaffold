@@ -2,6 +2,7 @@
   "accessDenied.back": "返回上一页",
   "accessDenied.subTitle": "抱歉，您没有权限访问此页面。",
   "all": "全部",
+  "app.name": "RBAC 管理平台",
   "cancel": "取消",
   "confirm": "确定",
   "confirm.disable": "停用确认",

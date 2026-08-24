@@ -2,21 +2,25 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Form, Input, Button, Card, Typography, Tabs, Select, message, theme } from 'antd';
 import { UserOutlined, LockOutlined, BankOutlined, SafetyOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../../stores/userStore';
 import { authApi, tenantApi, TenantOptionVO } from '../../services/userApi';
-import { APP_NAME } from '../../config/app';
+import { APP_NAME_KEY } from '../../config/app';
 
 const { Title, Text } = Typography;
 
 export default function LoginPage() {
   const { token: themeToken } = theme.useToken();
+  const { t } = useTranslation('login');
   const navigate = useNavigate();
   const login = useUserStore((s) => s.login);
   const [activeTab, setActiveTab] = useState<'default' | 'tenant'>('default');
   const [loading, setLoading] = useState(false);
-  const [tenantOptions, setTenantOptions] = useState<{ label: string; value: string }[]>([
-    { label: '默认租户', value: '' },
-  ]);
+  /**
+   * 只放后端返回的真实租户；「默认租户」那条在渲染时才拼。
+   * 塞进 state 的话切换语言不会重算（options 只在挂载时 fetch 一次），标签会留在旧语言。
+   */
+  const [tenantOptions, setTenantOptions] = useState<{ label: string; value: string }[]>([]);
   const [captchaImg, setCaptchaImg] = useState('');
   const [captchaUuid, setCaptchaUuid] = useState('');
   const [defaultForm] = Form.useForm();
@@ -42,15 +46,19 @@ export default function LoginPage() {
   useEffect(() => {
     tenantApi.options()
       .then((res) => {
-        const opts = (res.data || []).map((t: TenantOptionVO) => ({
-          label: t.name, value: t.code,
-        }));
-        setTenantOptions([{ label: '默认租户', value: '' }, ...opts]);
+        setTenantOptions(
+          (res.data || []).map((tenant: TenantOptionVO) => ({
+            label: tenant.name,
+            value: tenant.code,
+          })),
+        );
       })
       .catch(() => {
-        setTenantOptions([{ label: '默认租户', value: '' }]);
+        setTenantOptions([]);
       });
   }, []);
+
+  const tenantSelectOptions = [{ label: t('defaultTenant'), value: '' }, ...tenantOptions];
 
   const handleLogin = async (values: any) => {
     setLoading(true);
@@ -65,10 +73,10 @@ export default function LoginPage() {
       });
       // 密码过期引导：不阻断登录，跳个人中心提示修改
       if (useUserStore.getState().passwordExpired) {
-        message.warning('密码已过期，建议尽快修改');
+        message.warning(t('msg.pwdExpired'));
         navigate('/profile');
       } else {
-        message.success('登录成功');
+        message.success(t('msg.success'));
         // 跳到根路径，由 App.tsx 依据动态菜单的第一条路由重定向（避免写死落地页）
         navigate('/');
       }
@@ -84,17 +92,17 @@ export default function LoginPage() {
 
   // 验证码输入项（两个 Tab 共用同一张图）
   const captchaItem = (
-    <Form.Item name="captcha" rules={[{ required: true, message: '请输入验证码' }]}>
+    <Form.Item name="captcha" rules={[{ required: true, message: t('captcha.placeholder') }]}>
       <Input
         prefix={<SafetyOutlined />}
-        placeholder="验证码"
+        placeholder={t('captcha')}
         suffix={
           captchaImg ? (
             <img
               src={captchaImg}
-              alt="验证码"
+              alt={t('captcha')}
               onClick={refreshCaptcha}
-              title="点击刷新"
+              title={t('captcha.refresh')}
               style={{ height: 32, cursor: 'pointer', borderRadius: 4 }}
             />
           ) : null
@@ -106,40 +114,40 @@ export default function LoginPage() {
   const tabItems = [
     {
       key: 'default',
-      label: '默认登录',
+      label: t('tab.default'),
       children: (
         <Form form={defaultForm} name="defaultLogin" onFinish={handleLogin} layout="vertical" size="large">
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
+          <Form.Item name="username" rules={[{ required: true, message: t('placeholder.username', { ns: 'common' }) }]}>
+            <Input prefix={<UserOutlined />} placeholder={t('username', { ns: 'common' })} />
           </Form.Item>
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+          <Form.Item name="password" rules={[{ required: true, message: t('placeholder.password', { ns: 'common' }) }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder={t('password', { ns: 'common' })} />
           </Form.Item>
           {captchaItem}
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>登录</Button>
+            <Button type="primary" htmlType="submit" block loading={loading}>{t('submit')}</Button>
           </Form.Item>
         </Form>
       ),
     },
     {
       key: 'tenant',
-      label: '租户登录',
+      label: t('tab.tenant'),
       children: (
         <Form form={tenantForm} name="tenantLogin" onFinish={handleLogin} layout="vertical" size="large"
               initialValues={{ tenantCode: '' }}>
-          <Form.Item name="tenantCode" label="租户">
-            <Select options={tenantOptions} placeholder="请选择租户" suffixIcon={<BankOutlined />} />
+          <Form.Item name="tenantCode" label={t('tenant')}>
+            <Select options={tenantSelectOptions} placeholder={t('tenant.placeholder')} suffixIcon={<BankOutlined />} />
           </Form.Item>
-          <Form.Item name="username" rules={[{ required: true, message: '请输入用户名' }]}>
-            <Input prefix={<UserOutlined />} placeholder="用户名" />
+          <Form.Item name="username" rules={[{ required: true, message: t('placeholder.username', { ns: 'common' }) }]}>
+            <Input prefix={<UserOutlined />} placeholder={t('username', { ns: 'common' })} />
           </Form.Item>
-          <Form.Item name="password" rules={[{ required: true, message: '请输入密码' }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="密码" />
+          <Form.Item name="password" rules={[{ required: true, message: t('placeholder.password', { ns: 'common' }) }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder={t('password', { ns: 'common' })} />
           </Form.Item>
           {captchaItem}
           <Form.Item>
-            <Button type="primary" htmlType="submit" block loading={loading}>登录</Button>
+            <Button type="primary" htmlType="submit" block loading={loading}>{t('submit')}</Button>
           </Form.Item>
         </Form>
       ),
@@ -157,8 +165,8 @@ export default function LoginPage() {
             margin: '0 auto 16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: themeToken.colorTextLightSolid, fontSize: 24, fontWeight: 'bold',
           }}>P</div>
-          <Title level={3} style={{ margin: 0 }}>{APP_NAME}</Title>
-          <Text type="secondary">RBAC 权限管理控制台</Text>
+          <Title level={3} style={{ margin: 0 }}>{t(APP_NAME_KEY, { ns: 'common' })}</Title>
+          <Text type="secondary">{t('subtitle')}</Text>
         </div>
 
         {/* TODO [多租户演进] 开放多租户后，默认登录 Tab 可考虑隐藏或改为配置控制 */}
@@ -170,7 +178,7 @@ export default function LoginPage() {
         />
 
         <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <Text type="secondary" style={{ fontSize: 12 }}>测试账号: admin / Abc@123456</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>{t('testAccount')}</Text>
         </div>
       </Card>
     </div>

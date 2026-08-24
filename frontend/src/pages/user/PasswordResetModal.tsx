@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import { userApi } from '../../services/userApi';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function PasswordResetModal({ open, userId, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['user', 'common']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -18,7 +20,7 @@ export default function PasswordResetModal({ open, userId, onSuccess, onCancel }
       const values = await form.validateFields();
       setLoading(true);
       await userApi.resetPassword(userId, { newPassword: values.newPassword });
-      message.success('密码重置成功');
+      message.success(t('pwd.success'));
       form.resetFields();
       onSuccess();
     } catch (err: any) {
@@ -30,7 +32,7 @@ export default function PasswordResetModal({ open, userId, onSuccess, onCancel }
 
   return (
     <Modal
-      title="重置密码"
+      title={t('pwd.title')}
       open={open}
       onOk={handleOk}
       onCancel={() => { form.resetFields(); onCancel(); }}
@@ -40,29 +42,29 @@ export default function PasswordResetModal({ open, userId, onSuccess, onCancel }
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Form.Item
           name="newPassword"
-          label="新密码"
+          label={t('pwd.new')}
           rules={[
-            { required: true, message: '请输入新密码' },
-            { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: '8-20位，含大小写字母和数字' },
+            { required: true, message: t('common:placeholder.newPassword') },
+            { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: t('common:valid.password') },
           ]}
         >
-          <Input.Password placeholder="请输入新密码" />
+          <Input.Password placeholder={t('common:placeholder.newPassword')} />
         </Form.Item>
         <Form.Item
           name="confirmPassword"
-          label="确认密码"
+          label={t('pwd.confirm')}
           dependencies={['newPassword']}
           rules={[
-            { required: true, message: '请确认密码' },
+            { required: true, message: t('pwd.confirmRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                return Promise.reject(new Error('两次密码不一致'));
+                return Promise.reject(new Error(t('pwd.mismatch')));
               },
             }),
           ]}
         >
-          <Input.Password placeholder="请再次输入密码" />
+          <Input.Password placeholder={t('pwd.confirmPlaceholder')} />
         </Form.Item>
       </Form>
     </Modal>

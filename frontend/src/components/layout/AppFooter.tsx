@@ -1,10 +1,14 @@
 import React from 'react';
-import { APP_NAME } from '../../config/app';
+import { useTranslation } from 'react-i18next';
+import { APP_NAME_KEY } from '../../config/app';
 
-const AppFooter: React.FC = () => (
-  <footer className="ps-footer">
-    © {new Date().getFullYear()} {APP_NAME}
-  </footer>
-);
+const AppFooter: React.FC = () => {
+  const { t } = useTranslation();
+  return (
+    <footer className="ps-footer">
+      © {new Date().getFullYear()} {t(APP_NAME_KEY)}
+    </footer>
+  );
+};
 
 export default AppFooter;

@@ -14,6 +14,13 @@ export default defineConfig({
     baseURL: 'http://localhost:3030',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    /*
+     * 固定成 zh-CN。**不能省** —— Playwright 起的 Chromium 默认 navigator.language 是
+     * en-US，而 resolveInitialLocale() 会跟随浏览器语言，于是整套断言中文文案的用例
+     * 会集体变红（表现为「找不到『新增』按钮」这类，很难联想到语言）。
+     * 需要验英文界面的用例自己 test.use({ locale: 'en-US' }) 覆盖。
+     */
+    locale: 'zh-CN',
   },
   projects: [
     {

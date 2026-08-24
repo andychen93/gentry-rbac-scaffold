@@ -46,6 +46,25 @@ describe('PageSelect', () => {
     expect(screen.getByPlaceholderText('请选择')).toBeInTheDocument();
   });
 
+  it('不传 placeholder 时回落到 common:placeholder.keyword', () => {
+    /*
+     * 这条是补的回归防线：i18n 改造把原来的默认参数 `placeholder = '输入关键字搜索'`
+     * 删掉时忘了在函数体里补 `?? t(...)`，于是所有不显式传 placeholder 的调用方
+     * （日志页的用户/模块筛选）都变成了空占位符。原有用例每次都显式传值，没拦住。
+     */
+    render(
+      <PageSelect<Row>
+        service={service}
+        columns={[{ title: '名', dataIndex: 'name', key: 'name' }]}
+        rowKey="id"
+        labelField="name"
+        onChange={vi.fn()}
+      />,
+      { wrapper },
+    );
+    expect(screen.getByPlaceholderText('输入关键字搜索')).toBeInTheDocument();
+  });
+
   it('点击输入框打开弹层并加载数据', async () => {
     render(
       <PageSelect<Row>

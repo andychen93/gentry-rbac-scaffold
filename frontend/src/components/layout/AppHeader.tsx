@@ -79,7 +79,7 @@ const AppHeader: React.FC = () => {
       items.push({ title: t(EXTRA_PAGE_KEYS[path]) });
     } else {
       const derived = navKeyFromPath(path);
-      const label = t(derived, { ns: 'nav', defaultValue: '' });
+      const label = derived ? t(derived, { ns: 'nav', defaultValue: '' }) : '';
       if (label) items.push({ title: label });
     }
 

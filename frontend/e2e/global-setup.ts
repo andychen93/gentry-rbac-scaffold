@@ -21,6 +21,14 @@ export const TOKENS_FILE = path.join(HERE, '.auth', 'tokens.json');
 const ACCOUNTS: Record<string, string> = {
   admin: 'Abc@123456',
   chenli: 'Chenli@2026',
+  /*
+   * 语言切换用例（14-i18n）专用。
+   *
+   * 切语言会把偏好写进 `sys_user.language`，而三级链里用户偏好优先级最高 ——
+   * 拿 admin 去切，之后所有依赖「admin 没有语言偏好、跟随 localStorage」的用例
+   * 都会被这条持久化数据带跑偏。所以隔离到一个没人用的账号上。
+   */
+  zhangsan: 'Abc@123456',
 };
 
 /** 验证码错误的业务码（ErrorCode.CAPTCHA_ERROR） */

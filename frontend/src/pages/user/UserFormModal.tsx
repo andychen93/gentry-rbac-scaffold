@@ -2,7 +2,15 @@ import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Select, Radio, Switch, Transfer, message } from 'antd';
 import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
+import { useTranslation } from 'react-i18next';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
+
+/**
+ * 职务候选。与 sys_user_post 字典的 dict_label 一致（库里 8 条）。
+ * 之所以是中文常量而不是字典码：post_name 列存的就是这个中文串，见下方 Form.Item 注释。
+ */
+const POST_NAMES = ['首席执行官', '总监', '经理', '主管', '总架构师', '高级工程师', '工程师', '司机'];
 
 interface Props {
   open: boolean;
@@ -17,6 +25,7 @@ function RoleTransfer({ value, onChange, dataSource }: {
   onChange?: (val: number[]) => void;
   dataSource: { key: string; title: string }[];
 }) {
+  const { t } = useTranslation('user');
   const targetKeys = (value || []).map(String);
   return (
     <Transfer
@@ -24,7 +33,7 @@ function RoleTransfer({ value, onChange, dataSource }: {
       targetKeys={targetKeys}
       onChange={(keys) => onChange?.(keys.map(Number))}
       render={(item) => item.title}
-      titles={['可选角色', '已选角色']}
+      titles={[t('form.roleTransfer'), t('form.roleTransferPicked')]}
       listStyle={{ width: 210, height: 200 }}
       showSearch
       filterOption={(input, item) => (item.title ?? '').toLowerCase().includes(input.toLowerCase())}
@@ -33,6 +42,7 @@ function RoleTransfer({ value, onChange, dataSource }: {
 }
 
 export default function UserFormModal({ open, userId, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['user', 'common', 'dict']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [roleOptions, setRoleOptions] = useState<{ key: string; title: string }[]>([]);
@@ -73,10 +83,10 @@ export default function UserFormModal({ open, userId, onSuccess, onCancel }: Pro
       if (isEdit) {
         const { username, password, ...updateData } = payload;
         await userApi.update(userId!, updateData);
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
       } else {
         await userApi.create(payload);
-        message.success('新增成功');
+        message.success(t('common:msg.createSuccess'));
       }
       onSuccess();
     } catch (err: any) {
@@ -87,54 +97,54 @@ export default function UserFormModal({ open, userId, onSuccess, onCancel }: Pro
   };
 
   return (
-    <Modal title={isEdit ? '编辑用户' : '新增用户'} open={open} onOk={handleOk} onCancel={onCancel}
+    <Modal title={isEdit ? t('form.title.edit') : t('form.title.create')} open={open} onOk={handleOk} onCancel={onCancel}
       confirmLoading={loading} destroyOnHidden width={560}>
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item name="username" label="用户名"
-          rules={[{ required: true, message: '请输入用户名' }, { pattern: /^[a-zA-Z][a-zA-Z0-9_]{3,19}$/, message: '4-20字符，字母开头' }]}>
-          <Input placeholder="请输入用户名" disabled={isEdit} />
+        <Form.Item name="username" label={t('common:username')}
+          rules={[{ required: true, message: t('common:placeholder.username') }, { pattern: /^[a-zA-Z][a-zA-Z0-9_]{3,19}$/, message: t('form.username.hint') }]}>
+          <Input placeholder={t('common:placeholder.username')} disabled={isEdit} />
         </Form.Item>
-        <Form.Item name="nickname" label="昵称" rules={[{ required: true, message: '请输入昵称' }, { min: 2, max: 20, message: '2-20字符' }]}>
-          <Input placeholder="请输入昵称" />
+        <Form.Item name="nickname" label={t('common:nickname')} rules={[{ required: true, message: t('common:placeholder.nickname') }, { min: 2, max: 20, message: t('form.nickname.hint') }]}>
+          <Input placeholder={t('common:placeholder.nickname')} />
         </Form.Item>
         {!isEdit && (
-          <Form.Item name="password" label="密码"
-            rules={[{ required: true, message: '请输入密码' }, { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: '8-20位，含大小写字母和数字' }]}>
-            <Input.Password placeholder="请输入密码" />
+          <Form.Item name="password" label={t('common:password')}
+            rules={[{ required: true, message: t('common:placeholder.password') }, { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: t('common:valid.password') }]}>
+            <Input.Password placeholder={t('common:placeholder.password')} />
           </Form.Item>
         )}
-        <Form.Item name="deptId" label="所属部门">
-          <DeptTreeSelect placeholder="请选择所属部门" showRoot={false} />
+        <Form.Item name="deptId" label={t('form.dept')}>
+          <DeptTreeSelect placeholder={t('form.dept.placeholder')} showRoot={false} />
         </Form.Item>
-        <Form.Item name="roleIds" label="角色">
+        <Form.Item name="roleIds" label={t('common:role')}>
           <RoleTransfer dataSource={roleOptions} />
         </Form.Item>
-        <Form.Item name="phone" label="手机号" rules={[{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }]}>
-          <Input placeholder="请输入手机号" />
+        <Form.Item name="phone" label={t('common:phone')} rules={[{ pattern: /^1[3-9]\d{9}$/, message: t('common:valid.phone') }]}>
+          <Input placeholder={t('form.phone.placeholder')} />
         </Form.Item>
-        <Form.Item name="email" label="邮箱" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
-          <Input placeholder="请输入邮箱" />
+        <Form.Item name="email" label={t('common:email')} rules={[{ type: 'email', message: t('common:valid.email') }]}>
+          <Input placeholder={t('common:placeholder.email')} />
         </Form.Item>
-        <Form.Item name="gender" label="性别">
-          <Radio.Group>
-            <Radio value={0}>未知</Radio><Radio value={1}>男</Radio><Radio value={2}>女</Radio>
-          </Radio.Group>
+        <Form.Item name="gender" label={t('common:gender')}>
+          {/* 选项由字典枚举驱动，不再硬编码 —— 文案走 dict namespace 的派生 key */}
+          <Radio.Group options={dictOptions(t, DICT_TYPES.gender, { numeric: true })} />
         </Form.Item>
-        <Form.Item name="postName" label="职务">
-          <Select placeholder="请选择职务" allowClear>
-            <Select.Option value="首席执行官">首席执行官</Select.Option>
-            <Select.Option value="总监">总监</Select.Option>
-            <Select.Option value="经理">经理</Select.Option>
-            <Select.Option value="主管">主管</Select.Option>
-            <Select.Option value="高级工程师">高级工程师</Select.Option>
-            <Select.Option value="工程师">工程师</Select.Option>
-          </Select>
+        {/*
+          * 职务的 value 是**中文 label 本身**（sys_user.post_name 存的就是「经理」这种），
+          * 不是字典码。改成存 sys_user_post 的码（CEO/Manager/…）才能真正 i18n，
+          * 但那要一条数据迁移 + 后端导入导出配套，属数据模型变更，本批不做。
+          * 这里只补齐漂移：原来只列了 6 个，库里 sys_user_post 有 8 个。
+          * 已知限制：英文界面下职务下拉仍显示中文。
+          */}
+        <Form.Item name="postName" label={t('form.post')}>
+          <Select placeholder={t('form.post.placeholder')} allowClear
+            options={POST_NAMES.map((n) => ({ value: n, label: n }))} />
         </Form.Item>
-        <Form.Item name="status" label="状态" valuePropName="checked">
-          <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+        <Form.Item name="status" label={t('common:status')} valuePropName="checked">
+          <Switch checkedChildren={t('common:enable')} unCheckedChildren={t('common:disable')} />
         </Form.Item>
-        <Form.Item name="remark" label="备注" rules={[{ max: 500, message: '最长500字符' }]}>
-          <Input.TextArea rows={3} placeholder="请输入备注" />
+        <Form.Item name="remark" label={t('common:remark')} rules={[{ max: 500, message: t('common:valid.max500') }]}>
+          <Input.TextArea rows={3} placeholder={t('common:placeholder.remark')} />
         </Form.Item>
       </Form>
     </Modal>

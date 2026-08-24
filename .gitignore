@@ -69,3 +69,6 @@ __pycache__/
 
 # 脚手架抽取过程中的一次性脚本
 .scaffold-copy*.sh
+
+# 本地起 redis-server 时落在工作目录的快照文件
+dump.rdb

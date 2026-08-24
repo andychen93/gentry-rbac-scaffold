@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { loginViaUi, gotoLoginAndGetCaptcha } from './helpers/auth';
-import { APP_NAME } from '../src/config/app';
+import { pack } from './helpers/i18n';
+
+const commonZh = pack('zh-CN', 'common');
 
 test.describe('登录功能', () => {
 
@@ -10,7 +12,7 @@ test.describe('登录功能', () => {
   });
 
   test('登录页正常渲染', async ({ page }) => {
-    await expect(page.getByText(APP_NAME)).toBeVisible();
+    await expect(page.getByText(commonZh['app.name'])).toBeVisible();
     await expect(page.getByText('默认登录')).toBeVisible();
     await expect(page.getByText('租户登录')).toBeVisible();
   });

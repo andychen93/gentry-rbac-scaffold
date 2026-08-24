@@ -94,8 +94,21 @@ export function setupI18n(): Promise<typeof i18n> {
       react: { useSuspense: false },
       // 开发期把缺失的 key 打到控制台；生产静默，避免刷屏
       saveMissing: import.meta.env.DEV,
+      /*
+       * 必须是 'current'。默认值 'fallback' 会拿 fallbackLng（zh-CN）去判定，
+       * 而懒加载只会加载**当前**语言的 namespace —— 于是英文界面下每个正常命中的 key
+       * 都会报一句「missing key: home:xxx (zh-CN)」，全是假警报，真的漏译反而被埋掉。
+       */
+      saveMissingTo: 'current',
       missingKeyHandler: import.meta.env.DEV
         ? (lngs, ns, key) => {
+            /*
+             * 懒加载的 namespace 在首帧还没到（useSuspense:false，t() 先返回 key、
+             * 加载完再重渲染），这一帧的「缺失」是假警报。只有 namespace 确实加载完了
+             * 还查不到，才是真漏译。不加这个判断，每次进页面都刷一屏假警报，
+             * 真问题就被埋了。
+             */
+            if (!i18n.hasLoadedNamespace(ns)) return;
             // eslint-disable-next-line no-console
             console.warn(`[i18n] missing key: ${ns}:${key} (${lngs.join(',')})`);
           }

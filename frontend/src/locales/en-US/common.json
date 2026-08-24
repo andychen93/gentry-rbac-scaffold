@@ -2,6 +2,7 @@
   "accessDenied.back": "Go back",
   "accessDenied.subTitle": "Sorry, you are not authorized to access this page.",
   "all": "All",
+  "app.name": "RBAC Console",
   "cancel": "Cancel",
   "confirm": "OK",
   "confirm.disable": "Confirm disable",

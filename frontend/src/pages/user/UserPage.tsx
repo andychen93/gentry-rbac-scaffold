@@ -12,6 +12,8 @@ import type { DeptTreeVO } from '../../services/deptApi';
 import UserFormModal from './UserFormModal';
 import RoleAssignModal from './RoleAssignModal';
 import PasswordResetModal from './PasswordResetModal';
+import { useTranslation } from 'react-i18next';
+import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
 
 interface TreeNode {
   title: string;
@@ -28,6 +30,7 @@ function buildDeptTreeNodes(list: DeptTreeVO[]): TreeNode[] {
 }
 
 export default function UserPage() {
+  const { t } = useTranslation(['user', 'common', 'dict']);
   const qc = useQueryClient();
 
   // 部门树状态（保留左侧导航 UX，deptId 通过 queryKey+service 注入 ProTable）
@@ -60,9 +63,9 @@ export default function UserPage() {
   const handleExport = async () => {
     try {
       await userApi.exportUsers({ pageNum: 1, pageSize: 10, ...exportFilters, deptId: selectedDeptId ?? undefined });
-      message.success('导出成功');
+      message.success(t('common:msg.exportSuccess'));
     } catch {
-      message.error('导出失败');
+      message.error(t('msg.exportFailed'));
     }
   };
 
@@ -70,11 +73,19 @@ export default function UserPage() {
     setImporting(true);
     userApi.importUsers(file)
       .then((res) => {
-        message.success(`导入完成：成功 ${res.success} 条，失败 ${res.fail} 条`);
+        message.success(t('msg.importDone', { success: res.success, fail: res.fail }));
         if (res.fail > 0 && res.errors?.length) {
           const detail = res.errors.slice(0, 3)
-            .map((e) => `第${e.row}行${e.username ? '(' + e.username + ')' : ''}${e.msg}`).join('；');
-          message.warning(`失败明细：${detail}${res.errors.length > 3 ? '...' : ''}`);
+            .map((e) => t('msg.importErrorRow', {
+              row: e.row,
+              who: e.username ? `(${e.username})` : '',
+              reason: e.msg,
+            }))
+            .join('; ');
+          message.warning(t('msg.importErrorDetail', {
+            detail,
+            more: res.errors.length > 3 ? t('msg.importMore') : '',
+          }));
         }
         refresh();
       })
@@ -86,7 +97,7 @@ export default function UserPage() {
     try {
       // id 是雪花 ID，超过 JS Number 安全整数范围就不能 Number(id)（会精度丢失变成别的 ID）
       await userApi.updateStatus(id, { status: checked ? 1 : 0 });
-      message.success('状态更新成功');
+      message.success(t('common:msg.statusUpdated'));
       refresh();
     } catch {
       refresh(); // 回滚 Switch 状态
@@ -107,21 +118,24 @@ export default function UserPage() {
   };
 
   const columns: ColumnsType<UserListVO> = [
-    { title: '用户名', dataIndex: 'username', key: 'username', width: 120 },
-    { title: '昵称', dataIndex: 'nickname', key: 'nickname', width: 120 },
-    { title: '手机号', dataIndex: 'phone', key: 'phone', width: 140 },
-    { title: '部门', dataIndex: 'deptName', key: 'deptName', width: 120 },
+    { title: t('common:username'), dataIndex: 'username', key: 'username', width: 120 },
+    { title: t('common:nickname'), dataIndex: 'nickname', key: 'nickname', width: 120 },
+    { title: t('common:phone'), dataIndex: 'phone', key: 'phone', width: 140 },
+    { title: t('common:dept'), dataIndex: 'deptName', key: 'deptName', width: 120 },
     {
-      title: '性别', dataIndex: 'gender', key: 'gender', width: 80,
-      render: (v: number) => ({ 0: '未知', 1: '男', 2: '女' }[v] || '未知'),
+      title: t('common:gender'), dataIndex: 'gender', key: 'gender', width: 80,
+      // 原来是硬编码 { 0:'未知',1:'男',2:'女' } —— 那是 sys_user_gender 字典的拷贝
+      render: (v: number) => dictLabel(t, DICT_TYPES.gender, v ?? 0),
     },
     {
-      title: '角色', dataIndex: 'roles', key: 'roles', width: 160,
+      title: t('table.roles'), dataIndex: 'roles', key: 'roles', width: 160,
       render: (roles: UserListVO['roles']) =>
-        roles?.map((r) => <Tag color="blue" key={r.id}>{r.roleName || `角色${r.id}`}</Tag>),
+        roles?.map((r) => (
+          <Tag color="blue" key={r.id}>{r.roleName || t('table.roleFallback', { id: r.id })}</Tag>
+        )),
     },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 80,
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: 80,
       render: (s: number, r: UserListVO) => (
         <StatusSwitch
           id={r.id}
@@ -129,35 +143,36 @@ export default function UserPage() {
           onToggle={handleStatus}
           confirmText={(next) =>
             next
-              ? `确定启用用户「${r.username}」？启用后该账号可以正常登录。`
-              : `确定停用用户「${r.username}」？停用后该账号将无法登录，已登录的会话不受影响。`
+              ? t('confirm.enable', { username: r.username })
+              : t('confirm.disable', { username: r.username })
           }
         />
       ),
     },
-    { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
+    { title: t('common:createTime'), dataIndex: 'createTime', key: 'createTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 130, fixed: 'right',
+      // 「操作」在表头是 Action，与操作日志语境的 Operation 不同，故不进 common
+      title: t('table.action'), key: 'action', width: 130, fixed: 'right',
       render: (_: unknown, r: UserListVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />,
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />,
             onClick: () => { setEditingId(r.id); setFormOpen(true); },
           },
           {
-            key: 'role', label: '角色', icon: <UserSwitchOutlined />,
+            key: 'role', label: t('common:role'), icon: <UserSwitchOutlined />,
             onClick: () => handleOpenRoleModal(r),
           },
           {
-            key: 'pwd', label: '重置密码', icon: <KeyOutlined />,
+            key: 'pwd', label: t('action.resetPwd'), icon: <KeyOutlined />,
             onClick: () => { setPasswordTargetUserId(r.id); setPasswordModalOpen(true); },
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
-            confirmText: `确定删除用户 ${r.username}？`,
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, danger: true,
+            confirmText: t('confirm.delete', { username: r.username }),
             onClick: async () => {
               await userApi.remove(r.id);
-              message.success('删除成功');
+              message.success(t('common:msg.deleteSuccess'));
               refresh();
             },
           },
@@ -169,7 +184,7 @@ export default function UserPage() {
   return (
     <div style={{ display: 'flex', gap: 16 }}>
       {/* 左侧部门树（保留导航 UX：点击部门 → queryKey 变化 → refetch） */}
-      <Card style={{ width: 240, flexShrink: 0 }} title="部门" size="small" loading={deptLoading}>
+      <Card style={{ width: 240, flexShrink: 0 }} title={t('common:dept')} size="small" loading={deptLoading}>
         <Tree
           treeData={deptTree}
           selectedKeys={selectedDeptId ? [String(selectedDeptId)] : []}
@@ -178,7 +193,7 @@ export default function UserPage() {
           blockNode
         />
         {selectedDeptId && (
-          <Button type="link" size="small" onClick={() => handleDeptSelect([])}>清除筛选</Button>
+          <Button type="link" size="small" onClick={() => handleDeptSelect([])}>{t('action.clearFilter')}</Button>
         )}
       </Card>
 
@@ -192,21 +207,23 @@ export default function UserPage() {
           scroll={{ x: 1200 }}
           onFiltersChange={(f) => setExportFilters(f as Record<string, unknown>)}
           querySchema={[
-            { name: 'username', label: '用户名' },
-            { name: 'phone', label: '手机号' },
+            { name: 'username', label: t('common:username') },
+            { name: 'phone', label: t('common:phone') },
             {
-              name: 'status', label: '状态', type: 'select',
-              options: [{ label: '正常', value: 1 }, { label: '禁用', value: 0 }],
+              name: 'status', label: t('common:status'), type: 'select',
+              // 原来写死「正常 / 禁用」，而库里 sys_normal_disable 是「正常 / 停用」——
+              // 已经漂移了。改由字典枚举驱动
+              options: dictOptions(t, DICT_TYPES.normalDisable, { numeric: true }),
             },
           ]}
           toolbar={
             <Space>
-              <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); setFormOpen(true); }}>新增用户</Button>
-              <Button icon={<DownloadOutlined />} disabled={!hasPermission('system:user:export')} onClick={handleExport}>导出</Button>
+              <Button type="primary" icon={<PlusOutlined />} onClick={() => { setEditingId(null); setFormOpen(true); }}>{t('action.create')}</Button>
+              <Button icon={<DownloadOutlined />} disabled={!hasPermission('system:user:export')} onClick={handleExport}>{t('action.export')}</Button>
               <Upload accept=".xlsx,.xls" showUploadList={false} beforeUpload={(file) => { handleImport(file); return false; }}>
-                <Button icon={<UploadOutlined />} loading={importing} disabled={!hasPermission('system:user:import')}>导入</Button>
+                <Button icon={<UploadOutlined />} loading={importing} disabled={!hasPermission('system:user:import')}>{t('action.import')}</Button>
               </Upload>
-              <Button icon={<DownloadOutlined />} onClick={() => userApi.downloadTemplate()}>模板</Button>
+              <Button icon={<DownloadOutlined />} onClick={() => userApi.downloadTemplate()}>{t('action.template')}</Button>
             </Space>
           }
         />
