@@ -3,6 +3,7 @@ import { PageSelect } from '../pro/PageSelect';
 import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO } from '../../services/menuApi';
 import type { ApiResult, PageQuery, PageResult } from '../../types/api';
+import { useTranslation } from 'react-i18next';
 
 /** 拍平后的菜单行（只保留下拉表格要显示的字段 + 层级路径） */
 export interface MenuFlatVO {
@@ -13,7 +14,8 @@ export interface MenuFlatVO {
   fullPath: string;
 }
 
-const TYPE_TEXT: Record<number, string> = { 1: '目录', 2: '菜单', 3: '按钮' };
+/** 模块级常量拿不到 t，只存 key */
+const TYPE_KEYS: Record<number, string> = { 1: 'menuType.1', 2: 'menuType.2', 3: 'menuType.3' };
 
 /**
  * 把菜单树拍平成列表，只保留目录与菜单（type 1/2），丢掉按钮。
@@ -72,7 +74,8 @@ interface Props {
  * 注意二者是「约定对齐」而不是外键，个别模块名（如「日志管理」）在菜单表里
  * 没有完全同名的行，反之菜单里也有从未产生日志的项 —— 选中后查不到结果是正常的。
  */
-const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '输入名称搜索模块' }) => {
+const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder }) => {
+  const { t } = useTranslation('common');
   const pseudoRecord = value ? ({ name: value } as MenuFlatVO) : null;
 
   return (
@@ -80,12 +83,13 @@ const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder = '输�
       cacheKey="menuTableSelect"
       service={listMenusPaged}
       columns={[
-        { title: '名称', dataIndex: 'name', width: 130 },
+        { title: t('name'), dataIndex: 'name', width: 130 },
         {
-          title: '类型', dataIndex: 'type', width: 70,
-          render: (t: number) => TYPE_TEXT[t] ?? '-',
+          title: t('type'), dataIndex: 'type', width: 70,
+          // 参数原名叫 t，会遮蔽翻译函数 t —— 改名 type
+          render: (type: number) => (TYPE_KEYS[type] ? t(TYPE_KEYS[type]) : '-'),
         },
-        { title: '位置', dataIndex: 'fullPath', ellipsis: true },
+        { title: t('position'), dataIndex: 'fullPath', ellipsis: true },
       ]}
       rowKey="id"
       labelField="name"

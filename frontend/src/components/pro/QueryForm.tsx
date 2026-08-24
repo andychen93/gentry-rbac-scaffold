@@ -2,6 +2,7 @@ import React from 'react';
 import { Card, Form, Input, Select, Button, Space, DatePicker, Row, Col } from 'antd';
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
 import DictSelect from '../common/DictSelect';
+import { useTranslation } from 'react-i18next';
 
 export type QueryField = {
   name: string;
@@ -27,6 +28,7 @@ export interface QueryFormProps {
 }
 
 const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
+  const { t } = useTranslation('common');
   const [form] = Form.useForm();
   const handleSearch = () => {
     const v = form.getFieldsValue();
@@ -47,13 +49,13 @@ const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
                 {f.type === 'node' ? (
                   f.node
                 ) : f.type === 'select' ? (
-                  <Select placeholder={f.placeholder ?? '全部'} allowClear options={f.options} style={{ width: '100%' }} />
+                  <Select placeholder={f.placeholder ?? t('common:all')} allowClear options={f.options} style={{ width: '100%' }} />
                 ) : f.type === 'dict' ? (
-                  <DictSelect dictType={f.dictType!} placeholder={f.placeholder ?? '全部'} />
+                  <DictSelect dictType={f.dictType!} placeholder={f.placeholder ?? t('common:all')} />
                 ) : f.type === 'dateRange' ? (
                   <DatePicker.RangePicker style={{ width: '100%' }} />
                 ) : (
-                  <Input placeholder={f.placeholder ?? '请输入'} allowClear style={{ width: '100%' }} />
+                  <Input placeholder={f.placeholder ?? t('common:placeholder.input')} allowClear style={{ width: '100%' }} />
                 )}
               </Form.Item>
             </Col>
@@ -64,8 +66,8 @@ const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
           */}
           <Col flex="auto" style={{ textAlign: 'right' }}>
             <Space style={{ marginBottom: 0 }}>
-              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch} aria-label="查询">查询</Button>
-              <Button icon={<ReloadOutlined />} onClick={handleReset} aria-label="重置">重置</Button>
+              <Button type="primary" icon={<SearchOutlined />} onClick={handleSearch} aria-label={t('common:query')}>{t('common:query')}</Button>
+              <Button icon={<ReloadOutlined />} onClick={handleReset} aria-label={t('common:reset')}>{t('common:reset')}</Button>
             </Space>
           </Col>
         </Row>

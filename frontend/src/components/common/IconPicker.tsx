@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Input, Popover, Empty, theme } from 'antd';
 import * as Icons from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 
 /** 可选图标列表（常用 Ant Design 图标） */
 const ICON_LIST: string[] = [
@@ -55,6 +56,7 @@ interface IconPickerProps {
 }
 
 export default function IconPicker({ value, onChange }: IconPickerProps) {
+  const { t } = useTranslation('common');
   const { token } = theme.useToken();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -78,7 +80,7 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
   const content = (
     <div style={{ width: 360 }}>
       <Input
-        placeholder="搜索图标"
+        placeholder={t('icon.search')}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         allowClear
@@ -86,7 +88,7 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
       />
       <div style={{ maxHeight: 280, overflowY: 'auto' }}>
         {filteredIcons.length === 0 ? (
-          <Empty description="无匹配图标" image={Empty.PRESENTED_IMAGE_SIMPLE} />
+          <Empty description={t('icon.noMatch')} image={Empty.PRESENTED_IMAGE_SIMPLE} />
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(8, 1fr)', gap: 4 }}>
             {filteredIcons.map((name) => (
@@ -131,7 +133,7 @@ export default function IconPicker({ value, onChange }: IconPickerProps) {
       <Input
         readOnly
         value={value || ''}
-        placeholder="点击选择图标"
+        placeholder={t('icon.pick')}
         prefix={value ? getIconComponent(value) : undefined}
         allowClear
         onClear={handleClear}

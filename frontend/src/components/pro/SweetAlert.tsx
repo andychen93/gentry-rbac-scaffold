@@ -7,6 +7,7 @@ import {
   InfoCircleOutlined,
 } from '@ant-design/icons';
 import { argonGradients } from '../../theme/argonColors';
+import { useTranslation } from 'react-i18next';
 
 export type SweetAlertType = 'success' | 'error' | 'warning' | 'info';
 
@@ -48,11 +49,12 @@ const SweetAlert: React.FC<SweetAlertProps> = ({
   type,
   title,
   content,
-  confirmText = '确认',
+  confirmText,
   onConfirm,
   cancelText,
   onCancel,
 }) => {
+  const { t } = useTranslation('common');
   const Icon = ICONS[type];
   // 渐变没有对应 token，只能继续从 argonColors 取（见上方 import）；
   // 纯色部分一律走 token，不再写死 hex
@@ -89,7 +91,7 @@ const SweetAlert: React.FC<SweetAlertProps> = ({
         )}
         <div>
           <Button type="primary" className={BTN_CLASS[type]} onClick={onConfirm} style={{ marginRight: 8 }}>
-            {confirmText}
+            {confirmText ?? t('confirm')}
           </Button>
           {cancelText && onCancel && (
             <Button className="ps-btn-neutral" onClick={onCancel}>

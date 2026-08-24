@@ -4,6 +4,7 @@ import { usePagedList } from '../../hooks/usePagedList';
 import { QueryForm, type QueryField } from './QueryForm';
 import type { ApiResult, PageResult, PageQuery } from '../../types/api';
 import type { TableProps } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export interface ProTableProps<T> {
   service: (params: PageQuery) => Promise<ApiResult<PageResult<T>>>;
@@ -20,6 +21,7 @@ export interface ProTableProps<T> {
 }
 
 function ProTableInner<T>(props: ProTableProps<T>) {
+  const { t } = useTranslation('common');
   const { service, queryKey, columns, rowKey, querySchema, pageSize, rowSelection, scroll, toolbar, onFiltersChange } = props;
   const [filters, setFilters] = useState<Record<string, unknown>>({});
   const list = usePagedList<T>({ service, queryKey, pageSize, extraParams: filters });
@@ -42,7 +44,7 @@ function ProTableInner<T>(props: ProTableProps<T>) {
           scroll={scroll} rowSelection={rowSelection}
           pagination={{
             current: list.page, pageSize: list.pageSize, total: list.total,
-            showSizeChanger: true, showQuickJumper: true, showTotal: (t) => `共 ${t} 条`,
+            showSizeChanger: true, showQuickJumper: true, showTotal: (n) => t('total', { count: n }),
             onChange: (p, ps) => { list.setPage(p); list.setPageSize(ps); },
           }}
         />

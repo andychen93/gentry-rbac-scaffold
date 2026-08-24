@@ -3,6 +3,7 @@ import { Menu, Skeleton, Alert, Button } from 'antd';
 import { ReloadOutlined } from '@ant-design/icons';
 import type { MenuProps } from 'antd';
 import type { MenuItem } from '../../types/menu';
+import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../../stores/userStore';
 import {
   UserOutlined,
@@ -141,6 +142,7 @@ const MenuList: React.FC<MenuListProps> = ({
 }) => {
   const hasPermission = useUserStore((s) => s.hasPermission);
 
+  const { t } = useTranslation('common');
   const antdItems = useMemo(
     () => convertToAntdItems(items, hasPermission),
     [items, hasPermission],
@@ -161,7 +163,7 @@ const MenuList: React.FC<MenuListProps> = ({
       <div style={{ padding: 16 }}>
         <Alert
           type="error"
-          message="菜单加载失败"
+          message={t('common:menu.loadFailed')}
           description={error}
           showIcon
           style={{ marginBottom: 12 }}

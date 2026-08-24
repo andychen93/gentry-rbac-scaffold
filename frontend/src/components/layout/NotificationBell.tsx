@@ -4,13 +4,14 @@ import { BellOutlined } from '@ant-design/icons';
 import { notificationApi } from '../../services/notificationApi';
 import type { NotificationVO } from '../../services/notificationApi';
 import { useUserStore } from '../../stores/userStore';
+import { useTranslation } from 'react-i18next';
 
 /** 级别 → 展示文案与 Tag 配色（Tag 用 antd 预设色名，跟随主题） */
-const LEVEL_META: Record<number, { text: string; color: string }> = {
-  1: { text: '紧急', color: 'red' },
-  2: { text: '严重', color: 'orange' },
-  3: { text: '一般', color: 'blue' },
-  4: { text: '提示', color: 'default' },
+const LEVEL_META: Record<number, { key: string; color: string }> = {
+  1: { key: 'notify.level.1', color: 'red' },
+  2: { key: 'notify.level.2', color: 'orange' },
+  3: { key: 'notify.level.3', color: 'blue' },
+  4: { key: 'notify.level.4', color: 'default' },
 };
 
 /** SSE 断开时的兜底轮询周期 */
@@ -24,6 +25,7 @@ const LIST_SIZE = 10;
  * <p>无 notice:list 权限时整个铃铛不渲染，避免打出一串 403。</p>
  */
 const NotificationBell: React.FC = () => {
+  const { t } = useTranslation('common');
   const { token } = theme.useToken();
   const hasPermission = useUserStore((s) => s.hasPermission);
   const canRead = hasPermission('notice:list');
@@ -114,7 +116,7 @@ const NotificationBell: React.FC = () => {
         );
         const meta = LEVEL_META[item.level] ?? LEVEL_META[3];
         if (item.level <= 2) {
-          message.warning(`[${meta.text}] ${item.title}`);
+          message.warning(`[${t(meta.key)}] ${item.title}`);
         }
       } catch {
         /* 忽略异常载荷 */
@@ -195,7 +197,7 @@ const NotificationBell: React.FC = () => {
       await notificationApi.markAllRead();
       setItems((prev) => prev.map((n) => ({ ...n, readStatus: 1 })));
       setUnread(0);
-      message.success('已全部标记为已读');
+      message.success(t('notify.allReadDone'));
     } catch {
       /* 忽略 */
     }
@@ -206,14 +208,14 @@ const NotificationBell: React.FC = () => {
   const content = (
     <div style={{ width: 360 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <span style={{ fontWeight: 600 }}>通知</span>
+        <span style={{ fontWeight: 600 }}>{t('notify.title')}</span>
         <Button type="link" size="small" onClick={handleMarkAll} disabled={unread === 0}>
-          全部已读
+          {t('notify.markAllRead')}
         </Button>
       </div>
       <Spin spinning={loading}>
         {items.length === 0 ? (
-          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="暂无通知" />
+          <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={t('notify.empty')} />
         ) : (
           <List
             size="small"
@@ -233,7 +235,7 @@ const NotificationBell: React.FC = () => {
                   <List.Item.Meta
                     title={
                       <span>
-                        <Tag color={meta.color}>{meta.text}</Tag>
+                        <Tag color={meta.color}>{t(meta.key)}</Tag>
                         {item.title}
                       </span>
                     }
@@ -259,7 +261,7 @@ const NotificationBell: React.FC = () => {
   return (
     <Popover content={content} trigger="click" open={open} onOpenChange={handleOpenChange} placement="bottomRight">
       <Badge count={unread} size="small" offset={[-2, 2]}>
-        <Button type="text" aria-label="通知" icon={<BellOutlined style={{ fontSize: 18 }} />} />
+        <Button type="text" aria-label={t('notify.title')} icon={<BellOutlined style={{ fontSize: 18 }} />} />
       </Badge>
     </Popover>
   );

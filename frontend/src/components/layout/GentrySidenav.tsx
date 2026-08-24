@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import MenuList from './MenuList';
 import type { MenuItem } from '../../types/menu';
 import { APP_NAME } from '../../config/app';
+import { useTranslation } from 'react-i18next';
 
 export interface GentrySidenavProps {
   items: MenuItem[];
@@ -16,6 +17,7 @@ const GentrySidenav: React.FC<GentrySidenavProps> = ({
   items, selectedKey, openKeys, onSelect, onOpenChange, pinned,
 }) => {
   const [hovered, setHovered] = useState(false);
+  const { t } = useTranslation('common');
   const mini = !pinned;
   const showHoverOverlay = mini && hovered;
 
@@ -30,7 +32,7 @@ const GentrySidenav: React.FC<GentrySidenavProps> = ({
         <span className="ps-sidenav__logo">P</span>
         <span className="ps-sidenav__brand-text">{APP_NAME}</span>
       </div>
-      <nav aria-label="主导航菜单">
+      <nav aria-label={t('sidebar.nav')}>
         <MenuList
           items={items}
           selectedKey={selectedKey}

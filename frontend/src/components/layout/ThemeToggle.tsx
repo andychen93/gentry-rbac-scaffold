@@ -2,6 +2,7 @@ import React from 'react';
 import { Button, Tooltip } from 'antd';
 import { BulbOutlined, BulbFilled } from '@ant-design/icons';
 import type { ThemeMode } from '../../types/layout';
+import { useTranslation } from 'react-i18next';
 
 interface ThemeToggleProps {
   value: ThemeMode;
@@ -13,15 +14,16 @@ interface ThemeToggleProps {
  * 亮色模式显示 BulbOutlined，暗色模式显示 BulbFilled
  */
 const ThemeToggle: React.FC<ThemeToggleProps> = ({ value, onChange }) => {
+  const { t } = useTranslation('common');
   const isDark = value === 'dark';
 
   return (
-    <Tooltip title={isDark ? '切换亮色模式' : '切换暗色模式'}>
+    <Tooltip title={isDark ? t('common:theme.toLight') : t('common:theme.toDark')}>
       <Button
         type="text"
         icon={isDark ? <BulbFilled /> : <BulbOutlined />}
         onClick={() => onChange(isDark ? 'light' : 'dark')}
-        aria-label="切换主题"
+        aria-label={t('common:theme.toggle')}
       />
     </Tooltip>
   );

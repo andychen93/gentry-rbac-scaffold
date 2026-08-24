@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { TreeSelect } from 'antd';
 import { deptApi } from '../../services/deptApi';
 import type { DeptTreeVO } from '../../services/deptApi';
+import { useTranslation } from 'react-i18next';
 
 interface TreeNode {
   title: string;
@@ -25,12 +26,13 @@ interface Props {
 export default function DeptTreeSelect({
   value,
   onChange,
-  placeholder = '请选择上级部门',
+  placeholder,
   allowClear = true,
   disabled = false,
   showRoot = true,
   excludeId,
 }: Props) {
+  const { t } = useTranslation('common');
   const [treeData, setTreeData] = useState<DeptTreeVO[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -54,7 +56,7 @@ export default function DeptTreeSelect({
 
     const nodes = buildNodes(treeData);
     if (showRoot) {
-      return [{ title: '无上级（顶级）', value: 0, children: nodes }];
+      return [{ title: t('common:dept.noParent'), value: 0, children: nodes }];
     }
     return nodes;
   }, [treeData, showRoot, excludeId]);
@@ -64,7 +66,7 @@ export default function DeptTreeSelect({
       value={value}
       onChange={(val) => onChange?.(val ?? null)}
       treeData={treeSelectData}
-      placeholder={placeholder}
+      placeholder={placeholder ?? t('common:placeholder.selectParentDept')}
       allowClear={allowClear}
       disabled={disabled}
       loading={loading}

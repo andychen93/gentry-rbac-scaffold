@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Switch } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 export interface StatusSwitchProps {
   id: string | number;
@@ -14,6 +15,7 @@ export interface StatusSwitchProps {
 }
 
 const StatusSwitch: React.FC<StatusSwitchProps> = ({ status, id, onToggle, disabled, confirmText }) => {
+  const { t } = useTranslation('common');
   const [loading, setLoading] = React.useState(false);
 
   const run = async (checked: boolean) => {
@@ -31,10 +33,10 @@ const StatusSwitch: React.FC<StatusSwitchProps> = ({ status, id, onToggle, disab
      * 不需要手动回滚 UI。onOk 返回 Promise 让弹窗按钮显示 loading 并等请求结束再关。
      */
     Modal.confirm({
-      title: checked ? '启用确认' : '停用确认',
+      title: checked ? t('common:confirm.enable') : t('common:confirm.disable'),
       content: confirmText(checked),
-      okText: '确定',
-      cancelText: '取消',
+      okText: t('common:confirm'),
+      cancelText: t('common:cancel'),
       okButtonProps: { danger: !checked },
       onOk: () => run(checked),
     });

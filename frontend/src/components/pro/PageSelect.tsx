@@ -4,6 +4,7 @@ import { SearchOutlined, CloseCircleFilled } from '@ant-design/icons';
 import { usePagedList } from '../../hooks/usePagedList';
 import type { ApiResult, PageResult, PageQuery } from '../../types/api';
 import type { TableProps } from 'antd';
+import { useTranslation } from 'react-i18next';
 
 /** 输入停止多久后才真正发请求（毫秒） */
 const SEARCH_DEBOUNCE_MS = 300;
@@ -50,9 +51,10 @@ export interface PageSelectProps<T> {
  *   输入框回滚成已选项的文本，避免把打了一半的关键字当成有效筛选值提交。
  */
 function PageSelectInner<T>(props: PageSelectProps<T>) {
+  const { t } = useTranslation('common');
   const {
     service, columns, rowKey, labelField, value, onChange,
-    placeholder = '输入关键字搜索', searchField, pageSize = 5, popoverWidth = 480,
+    placeholder, searchField, pageSize = 5, popoverWidth = 480,
     allowClear = false, cacheKey,
   } = props;
   const { token } = theme.useToken();
@@ -137,7 +139,7 @@ function PageSelectInner<T>(props: PageSelectProps<T>) {
         })}
         pagination={{
           current: list.page, pageSize: list.pageSize, total: list.total,
-          size: 'small', showTotal: (t) => `共 ${t} 条`,
+          size: 'small', showTotal: (n) => t('total', { count: n }),
           onChange: (p, ps) => { list.setPage(p); list.setPageSize(ps); },
         }}
       />

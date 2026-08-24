@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, Switch, DatePicker, Row, Col, message } from 'antd';
 import DictSelect from '../common/DictSelect';
+import { useTranslation } from 'react-i18next';
 
 export type FormFieldType =
   | 'input'
@@ -54,6 +55,7 @@ const CrudFormModal: React.FC<CrudFormModalProps> = ({
   onCancel,
   width = 600,
 }) => {
+  const { t } = useTranslation('common');
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
   const isEdit = recordId !== null && recordId !== undefined;
@@ -96,7 +98,7 @@ const CrudFormModal: React.FC<CrudFormModalProps> = ({
     setLoading(true);
     try {
       await onSubmit(values, isEdit);
-      message.success(isEdit ? '编辑成功' : '新增成功');
+      message.success(isEdit ? t('msg.updateSuccess') : t('msg.createSuccess'));
       onSuccess?.();
     } finally {
       setLoading(false);
@@ -105,7 +107,7 @@ const CrudFormModal: React.FC<CrudFormModalProps> = ({
 
   return (
     <Modal
-      title={isEdit ? `编辑${title}` : `新增${title}`}
+      title={isEdit ? t('crud.editTitle', { name: title }) : t('crud.createTitle', { name: title })}
       open={open}
       onOk={handleOk}
       confirmLoading={loading}
