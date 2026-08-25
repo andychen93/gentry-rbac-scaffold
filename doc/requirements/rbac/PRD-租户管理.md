@@ -330,6 +330,12 @@ GET /api/v1/tenants/{id}
 配置租户级别的参数，包括设备限额、功能开关等。
 
 #### 配置项
+> **⚠ 已被后续变更取代（2026-08-24）**：本节描述的租户配置字段
+> （`maxDevices` / `dataRetentionDays` / `videoEnabled` / `alarmEnabled` / `reportEnabled` /
+> `mapProvider`）以及 `sys_tenant.device_limit` 列是本仓库派生自车辆定位平台时留下的业务概念，
+> 已由 `V13__cleanup_business_leftovers.sql` 清除，`TenantConfigDTO` 现在只有 `maxUsers`。
+> 见 `doc/design/modules/rbac/modules/业务域残留清理/详细设计.md` §2。
+
 
 | 配置项 | 类型 | 说明 | 默认值 |
 |--------|------|------|--------|

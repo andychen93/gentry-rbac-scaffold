@@ -32,11 +32,6 @@ const ALLOW: { pattern: RegExp; why: string }[] = [
     pattern: /^components\/layout\/LocaleSwitcher\.tsx$/,
     why: '语言选择器显示语言的**自称**（简体中文 / English）。翻译它反而会让对方语言的用户认不出',
   },
-  {
-    pattern: /^locales\/dictEnum\.ts$/,
-    why: 'POST_NAMES 的值就是中文 label —— sys_user.post_name 列存的是中文串而非字典码，'
-      + '下拉 value 必须与库里一致。改成存字典码要一条数据迁移，见该处注释',
-  },
 ];
 
 /** 只扫源码，不扫测试与语言包 */

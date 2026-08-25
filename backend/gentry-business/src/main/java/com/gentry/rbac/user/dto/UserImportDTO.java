@@ -22,7 +22,23 @@ public class UserImportDTO {
     @ExcelProperty(index = 1) private String nickname;
     @ExcelProperty(index = 2) private String phone;
     @ExcelProperty(index = 3) private String email;
-    @ExcelProperty(index = 4) private Integer gender;
+    /**
+     * 性别，<b>用 String 收而不是 Integer</b>。
+     *
+     * <p>这里修的是一个既有缺陷：导出写的是「男」/{@code Male}（导出是给人看的报表），
+     * 而本字段原来是 {@code Integer}，于是<b>导出的文件导回来这一列静默变 null</b>，
+     * 与上面那句「任意语言导出的文件都能导回来」直接矛盾。</p>
+     *
+     * <p>改成 String 之后由 {@code LocalizedCodeResolver} 归一：码（0/1/2）与
+     * 任一语言的 label（男/女/未知、Male/Female/Unknown）都认。</p>
+     */
+    @ExcelProperty(index = 4) private String gender;
+    /**
+     * 职务，收的是<b>字典码或任一语言的 label</b>，由 {@code LocalizedCodeResolver} 归一成码。
+     *
+     * <p>{@code sys_user.post_name} 自 V13 起存 {@code sys_user_post} 的码
+     * （{@code Manager}）而不是中文 label（「经理」）—— 存展示文案会让职务下拉无法翻译。</p>
+     */
     @ExcelProperty(index = 5) private String postName;
 
     /** 模板表头 i18n key，顺序与上面的 index 对应 */

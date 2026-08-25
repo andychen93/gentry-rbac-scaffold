@@ -4,7 +4,7 @@ import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
 import { useTranslation } from 'react-i18next';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
-import { DICT_TYPES, dictOptions, POST_NAMES } from '../../locales/dictEnum';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -123,16 +123,14 @@ export default function UserFormModal({ open, userId, onSuccess, onCancel }: Pro
           {/* 选项由字典枚举驱动，不再硬编码 —— 文案走 dict namespace 的派生 key */}
           <Radio.Group options={dictOptions(t, DICT_TYPES.gender, { numeric: true })} />
         </Form.Item>
-        {/*
-          * 职务的 value 是**中文 label 本身**（sys_user.post_name 存的就是「经理」这种），
-          * 不是字典码。改成存 sys_user_post 的码（CEO/Manager/…）才能真正 i18n，
-          * 但那要一条数据迁移 + 后端导入导出配套，属数据模型变更，本批不做。
-          * 这里只补齐漂移：原来只列了 6 个，库里 sys_user_post 有 8 个。
-          * 已知限制：英文界面下职务下拉仍显示中文。
-          */}
+        {/* value 是 sys_user_post 的字典码（V13 起 post_name 存码不存 label），
+            文案走 dict.sys_user_post.{code} 译文 */}
         <Form.Item name="postName" label={t('form.post')}>
-          <Select placeholder={t('form.post.placeholder')} allowClear
-            options={POST_NAMES.map((n) => ({ value: n, label: n }))} />
+          <Select
+            placeholder={t('form.post.placeholder')}
+            allowClear
+            options={dictOptions(t, DICT_TYPES.userPost)}
+          />
         </Form.Item>
         <Form.Item name="status" label={t('common:status')} valuePropName="checked">
           <Switch checkedChildren={t('common:enable')} unCheckedChildren={t('common:disable')} />

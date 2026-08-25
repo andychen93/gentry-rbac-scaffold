@@ -56,7 +56,6 @@ export default function TenantDetailModal({ open, tenantId, onCancel }: Props) {
                 </Tag>
               </Descriptions.Item>
               <Descriptions.Item label={t('detail.accountLimit')}>{detail.accountLimit}</Descriptions.Item>
-              <Descriptions.Item label={t('detail.deviceLimit')}>{detail.deviceLimit}</Descriptions.Item>
               <Descriptions.Item label={t('common:remark')} span={2}>{detail.remark || '-'}</Descriptions.Item>
               <Descriptions.Item label={t('common:createTime')}>
                 {detail.createTime?.replace('T', ' ')}

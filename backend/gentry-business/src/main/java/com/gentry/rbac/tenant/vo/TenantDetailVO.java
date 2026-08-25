@@ -16,7 +16,6 @@ public class TenantDetailVO {
     private String domain;
     private LocalDateTime expireTime;
     private Integer accountLimit;
-    private Integer deviceLimit;
     private Integer status;
     private String remark;
     private Map<String, Object> config;
@@ -46,8 +45,6 @@ public class TenantDetailVO {
     public void setExpireTime(LocalDateTime expireTime) { this.expireTime = expireTime; }
     public Integer getAccountLimit() { return accountLimit; }
     public void setAccountLimit(Integer accountLimit) { this.accountLimit = accountLimit; }
-    public Integer getDeviceLimit() { return deviceLimit; }
-    public void setDeviceLimit(Integer deviceLimit) { this.deviceLimit = deviceLimit; }
     public Integer getStatus() { return status; }
     public void setStatus(Integer status) { this.status = status; }
     public String getRemark() { return remark; }

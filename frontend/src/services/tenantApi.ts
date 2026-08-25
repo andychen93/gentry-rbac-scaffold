@@ -34,7 +34,6 @@ export interface TenantDetailVO {
   domain: string;
   expireTime: string | null;
   accountLimit: number;
-  deviceLimit: number;
   status: number;
   remark: string;
   config: Record<string, any> | null;
@@ -82,14 +81,15 @@ export interface TenantUpdateDTO {
   remark?: string;
 }
 
+/**
+ * 租户扩展配置。与后端 `TenantConfigDTO` 一一对应，**它就是 config 的字段白名单**
+ * （后端只写这里声明的键，不做增量合并）。
+ *
+ * 原来还有 maxDevices / dataRetentionDays / videoEnabled / alarmEnabled /
+ * reportEnabled / mapProvider —— 车辆定位平台的业务概念，已由 V13 迁移清掉。
+ */
 export interface TenantConfigDTO {
-  maxDevices?: number;
   maxUsers?: number;
-  dataRetentionDays?: number;
-  videoEnabled?: boolean;
-  alarmEnabled?: boolean;
-  reportEnabled?: boolean;
-  mapProvider?: string;
 }
 
 export interface TenantStatusDTO {

@@ -7,6 +7,8 @@ import com.gentry.rbac.log.annotation.Log;
 import com.gentry.rbac.log.entity.OperLog;
 import com.gentry.rbac.log.service.LogService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.multipart.MultipartFile;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -102,6 +104,27 @@ public class LogAspect {
             Object arg = args[i];
             if (arg == null) {
                 sanitized[i] = null;
+                continue;
+            }
+            /*
+             * **Servlet 对象与上传文件必须先剔掉，不能交给 Jackson。**
+             *
+             * Jackson 序列化一个 HttpServletResponse 会去调它的 bean getter，其中包括
+             * getWriter() —— 那会把 Catalina Response 的 usingWriter 置为 true，导致业务代码
+             * 随后的 response.getOutputStream() 抛
+             * 「getWriter() has already been called for this response」。
+             *
+             * 症状极隐蔽：外层 try 把 Jackson 的异常吞了，但**对 response 的副作用留下来了**，
+             * 于是所有「@Log + 参数里有 HttpServletResponse」的下载接口（用户导出就是）
+             * 在真实容器里必挂 500。而 MockHttpServletResponse 允许先 getWriter 再
+             * getOutputStream，所以 MockMvc 测试一路绿灯，本地真机跑才暴露。
+             *
+             * RepeatSubmitAspect.isSerializable 早就这么过滤了，这里是漏的那一处。
+             */
+            if (arg instanceof HttpServletResponse
+                    || arg instanceof HttpServletRequest
+                    || arg instanceof MultipartFile) {
+                sanitized[i] = "<" + arg.getClass().getSimpleName() + ">";
                 continue;
             }
             try {

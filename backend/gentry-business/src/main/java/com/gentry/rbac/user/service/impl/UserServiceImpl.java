@@ -27,6 +27,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import com.gentry.core.i18n.LocalizedCodeResolver;
+import com.gentry.rbac.dict.service.DictService;
+import com.gentry.rbac.dict.vo.DictDataVO;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,6 +46,18 @@ public class UserServiceImpl implements UserService {
     private static final String ADMIN_USERNAME = "admin";
     /** 导入用户的默认初始密码（符合密码强度规则，用户首次登录后可自行修改） */
     private static final String DEFAULT_IMPORT_PASSWORD = "Abc@123456";
+    /** 职务字典类型。码存进 sys_user.post_name，译文走 export.user.post.{code} */
+    private static final String POST_DICT_TYPE = "sys_user_post";
+    /**
+     * 性别码 → 译文 key。
+     *
+     * <p>性别不是字典驱动的（0/1/2 硬编码在业务里，{@code User.gender} 就是 Integer），
+     * 所以单列一张表，而职务的码清单从 {@link #POST_DICT_TYPE} 字典查。</p>
+     */
+    private static final Map<String, String> GENDER_KEYS = Map.of(
+            "0", "export.user.gender.unknown",
+            "1", "export.user.gender.male",
+            "2", "export.user.gender.female");
 
     private final UserMapper userMapper;
     private final UserRoleMapper userRoleMapper;
@@ -52,13 +67,18 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final I18nProperties i18nProperties;
     private final I18nUtil i18nUtil;
+    /** 职务码清单的来源：sys_user_post 字典（带 Caffeine 缓存，导入时只查一次） */
+    private final DictService dictService;
+    private final LocalizedCodeResolver codeResolver;
 
     public UserServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, DeptMapper deptMapper,
                            DeptService deptService,
                            PasswordEncoder passwordEncoder,
                            I18nProperties i18nProperties,
-                           I18nUtil i18nUtil) {
+                           I18nUtil i18nUtil,
+                           DictService dictService,
+                           LocalizedCodeResolver codeResolver) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
@@ -67,6 +87,8 @@ public class UserServiceImpl implements UserService {
         this.passwordEncoder = passwordEncoder;
         this.i18nProperties = i18nProperties;
         this.i18nUtil = i18nUtil;
+        this.dictService = dictService;
+        this.codeResolver = codeResolver;
     }
 
     @Override
@@ -459,7 +481,11 @@ public class UserServiceImpl implements UserService {
         Long tenantId = UserContext.getTenantId();
         List<Long> deptIds = query.getDeptId() != null ? deptService.getChildDeptIds(query.getDeptId()) : null;
         List<User> users = userMapper.selectList(query, tenantId, deptIds);
-        List<UserExportVO> rows = users.stream().map(this::toExportVO).collect(Collectors.toList());
+        // 职务码 → 展示名的映射只算一次，避免每行都查一遍字典
+        Map<String, String> postKeys = postCodeToMessageKey();
+        List<UserExportVO> rows = users.stream()
+                .map(u -> toExportVO(u, postKeys))
+                .collect(Collectors.toList());
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding("UTF-8");
         response.setHeader("Content-Disposition", "attachment; filename=users.xlsx");
@@ -487,6 +513,8 @@ public class UserServiceImpl implements UserService {
         }
         int success = 0, fail = 0;
         List<UserImportResultVO.ErrorItem> errors = new ArrayList<>();
+        // 同上，整批只算一次
+        Map<String, String> postKeys = postCodeToMessageKey();
         // 逐行导入：单行失败不影响其他行。create 内 self-invocation 的 @Transactional 不生效，
         // 但导入不分配角色（roleIds 为空），仅单条 insert user，原子操作，安全。
         for (int i = 0; i < rows.size(); i++) {
@@ -501,8 +529,14 @@ public class UserServiceImpl implements UserService {
                 dto.setNickname(StringUtils.hasText(row.getNickname()) ? row.getNickname() : username.trim());
                 dto.setPhone(row.getPhone());
                 dto.setEmail(row.getEmail());
-                dto.setGender(row.getGender() != null ? row.getGender() : 0);
-                dto.setPostName(row.getPostName());
+                /*
+                 * 性别与职务都「码或任一语言的 label 都认」，见 LocalizedCodeResolver。
+                 * 认不出时按未填处理（性别退 0、职务留空）而不是整行报错 ——
+                 * 这两列都是可选信息，为一个拼错的职务名丢掉整行用户不划算。
+                 */
+                String genderCode = codeResolver.resolve(GENDER_KEYS, row.getGender());
+                dto.setGender(genderCode != null ? Integer.valueOf(genderCode) : 0);
+                dto.setPostName(codeResolver.resolve(postKeys, row.getPostName()));
                 dto.setPassword(DEFAULT_IMPORT_PASSWORD);
                 dto.setStatus(1);
                 create(dto);
@@ -537,7 +571,24 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toList());
     }
 
-    private UserExportVO toExportVO(User user) {
+    /**
+     * 职务码 → 译文 i18n key。
+     *
+     * <p>码清单取自 {@code sys_user_post} 字典（唯一真源，带缓存），译文取自
+     * {@code export.user.post.{code}}。<b>为什么译文要在后端再放一份</b>：Excel 是后端
+     * 生成的，而字典 label 的译文按既有决策放在前端语言包（{@code locales/{lang}/dict.json}），
+     * 后端拿不到。两份由 {@code frontend/src/locales/exportDictParity.test.ts} 逐条对齐，
+     * 把「可能漂移」变成「构造上不可能漂移」。</p>
+     */
+    private Map<String, String> postCodeToMessageKey() {
+        Map<String, String> map = new LinkedHashMap<>();
+        for (DictDataVO d : dictService.listDataByType(POST_DICT_TYPE)) {
+            map.put(d.getDictValue(), "export.user.post." + d.getDictValue());
+        }
+        return map;
+    }
+
+    private UserExportVO toExportVO(User user, Map<String, String> postKeys) {
         UserExportVO vo = new UserExportVO();
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
@@ -552,7 +603,10 @@ public class UserServiceImpl implements UserService {
             var dept = deptMapper.selectOneById(user.getDeptId());
             if (dept != null) vo.setDeptName(dept.getName());
         }
-        vo.setPostName(user.getPostName());
+        // 库里存的是字典码（V13 起），导出给人看的是当前语言的展示名
+        String postCode = user.getPostName();
+        vo.setPostName(postCode == null ? "" : i18nUtil.getMessage(
+                postKeys.getOrDefault(postCode, "export.user.post." + postCode), postCode));
         vo.setStatus(user.getStatus() != null && user.getStatus() == 1
                 ? i18nUtil.getMessage("export.user.status.enabled", "启用")
                 : i18nUtil.getMessage("export.user.status.disabled", "禁用"));

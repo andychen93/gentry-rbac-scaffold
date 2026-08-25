@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Radio, Select, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { authApi } from '../../services/userApi';
-import { DICT_TYPES, dictOptions, POST_NAMES } from '../../locales/dictEnum';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -67,13 +67,12 @@ export default function EditProfileModal({ open, onSuccess, onCancel }: Props) {
         <Form.Item name="gender" label={t('common:gender')}>
           <Radio.Group options={dictOptions(t, DICT_TYPES.gender, { numeric: true })} />
         </Form.Item>
-        {/* 职务的 value 是中文 label 本身，见 locales/dictEnum.ts 的 POST_NAMES 注释。
-            原来这里只列了 6 个、UserFormModal 列了 8 个，现在同源 */}
+        {/* value 是 sys_user_post 的字典码，与 UserFormModal 同源 */}
         <Form.Item name="postName" label={t('user:form.post')}>
           <Select
             placeholder={t('user:form.post.placeholder')}
             allowClear
-            options={POST_NAMES.map((n) => ({ value: n, label: n }))}
+            options={dictOptions(t, DICT_TYPES.userPost)}
           />
         </Form.Item>
       </Form>

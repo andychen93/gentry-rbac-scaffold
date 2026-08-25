@@ -6,6 +6,12 @@
 -- "不想跑应用、只想手动灌一个库看看" 的场景，不参与构建、不被 Flyway 读取。
 -- MySQL/SQLite 用户请直接跑应用，Flyway 会按 profile 自动建表初始化。
 --
+-- ⚠ 本文件**冻结在 V5**，之后的迁移（V6~V13）没有合并进来，因此它与当前表结构不一致：
+--   缺 sys_config / sys_notification 等表；sys_tenant 仍有已被 V13 删掉的 device_limit 列；
+--   sys_user.post_name 仍是中文 label 而非 V13 之后的字典码。
+-- 唯一权威是 backend/gentry-start/src/main/resources/db/migration/。
+-- 需要一份最新的全量脚本，请让应用跑一次 Flyway 后从库里 dump，不要手工维护本文件。
+--
 -- 账号:
 --   chenli   / Chenli@2026  → SUPER_ADMIN（平台超管）
 --   admin    / Abc@123456   → ADMIN（租户管理员）

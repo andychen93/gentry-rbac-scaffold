@@ -12,9 +12,11 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -296,6 +298,114 @@ class I18nApiIT extends BaseApiIT {
     }
 
     @Test
+    @DisplayName("种子用户的职务是字典码_而非中文label")
+    void 种子用户的职务是字典码_而非中文label() throws Exception {
+        /*
+         * V13 之前 sys_user.post_name 存的是「经理」这种中文 label，导致职务下拉的 value
+         * 必须是中文、因而无法翻译。这条钉住迁移的结果：库里存的必须是 sys_user_post 的码。
+         *
+         * 断言「在字典码集合内」而不是逐个写死 chenli=ChiefArchitect —— 后者会在有人
+         * 改了某个种子用户的职务时变红，而那不是缺陷。
+         */
+        MvcResult result = mockMvc.perform(authedGet("/api/v1/dict/types/sys_user_post/data"))
+                .andExpect(status().isOk())
+                .andReturn();
+        Set<String> codes = new HashSet<>();
+        for (JsonNode d : parse(result).at("/data")) {
+            codes.add(d.path("dictValue").asText());
+        }
+        assertThat(codes).as("sys_user_post 字典应有内容").isNotEmpty();
+        assertThat(codes).as("「司机 / Driver」是车辆定位平台的残留，V13 已删").doesNotContain("Driver");
+
+        for (String seed : new String[]{"chenli", "admin", "zhangsan"}) {
+            User u = userMapper.selectByUsername(1L, seed);
+            assertThat(u).as("种子用户 %s 应存在", seed).isNotNull();
+            assertThat(u.getPostName())
+                    .as("种子用户 %s 的 post_name 应是字典码而不是中文 label", seed)
+                    .isIn(codes);
+        }
+    }
+
+    @Test
+    @DisplayName("导出的Excel能原样导回_性别与职务都落对")
+    void 导出的Excel能原样导回_性别与职务都落对() throws Exception {
+        /*
+         * 覆盖一个既有缺陷：导出写「男」/「经理」（给人看），而导入侧原来 gender 是 Integer、
+         * postName 直接当字符串塞库，于是**导出的文件导回来**性别静默变 null、
+         * 职务变成一个查不到字典的孤值。现在两列都由 LocalizedCodeResolver 归一。
+         *
+         * 导出断言跑两种语言（GET，无副作用）；**导回只做一次**：导入接口有
+         * @RepeatSubmit(interval = 5)，而它的指纹是 userId|method|uri|argsMD5 且
+         * **MultipartFile 不参与 MD5**（RepeatSubmitAspect.extractArgs 跳过不可序列化对象），
+         * 所以同一用户 5 秒内的两次导入指纹完全相同、第二次必被判重复提交。
+         * 「英文 label 也能认」由 LocalizedCodeResolverTest 直接测那个纯函数。
+         *
+         * 导入用**另一个账号**：本类里已有两条用例在打这个接口，用 admin 会撞上它们的
+         * 5 秒窗口（指纹只差 userId）。
+         */
+        String username = "roundtrip" + SEQ.incrementAndGet();
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", username);
+        body.put("nickname", "往返测试");
+        body.put("password", TEST_PWD);
+        body.put("deptId", 100);
+        body.put("gender", 1);
+        body.put("postName", "Manager");
+        body.put("status", 1);
+        mockMvc.perform(authedPost("/api/v1/users").content(json(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        Map<String, List<String>> exported = new HashMap<>();
+        for (String lang : new String[]{"zh-CN", "en-US"}) {
+            // pageSize 上限是 100（valid.common.pageSize.max）
+            byte[] xlsx = mockMvc.perform(
+                            authedGet("/api/v1/users/export?pageNum=1&pageSize=100&username=" + username)
+                                    .header("Accept-Language", lang))
+                    .andExpect(status().isOk())
+                    .andReturn().getResponse().getContentAsByteArray();
+
+            // 先确认真是 xlsx：全局异常处理器对参数错误也返回 HTTP 200 + JSON，
+            // 直接丢给 EasyExcel 会得到「invalid char between encapsulated token」这种无从下手的报错
+            assertThat(new String(xlsx, 0, Math.min(4, xlsx.length),
+                    java.nio.charset.StandardCharsets.ISO_8859_1))
+                    .as("导出接口没有返回 xlsx，实际响应=%s",
+                            new String(xlsx, java.nio.charset.StandardCharsets.UTF_8))
+                    .startsWith("PK");
+
+            List<String> row = readRowByFirstCell(xlsx, username);
+            exported.put(lang, row);
+            // 导出是给人看的：性别与职务列必须是当前语言的展示名，不是码
+            assertThat(row.get(4))
+                    .as("%s 导出的性别列应是展示名", lang)
+                    .isEqualTo("zh-CN".equals(lang) ? "男" : "Male");
+            assertThat(row.get(6))
+                    .as("%s 导出的职务列应是展示名", lang)
+                    .isEqualTo("zh-CN".equals(lang) ? "经理" : "Manager");
+        }
+
+        // 拿中文导出的那一行原样导回。导入列序：username/nickname/phone/email/gender/postName
+        List<String> row = exported.get("zh-CN");
+        String reimported = username + "re";
+        byte[] back = buildImportFile(
+                new String[]{"c0", "c1", "c2", "c3", "c4", "c5"},
+                new String[]{reimported, row.get(1), row.get(2), row.get(3), row.get(4), row.get(6)});
+        String importerAuth = loginWithLanguage(null);
+        mockMvc.perform(multipart("/api/v1/users/import")
+                        .file(new MockMultipartFile("file", "back.xlsx",
+                                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", back))
+                        .header("Authorization", importerAuth)
+                        .header("Accept-Language", "zh-CN"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        User got = userMapper.selectByUsername(1L, reimported);
+        assertThat(got).as("导出的文件应能导回来").isNotNull();
+        assertThat(got.getGender()).as("往返后性别应还是 1（男）").isEqualTo(1);
+        assertThat(got.getPostName()).as("往返后职务应归一成字典码").isEqualTo("Manager");
+    }
+
+    @Test
     @DisplayName("导入模板表头随语言变化")
     void 导入模板表头随语言变化() throws Exception {
         byte[] en = mockMvc.perform(authedGet("/api/v1/users/import/template")
@@ -329,6 +439,37 @@ class I18nApiIT extends BaseApiIT {
                 })
                 .doRead();
         return head;
+    }
+
+    /** 读 xlsx 里 username 等于给定值的那一行（表头之后的数据行） */
+    private List<String> readRowByFirstCell(byte[] xlsx, String firstCell) {
+        List<List<String>> rows = new ArrayList<>();
+        com.alibaba.excel.EasyExcel.read(new java.io.ByteArrayInputStream(xlsx))
+                .sheet()
+                .headRowNumber(0)
+                .registerReadListener(new com.alibaba.excel.read.listener.ReadListener<Map<Integer, String>>() {
+                    @Override
+                    public void invoke(Map<Integer, String> row,
+                                       com.alibaba.excel.context.AnalysisContext ctx) {
+                        List<String> cells = new ArrayList<>();
+                        // TreeMap 按列序补齐：EasyExcel 对空单元格不产生 key，直接取 values 会错位
+                        java.util.TreeMap<Integer, String> sorted = new java.util.TreeMap<>(row);
+                        int max = sorted.isEmpty() ? -1 : sorted.lastKey();
+                        for (int i = 0; i <= max; i++) {
+                            cells.add(sorted.getOrDefault(i, ""));
+                        }
+                        rows.add(cells);
+                    }
+                    @Override
+                    public void doAfterAllAnalysed(com.alibaba.excel.context.AnalysisContext ctx) {
+                    }
+                })
+                .doRead();
+        return rows.stream()
+                .filter(r -> !r.isEmpty() && firstCell.equals(r.get(0)))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError(
+                        "导出的 Excel 里找不到 username=" + firstCell + " 的行，实际行数=" + rows.size()));
     }
 
     /** 用给定表头与一行数据造一个 xlsx */

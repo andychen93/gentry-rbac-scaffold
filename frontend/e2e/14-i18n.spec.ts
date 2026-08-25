@@ -242,6 +242,34 @@ test.describe('国际化 (I18N)', () => {
     }
   });
 
+  /**
+   * 职务下拉是「清理业务域残留」那批改动的可见成果。
+   *
+   * 在 V13 之前 `sys_user.post_name` 存的是中文 label（「经理」），下拉的 value 必须与库里
+   * 一致，所以**英文界面下这个下拉只能是中文**，前端还得为此维护一份 `POST_NAMES` 中文常量、
+   * 并给 i18n 防线开一个豁免。改成存 `sys_user_post` 的字典码之后文案才能翻。
+   */
+  test('I18N-009 职务下拉是英文（post_name 存字典码的可见成果）', async ({ page }) => {
+    await login(page);
+    await gotoPage(page, '/system/users');
+    await page.getByRole('button', { name: userEn['action.create'] }).click();
+    await expect(page.getByText(userEn['form.title.create'])).toBeVisible();
+
+    const modal = page.locator('.ant-modal-content');
+    await modal.locator('#postName').click();
+
+    const dictEn = pack('en-US', 'dict');
+    const dropdown = page.locator('.ant-select-dropdown:visible');
+    // 「Chief Architect」带空格、与码 ChiefArchitect 不同，最能说明显示的是译文而非码
+    await expect(dropdown.getByText(dictEn['dict.sys_user_post.ChiefArchitect'], { exact: true }))
+      .toBeVisible();
+    await expect(dropdown.getByText(dictEn['dict.sys_user_post.Supervisor'], { exact: true }))
+      .toBeVisible();
+    // 「司机 / Driver」已由 V13 从字典里删掉
+    await expect(dropdown.getByText('Driver', { exact: true })).toHaveCount(0);
+    await expect(dropdown.getByText('主管', { exact: true })).toHaveCount(0);
+  });
+
   test('I18N-005 顶栏切语言：界面与侧边栏立即变，且不重拉菜单', async ({ page }) => {
     /*
      * 用 zhangsan 而不是 admin：切语言会把偏好落进 `sys_user.language`，

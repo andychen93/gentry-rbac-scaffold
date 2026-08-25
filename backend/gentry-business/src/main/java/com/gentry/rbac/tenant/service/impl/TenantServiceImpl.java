@@ -98,7 +98,6 @@ public class TenantServiceImpl implements TenantService {
         tenant.setExpireTime(dto.getExpireTime());
         tenant.setRemark(dto.getRemark());
         tenant.setAccountLimit(100);
-        tenant.setDeviceLimit(1000);
         tenant.setStatus(1);
         tenantMapper.insert(tenant);
 
@@ -159,24 +158,27 @@ public class TenantServiceImpl implements TenantService {
     public void updateConfig(Long id, TenantConfigDTO dto) {
         Tenant tenant = getExistingTenant(id);
 
-        // 解析现有配置，合并而非覆盖
-        Map<String, Object> existingConfig = parseConfig(tenant.getConfig());
-        Map<String, Object> configMap = existingConfig != null ? new LinkedHashMap<>(existingConfig) : new LinkedHashMap<>();
-
-        if (dto.getMaxDevices() != null) configMap.put("maxDevices", dto.getMaxDevices());
-        if (dto.getMaxUsers() != null) configMap.put("maxUsers", dto.getMaxUsers());
-        if (dto.getDataRetentionDays() != null) configMap.put("dataRetentionDays", dto.getDataRetentionDays());
-
-        @SuppressWarnings("unchecked")
-        Map<String, Object> existingFeatures = configMap.containsKey("features")
-                ? new LinkedHashMap<>((Map<String, Object>) configMap.get("features"))
-                : new LinkedHashMap<>();
-        if (dto.getVideoEnabled() != null) existingFeatures.put("video", dto.getVideoEnabled());
-        if (dto.getAlarmEnabled() != null) existingFeatures.put("alarm", dto.getAlarmEnabled());
-        if (dto.getReportEnabled() != null) existingFeatures.put("report", dto.getReportEnabled());
-        if (!existingFeatures.isEmpty()) configMap.put("features", existingFeatures);
-
-        if (dto.getMapProvider() != null) configMap.put("mapProvider", dto.getMapProvider());
+        /*
+         * **白名单写入，不做增量合并。**
+         *
+         * 原实现在既有 JSON 上逐键 put，好处是不认识的键不会丢；坏处是删掉一个配置项之后，
+         * 历史 JSON 里的旧键会永久留着，并继续通过 TenantDetailVO.config 下发给前端 ——
+         * 车辆监控那批字段（maxDevices / features / mapProvider）就是这么留下来的。
+         *
+         * 改成只写 TenantConfigDTO 声明的键之后，「代码里没有的字段」会在下一次保存时
+         * 自动消失，config 的字段清单永远等于 DTO。
+         *
+         * 仍要读一遍旧值：null 表示「本次不修改这一项」，与「显式清空」不同，
+         * 未提交的项要原样带过去。
+         */
+        Map<String, Object> existing = parseConfig(tenant.getConfig());
+        Map<String, Object> configMap = new LinkedHashMap<>();
+        Integer maxUsers = dto.getMaxUsers() != null
+                ? dto.getMaxUsers()
+                : asInteger(existing == null ? null : existing.get("maxUsers"));
+        if (maxUsers != null) {
+            configMap.put("maxUsers", maxUsers);
+        }
 
         try {
             String configJson = OBJECT_MAPPER.writeValueAsString(configMap);
@@ -272,7 +274,6 @@ public class TenantServiceImpl implements TenantService {
         vo.setDomain(tenant.getDomain());
         vo.setExpireTime(tenant.getExpireTime());
         vo.setAccountLimit(tenant.getAccountLimit());
-        vo.setDeviceLimit(tenant.getDeviceLimit());
         vo.setStatus(tenant.getStatus());
         vo.setRemark(tenant.getRemark());
         vo.setConfig(parseConfig(tenant.getConfig()));
@@ -292,6 +293,24 @@ public class TenantServiceImpl implements TenantService {
             log.warn("Failed to parse tenant config JSON: {}", e.getMessage());
             return null;
         }
+    }
+
+    /**
+     * JSON 反序列化出来的数字可能是 Integer/Long/Double，统一归一成 Integer。
+     * 认不出的类型返回 null，而不是抛异常 —— 配置是软状态，一个脏值不该让保存整体失败。
+     */
+    private Integer asInteger(Object raw) {
+        if (raw instanceof Number n) {
+            return n.intValue();
+        }
+        if (raw instanceof String str && !str.isBlank()) {
+            try {
+                return Integer.valueOf(str.trim());
+            } catch (NumberFormatException ignored) {
+                return null;
+            }
+        }
+        return null;
     }
 
     private String generateRandomPassword() {

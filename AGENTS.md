@@ -307,8 +307,8 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 | AOP 切面 | 每个分支至少 1 个用例 |
 | 前端组件 | Pro 组件与布局组件必须有 Vitest 用例 |
 | 前端文案 | **不写中文字面量**，`src/locales/noHardcodedText.test.ts` 会拦（例外要进该文件的 ALLOW 并写明理由） |
-| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 122 个测试全绿） |
-| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 65 个测试全绿） |
+| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 130 个测试全绿） |
+| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 70 个测试全绿） |
 
 TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → 重构。
 测试命名 `方法_场景_预期`。
@@ -316,16 +316,20 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 331 个测试
-cd frontend && npm test          # 前端 108 个测试
+cd backend  && mvn test          # 后端 346 个测试
+cd frontend && npm test          # 前端 111 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```
 
 动了页面或权限，还要跑 UI E2E（需前后端都起着）：
 
 ```bash
-cd frontend && npm run test:e2e  # 83 个 Playwright 用例
+cd frontend && npm run test:e2e  # 84 个 Playwright 用例
 ```
+
+**`mvn -pl <module> test` 不可信**：单模块构建会从 `~/.m2` 解析 `gentry-core`，
+拿到的是上次 `install` 的旧产物。改了 core 的类或 `resources/i18n/*.properties` 之后
+必须跑全 reactor 的 `mvn test`，否则会看到「明明加了资源却读不到」这类假象。
 
 E2E 的登录 Token 由 `e2e/global-setup.ts` 一次性预登录后落盘复用 —— 登录接口有
 IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**，否则整套用例会被限流打挂。
