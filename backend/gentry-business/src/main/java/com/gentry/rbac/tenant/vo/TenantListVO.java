@@ -10,7 +10,6 @@ public class TenantListVO {
     private String contact;
     private String phone;
     private Integer userCount;
-    private Integer deviceCount;
     private LocalDateTime expireTime;
     private Integer status;
     private LocalDateTime createTime;
@@ -27,8 +26,6 @@ public class TenantListVO {
     public void setPhone(String phone) { this.phone = phone; }
     public Integer getUserCount() { return userCount; }
     public void setUserCount(Integer userCount) { this.userCount = userCount; }
-    public Integer getDeviceCount() { return deviceCount; }
-    public void setDeviceCount(Integer deviceCount) { this.deviceCount = deviceCount; }
     public LocalDateTime getExpireTime() { return expireTime; }
     public void setExpireTime(LocalDateTime expireTime) { this.expireTime = expireTime; }
     public Integer getStatus() { return status; }

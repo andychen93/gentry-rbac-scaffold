@@ -10,7 +10,6 @@ export interface TenantListVO {
   contact: string;
   phone: string;
   userCount: number;
-  deviceCount: number;
   expireTime: string | null;
   status: number;
   createTime: string;
