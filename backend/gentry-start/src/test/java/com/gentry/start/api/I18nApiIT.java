@@ -197,14 +197,34 @@ class I18nApiIT extends BaseApiIT {
     }
 
     @Test
-    @DisplayName("种子用户的language为NULL_V12不填默认值")
-    void 种子用户的language为NULL_V12不填默认值() {
-        // V12 迁移刻意不填默认值：NOT NULL DEFAULT 'zh_CN' 会让三级链的第 ② 级永不执行
-        for (String seed : new String[]{"chenli", "admin", "zhangsan"}) {
-            User u = userMapper.selectByUsername(1L, seed);
-            assertThat(u).as("种子用户 %s 应存在", seed).isNotNull();
-            assertThat(u.getLanguage()).as("种子用户 %s 的 language 应为 NULL", seed).isNull();
-        }
+    @DisplayName("新建用户的language为NULL_V12不填默认值")
+    void 新建用户的language为NULL_V12不填默认值() throws Exception {
+        /*
+         * V12 迁移刻意不填默认值：NOT NULL DEFAULT 'zh_CN' 会让三级链的第 ② 级永不执行。
+         *
+         * **断言对象是新建的用户，不是种子用户。**
+         * 原来这里遍历 chenli/admin/zhangsan 断言 language 为 NULL —— 那是在断言一行
+         * **任何人都能改**的可变数据：用户在界面上点一次语言切换就会落库，这条用例随即变红，
+         * 而迁移本身毫无问题。UI E2E 的 I18N-005 正是这么把它打红的（它用 zhangsan 走真实
+         * 切换以覆盖「偏好落库」路径）。
+         * 「新建用户不带语言偏好」才是这条迁移真正要保证的语义，且不受任何人操作影响。
+         */
+        String username = "i18nDefault" + SEQ.incrementAndGet();
+        Map<String, Object> body = new HashMap<>();
+        body.put("username", username);
+        body.put("nickname", "国际化测试用户");
+        body.put("password", TEST_PWD);
+        body.put("deptId", 100);
+        body.put("status", 1);
+        mockMvc.perform(authedPost("/api/v1/users").content(json(body)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        User created = userMapper.selectByUsername(1L, username);
+        assertThat(created).as("刚建的用户应存在").isNotNull();
+        assertThat(created.getLanguage())
+                .as("新建用户的 language 必须是 NULL（= 从未选过，跟随浏览器）")
+                .isNull();
     }
 
     // ==================== 导出 / 导入 ====================
