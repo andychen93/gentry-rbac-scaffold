@@ -139,7 +139,8 @@ test.describe('国际化 (I18N)', () => {
     { path: '/system/roles', expect: ['role:table.code', 'role:action.create', 'common:status'] },
     // 树默认展开，所以按钮显示的是「折叠全部」而不是「展开全部」
     { path: '/system/dept', expect: ['dept:table.name', 'dept:action.create', 'common:collapseAll'] },
-    { path: '/system/menu', expect: ['menuMgmt:table.permission', 'menuMgmt:action.create'] },
+    // 菜单管理自 V15 起是 SUPER_ADMIN 专属（sys_menu 是全局表，改它影响所有租户）
+    { path: '/system/menu', account: 'chenli', expect: ['menuMgmt:table.permission', 'menuMgmt:action.create'] },
     { path: '/system/dict', expect: ['dictMgmt:table.dictType', 'dictMgmt:action.createType'] },
     { path: '/system/config', expect: ['config:table.key', 'config:action.refreshCache'] },
     { path: '/monitor/operlog', expect: ['log:oper.table.id', 'log:oper.action.clean'] },

@@ -27,10 +27,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *       有没有权分配它 —— 租户管理员握有 {@code system:role:assignMenu}，能自己勾回来</li>
  * </ul>
  *
- * <p><b>为什么以前没测出来</b>：种子数据里的 ADMIN（{@code role_id=1}）是对的，70 个菜单里
- * 只有 61 个，恰好不含租户管理；E2E 的「ADMIN 无租户管理权限」测的就是它，一直绿。
- * 而「建租户」这条路径给出的权限完全不同 —— 两条路径结果不一致，测试只覆盖了对的那条。
- * 所以本类的每条用例都<b>先建一个租户</b>，走的是原来没人走的那条路。</p>
+ * <p><b>为什么以前没测出来</b>：种子数据里的 ADMIN（{@code role_id=1}）是对的，它的菜单集
+ * 恰好不含租户管理；E2E 的「ADMIN 无租户管理权限」测的就是它，一直绿。而「建租户」
+ * 这条路径给出的权限完全不同 —— 两条路径结果不一致，测试只覆盖了对的那条。
+ * 所以 D-1 的用例都<b>先建一个租户</b>，走的是原来没人走的那条路。</p>
+ *
+ * <p>末尾另有 V15 的两条：菜单管理收归平台级（{@code sys_menu} 是全局表，改它影响所有
+ * 租户），以及与之互补的「{@code system:menu:list} 必须保留」。</p>
  */
 @DisplayName("平台级权限隔离 - 租户管理员不得越权")
 class PlatformPermissionIsolationApiIT extends BaseApiIT {
@@ -241,5 +244,52 @@ class PlatformPermissionIsolationApiIT extends BaseApiIT {
         mockMvc.perform(bareGet("/api/v1/tenants?pageNum=1&pageSize=10")
                         .header("Authorization", auth))
                 .andExpect(status().isForbidden());
+    }
+
+    // ==================== V15：菜单管理收归平台级 ====================
+
+    /**
+     * {@code sys_menu} 是全局表（不做多租户），一份菜单树被所有租户共用 ——
+     * 所以改菜单是平台动作，不属于「租户下的最高权限」。
+     *
+     * <p>这里用**种子** ADMIN 而不是新建租户的 admin：种子 ADMIN 原本明确持有
+     * 这三个权限（V15 的 DELETE 才把它们收回），它是这条边界最容易回退的地方 ——
+     * 谁把 V15 的 DELETE 写漏了，先红的就是这条。</p>
+     */
+    @Test
+    @DisplayName("V15_租户管理员不能增删改菜单_菜单是全局表")
+    void V15_租户管理员不能增删改菜单_菜单是全局表() throws Exception {
+        Map<String, Object> body = new HashMap<>();
+        body.put("parentId", 0);
+        body.put("name", "越权建菜单");
+        body.put("type", 1);
+        body.put("sort", 999);
+        body.put("path", "/iso-menu");
+        body.put("permission", "iso:menu:view");
+
+        mockMvc.perform(barePost("/api/v1/menus").header("Authorization", auth).content(json(body)))
+                .andExpect(status().isForbidden());
+        // 拿一个真实存在的菜单 id（104 = 菜单管理页）来试改和删
+        mockMvc.perform(barePut("/api/v1/menus/{id}", 104L).header("Authorization", auth)
+                        .content(json(Map.of("name", "改名越权"))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(bareDelete("/api/v1/menus/{id}", 104L).header("Authorization", auth))
+                .andExpect(status().isForbidden());
+    }
+
+    /**
+     * 与上一条互补：{@code system:menu:list} **必须**留给租户管理员。
+     *
+     * <p>「角色管理 → 权限」页要靠 {@code GET /api/v1/menus} 拉整棵菜单树才能画出
+     * 勾选框。把 list 一起收成平台级，租户管理员就再也分配不了任何权限 —— 那是把
+     * 一个越权缺陷换成一个功能缺陷。这条用例是防止后来者「顺手把 list 也收走」。</p>
+     */
+    @Test
+    @DisplayName("V15_菜单树查询仍是租户级_否则权限分配功能会废掉")
+    void V15_菜单树查询仍是租户级_否则权限分配功能会废掉() throws Exception {
+        mockMvc.perform(bareGet("/api/v1/menus").header("Authorization", auth))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").isArray());
     }
 }

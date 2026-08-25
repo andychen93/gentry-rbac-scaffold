@@ -633,7 +633,9 @@ class I18nApiIT extends BaseApiIT {
         body.put("name", "无编码目录" + SEQ.incrementAndGet());
         body.put("type", 1);
         body.put("sort", 900);
-        MvcResult created = mockMvc.perform(authedPost("/api/v1/menus").content(json(body)))
+        // 建菜单用 SUPER_ADMIN：V15 起 system:menu:add 是平台级（sys_menu 是全局表，
+        // 改它影响所有租户），用默认的 ADMIN 会被 403 挡在前面，测不到 i18nKey 派生
+        MvcResult created = mockMvc.perform(superPost("/api/v1/menus").content(json(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();

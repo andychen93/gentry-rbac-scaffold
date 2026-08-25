@@ -82,9 +82,13 @@ public class MenuServiceImpl implements MenuService {
          * **is_platform 一律建成 0，且不从 DTO 取。**
          *
          * 该列 NOT NULL，不显式给值 INSERT 会失败（MenuApiIT.crudFlow 立刻变红）。
-         * 更要紧的是它<b>刻意不做成可由接口设置</b>：租户管理员握有 system:menu:edit，
-         * 若能改这个标记，它就能把「租户管理」从平台级改成租户级，然后正常勾给自己
-         * —— 那是又一条自提权路径。平台级只由 Flyway 迁移标记。
+         * 更要紧的是它<b>刻意不做成可由接口设置</b>：谁能改这个标记，谁就能把
+         * 「租户管理」从平台级改成租户级、再正常勾给自己 —— 那是一条自提权路径。
+         * 平台级只由 Flyway 迁移标记。
+         *
+         * <p>V15 已把 system:menu:{add,edit,remove} 本身也收成平台级，所以现在
+         * 只有平台超管进得到这里。但这条约束仍然留着：它是纵深防御，且「哪些权限点
+         * 算平台级」是一行 SQL 就能调的产品决策 —— 不该让安全性依赖那行 SQL 的现状。</p>
          */
         menu.setIsPlatform(0);
         // Menu 不继承 BaseEntity、不纳入 AutoFillHandler，需显式设置时间，否则 INSERT 违反 NOT NULL

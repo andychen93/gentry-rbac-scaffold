@@ -4,12 +4,16 @@ import { login, gotoPage } from './helpers/auth';
 
 const TS = Date.now().toString().slice(-6);
 
+// 菜单管理是 SUPER_ADMIN 专属，必须用 chenli 登录。
+// sys_menu 是全局表（菜单不做多租户），一份菜单树被所有租户共用，改它是平台动作 ——
+// V15 把 system:menu 与 {add,edit,remove} 标成 is_platform=1，ADMIN 连侧边栏都看不到这页。
+// 只有 system:menu:list 留给了 ADMIN：「角色 → 权限」页要靠它拉菜单树画勾选框。
 test.describe.serial('菜单管理 CRUD', () => {
   let page: Page;
 
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
-    await login(page);
+    await login(page, 'chenli');
     await gotoPage(page, '/system/menu');
   });
 

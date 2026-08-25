@@ -198,8 +198,19 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 > 详细设计：`doc/design/modules/rbac/modules/平台级权限隔离/详细设计.md`
 
 **每个租户的 `admin` 都是该租户下的最高权限**，但「租户下的最高权限」不等于「平台权限」。
-跨租户的能力（租户管理）和影响共享基础设施的破坏性操作（Redis 删 Key / 清慢日志）
-只属平台超管。判据是 `sys_menu.is_platform`（`1`=平台级），两道守卫：
+判据是 `sys_menu.is_platform`（`1`=平台级）。当前三类属平台级：
+
+| 类别 | 权限点 | 为什么 |
+|------|--------|--------|
+| 租户管理 | `system:tenant{,:list,:add,:edit,:remove,:detail,:config}` | 管理租户本身，天然跨租户 |
+| 菜单管理 | `system:menu{,:add,:edit,:remove}` | `sys_menu` 是全局表，一份菜单树所有租户共用 |
+| Redis 破坏性操作 | `monitor:redis:key:delete`、`monitor:redis:slowlog:reset` | Redis 是所有租户共用一个实例 |
+
+**只挡写，读留着**：`monitor:redis:info` 与 `system:menu:list` 都是租户级。
+后者尤其不能动 —— 「角色 → 权限」页靠 `GET /api/v1/menus` 拉菜单树画勾选框，
+收走 list 等于让租户管理员再也分配不了任何权限。
+
+两道守卫：
 
 | 守卫 | 位置 | 作用 |
 |------|------|------|
@@ -341,7 +352,7 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 353 个测试
+cd backend  && mvn test          # 后端 355 个测试
 cd frontend && npm test          # 前端 111 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```

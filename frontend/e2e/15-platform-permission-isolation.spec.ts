@@ -200,6 +200,8 @@ test.describe.serial('平台级权限隔离 (ISO)', () => {
     // Redis 监控本身是租户级（可看），只有两个破坏性按钮是平台级
     await expect(page.locator('.ant-tree').getByText('Key 删除')).toHaveCount(0);
     await expect(page.locator('.ant-tree').getByText('慢日志清空')).toHaveCount(0);
+    // V15：菜单管理也是平台级（sys_menu 是全局表，一份菜单树所有租户共用）
+    await expect(page.locator('.ant-tree').getByText('菜单管理')).toHaveCount(0);
   });
 
   test('ISO-006 平台超管仍看得到平台级节点（守卫不过度拦截）', async ({ page }) => {
@@ -225,5 +227,6 @@ test.describe.serial('平台级权限隔离 (ISO)', () => {
     await expect(page.locator('.ant-tree').getByText('租户管理')).toHaveCount(1);
     await expect(page.locator('.ant-tree').getByText('Key 删除')).toHaveCount(1);
     await expect(page.locator('.ant-tree').getByText('慢日志清空')).toHaveCount(1);
+    await expect(page.locator('.ant-tree').getByText('菜单管理')).toHaveCount(1);
   });
 });

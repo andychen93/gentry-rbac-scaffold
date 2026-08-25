@@ -196,7 +196,7 @@ Service 单测覆盖 ≥ 90%。
 不需要任何外部依赖，随时可跑：
 
 ```bash
-cd backend  && mvn test          # 353 个测试
+cd backend  && mvn test          # 355 个测试
 cd frontend && npm test          # 111 个测试（Vitest）
 cd frontend && npx tsc -b        # 类型检查
 ```
