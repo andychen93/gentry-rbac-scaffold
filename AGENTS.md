@@ -19,6 +19,7 @@
 | 认证 | Sa-Token JWT + Redis Session + Token 黑名单（单点登出/强制下线） |
 | 授权 | 菜单/按钮权限点 + `@SaCheckPermission`，前端按 permissions 渲染 |
 | 数据权限 | 五档范围（全部/本部门及子部门/本部门/仅本人/自定义），`@DataScope` 切面注入 |
+| 平台级权限隔离 | `sys_menu.is_platform` 标记平台级权限点，租户管理员既拿不到也分配不了 |
 | 系统管理 | 租户、用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户 |
 | 横切基础设施 | 全局异常、自动填充、Jackson 统一序列化、请求日志、限流、防重提交、TraceId |
 | 运维 | Redis 监控（INFO/Key CRUD/慢日志）、Actuator + Prometheus 指标 |
@@ -192,6 +193,29 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 - 新增业务表必须含 `tenant_id`（全局表除外）
 - 三层跳过：`ignoreTables()` 全局表 ｜ `@TenantIgnore` 单 Entity ｜ `@IgnoreTenant` 单方法
 
+### 平台级权限隔离
+
+> 详细设计：`doc/design/modules/rbac/modules/平台级权限隔离/详细设计.md`
+
+**每个租户的 `admin` 都是该租户下的最高权限**，但「租户下的最高权限」不等于「平台权限」。
+跨租户的能力（租户管理）和影响共享基础设施的破坏性操作（Redis 删 Key / 清慢日志）
+只属平台超管。判据是 `sys_menu.is_platform`（`1`=平台级），两道守卫：
+
+| 守卫 | 位置 | 作用 |
+|------|------|------|
+| 建租户基线 | `TenantServiceImpl.assignTenantScopedMenusToRole` | 新租户 ADMIN 只拿 `is_platform=0` 的菜单 |
+| 分配时校验 | `RoleServiceImpl.assignMenus` | 非平台超管提交含平台级 menuId → `PLATFORM_MENU_FORBIDDEN(40004)` + `log.warn` 审计 |
+
+两道都必须在：租户 ADMIN 握有 `system:role:assignMenu`，只修基线的话它能自己勾回来。
+
+- 新增平台级权限点：写 Flyway 迁移把 `sys_menu.is_platform` 置 1，**顺带
+  `DELETE sys_role_menu` 清掉已发出的授权**（参照 `V14__add_menu_is_platform.sql`）
+- **`is_platform` 不可由接口设置**：`MenuServiceImpl.create` 固定写 0 且不从 DTO 取，
+  `update` 不碰它。租户管理员有 `system:menu:edit`，能改标记就等于能自提权
+- 前端 `PermissionPage` 按后端下发的 `isPlatform` 隐藏节点，依据是
+  `UserInfoVO.platformAdmin`（**后端算，前端不从 roles 自行推导**）。
+  隐藏是体验层，不是安全边界
+
 ### 常见踩坑
 
 | 坑 | 正解 |
@@ -203,6 +227,7 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 | 定时任务里 UserContext 为空 | `@IgnoreTenant` 或手动 set |
 | 登录接口无限流 | 必须 `@RateLimit(IP)` |
 | 加了权限注解但没插菜单数据 | 写 Flyway 迁移插 `sys_menu` + `sys_role_menu` |
+| 新增跨租户/共享资源的权限点，忘了它不该给租户管理员 | 迁移里置 `is_platform=1`，并 `DELETE sys_role_menu` 清已发出的授权 |
 
 ### Redis / 缓存
 
@@ -316,7 +341,7 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 346 个测试
+cd backend  && mvn test          # 后端 353 个测试
 cd frontend && npm test          # 前端 111 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```
@@ -324,7 +349,7 @@ cd frontend && npx tsc -b        # 类型检查
 动了页面或权限，还要跑 UI E2E（需前后端都起着）：
 
 ```bash
-cd frontend && npm run test:e2e  # 84 个 Playwright 用例
+cd frontend && npm run test:e2e  # 90 个 Playwright 用例
 ```
 
 **`mvn -pl <module> test` 不可信**：单模块构建会从 `~/.m2` 解析 `gentry-core`，

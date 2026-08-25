@@ -22,6 +22,11 @@ export interface MenuTreeVO {
   status: number;
   isExternal: number;
   isCache: number;
+  /**
+   * 是否平台级权限点：1 = 只能由平台超管持有与分配（如租户管理、Redis 破坏性操作）。
+   * 权限分配树据此对非超管隐藏该节点，见 `pages/role/PermissionPage.tsx`。
+   */
+  isPlatform?: number;
   createTime: string;
   children: MenuTreeVO[];
 }

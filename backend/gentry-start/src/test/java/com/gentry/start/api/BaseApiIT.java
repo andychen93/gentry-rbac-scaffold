@@ -96,14 +96,22 @@ public abstract class BaseApiIT {
 
     // ==================== 鉴权辅助 ====================
 
-    /** 真实登录指定用户，返回 {@code "Bearer <token>"}。 */
+    /** 真实登录指定用户（默认租户），返回 {@code "Bearer <token>"}。 */
     protected String login(String username, String password) throws Exception {
+        return login(DEFAULT_TENANT, username, password);
+    }
+
+    /**
+     * 登录**指定租户**下的用户。多租户相关的 IT 需要它 —— 新建租户的 admin 与默认租户的
+     * admin 同名，只能靠 tenantCode 区分。
+     */
+    protected String login(String tenantCode, String username, String password) throws Exception {
         // 每次登录带唯一 X-Forwarded-For：login 有 @RateLimit(10/min per IP)，
         // 同 IP 跑全量套件会被限流(40001)。IpUtil 优先读该头，故每次给不同 IP 绕过。
         int n = IP_SEQ.incrementAndGet();
         String xff = "10." + ((n >> 8) & 0xff) + "." + (n & 0xff) + ".1";
         String body = objectMapper.writeValueAsString(Map.of(
-                "tenantCode", DEFAULT_TENANT,
+                "tenantCode", tenantCode,
                 "username", username,
                 "password", password));
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")

@@ -13,6 +13,7 @@ import type { DeptTreeVO } from '../../services/deptApi';
 import type { Key } from 'react';
 import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
 import { makeNavLabel } from '../../locales/navLabel';
+import { useUserStore } from '../../stores/userStore';
 
 const { Title, Text } = Typography;
 
@@ -30,12 +31,27 @@ interface TreeNode {
  * title 走 `makeNavLabel`：菜单名是 B 类内容，后端下发 `i18nKey`、前端翻。
  * 直接用 `item.name` 会让英文界面的权限树整棵是中文。
  */
-function transformMenuTree(list: MenuTreeVO[], navLabel: (n: MenuTreeVO) => string): TreeNode[] {
-  return list.map((item) => ({
-    key: String(item.id),
-    title: navLabel(item),
-    children: item.children?.length ? transformMenuTree(item.children, navLabel) : undefined,
-  }));
+function transformMenuTree(
+  list: MenuTreeVO[],
+  navLabel: (n: MenuTreeVO) => string,
+  includePlatform: boolean,
+): TreeNode[] {
+  return list
+    /*
+     * 平台级权限点（租户管理、Redis 破坏性操作）对非平台超管隐藏。
+     *
+     * 这是**体验层**的措施，不是安全边界 —— 真正的守卫在后端
+     * `RoleServiceImpl.assignMenus`（非超管提交平台级 menuId 直接报错）。
+     * 前端隐藏只是让人不去点一个必然被拒的勾选框。
+     */
+    .filter((item) => includePlatform || item.isPlatform !== 1)
+    .map((item) => ({
+      key: String(item.id),
+      title: navLabel(item),
+      children: item.children?.length
+        ? transformMenuTree(item.children, navLabel, includePlatform)
+        : undefined,
+    }));
 }
 
 /** 递归转换部门树（key 转字符串，见 TreeNode 注释） */
@@ -79,6 +95,8 @@ function collectLeafKeys(nodes: TreeNode[]): Set<string> {
 export default function PermissionPage() {
   // 数据权限档位取 dict namespace（dict.sys_data_scope.*），原来这里有一份硬编码拷贝
   const { t } = useTranslation(['role', 'common', 'dict']);
+  // 平台超管标记由后端下发（判据：角色含 SUPER_ADMIN），不在前端从 roles 里推
+  const isPlatformAdmin = useUserStore((s) => s.userInfo?.platformAdmin === true);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   // roleId 保持字符串：它是雪花 ID，超过 JS Number 安全整数范围（2^53-1），
@@ -118,7 +136,7 @@ export default function PermissionPage() {
         const detail = roleRes.data;
         setRoleDetail(detail);
 
-        const mTree = transformMenuTree(menuRes.data, makeNavLabel(t));
+        const mTree = transformMenuTree(menuRes.data, makeNavLabel(t), isPlatformAdmin);
         setMenuTreeData(mTree);
 
         const dTree = transformDeptTree(deptRes.data);

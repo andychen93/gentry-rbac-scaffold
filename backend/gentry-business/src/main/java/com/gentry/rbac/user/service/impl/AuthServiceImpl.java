@@ -331,6 +331,12 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         vo.setRoles(roles);
+        /*
+         * 平台超管标记：判据与登录时写 Session 的那处一致（角色含 SUPER_ADMIN）。
+         * 由后端算好下发，前端不自己从 roles 里推 —— 那会把安全判断复制一份到 TS 里。
+         */
+        vo.setPlatformAdmin(roles.stream()
+                .anyMatch(r -> TenantConstants.PLATFORM_ROLE_CODE.equals(r.getRoleCode())));
 
         // B-5: 从数据库查询权限列表
         if (!roleIds.isEmpty()) {

@@ -109,8 +109,8 @@ public class TenantServiceImpl implements TenantService {
         // 4. 创建管理员角色
         Long roleId = roleService.createAdminRole(tenantId, "ADMIN", "管理员");
 
-        // 5. 分配所有菜单权限给管理员角色
-        assignAllMenusToRole(roleId);
+        // 5. 分配**租户级**菜单权限给管理员角色（= 租户下的最高权限）
+        assignTenantScopedMenusToRole(roleId);
 
         // 6. 创建 admin 用户
         String rawPassword = generateRandomPassword();
@@ -229,10 +229,22 @@ public class TenantServiceImpl implements TenantService {
         return tenant;
     }
 
-    private void assignAllMenusToRole(Long roleId) {
-        List<Long> menuIds = roleMenuMapper.selectAllMenuIds();
+    /**
+     * 给新租户的 ADMIN 角色分配「租户下的最高权限」。
+     *
+     * <p><b>这里原来调的是 {@code selectAllMenuIds()}</b>，注释也写着「分配所有菜单权限」——
+     * 于是每个新建租户的管理员都拿到了 {@code system:tenant:*}，能列出/新增/修改/删除
+     * <b>所有</b>租户，包括默认租户。而种子数据里的 ADMIN（role_id=1）是对的，
+     * E2E 也只测了它，两条路径给出的权限不一致，测试正好覆盖了对的那条。</p>
+     *
+     * <p>现在按 {@code sys_menu.is_platform} 过滤。注意这只堵住「新建时给多了」，
+     * 租户管理员自己在角色管理里勾回来那条路由 {@code RoleServiceImpl.assignMenus}
+     * 的守卫堵 —— 只修这里是安全剧场。</p>
+     */
+    private void assignTenantScopedMenusToRole(Long roleId) {
+        List<Long> menuIds = roleMenuMapper.selectTenantScopedMenuIds();
         if (menuIds.isEmpty()) {
-            log.warn("No menus found to assign to role {}", roleId);
+            log.warn("No tenant-scoped menus found to assign to role {}", roleId);
             return;
         }
         List<RoleMenuMapper.RoleMenuEntry> entries = menuIds.stream()

@@ -35,5 +35,9 @@ fileMatchPattern: 'backend/**/*.java'
 Service impl 行覆盖 ≥ 90%、分支 ≥ 80%；AOP 切面每个分支至少一个用例；
 Controller 至少一个集成测试。命名 `方法_场景_预期`。
 
-改动 `gentry-core` 前先跑 `mvn -pl gentry-core test` 拿绿色基线（60 个测试）；
-改动 RBAC 跑 `mvn -pl gentry-business test`（49 个测试）。
+基线：`gentry-core` 130 个测试、`gentry-business` 70 个、全量 `mvn test` 353 个。
+
+**别用 `mvn -pl <module> test` 当验证手段**：单模块构建会从 `~/.m2` 解析
+`gentry-core`，拿到上次 `install` 的旧产物 —— 改了 core 的类或
+`resources/i18n/*.properties` 后会看到「明明加了却读不到」这类假象。跑全 reactor
+的 `mvn test`，或先 `mvn -q -DskipTests install`。

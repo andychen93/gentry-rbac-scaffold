@@ -29,6 +29,13 @@ public class MenuTreeVO {
     private Integer status;
     private Integer isExternal;
     private Integer isCache;
+    /**
+     * 是否平台级权限点：1 = 只能由平台超管持有与分配。
+     *
+     * <p>前端据此在权限分配树里隐藏这些节点 —— 不给点，也就不会撞上
+     * {@code RoleServiceImpl.assignMenus} 的守卫。</p>
+     */
+    private Integer isPlatform;
     private LocalDateTime createTime;
     private List<MenuTreeVO> children;
 
@@ -60,6 +67,8 @@ public class MenuTreeVO {
     public void setIsExternal(Integer isExternal) { this.isExternal = isExternal; }
     public Integer getIsCache() { return isCache; }
     public void setIsCache(Integer isCache) { this.isCache = isCache; }
+    public Integer getIsPlatform() { return isPlatform; }
+    public void setIsPlatform(Integer isPlatform) { this.isPlatform = isPlatform; }
     public LocalDateTime getCreateTime() { return createTime; }
     public void setCreateTime(LocalDateTime createTime) { this.createTime = createTime; }
     public List<MenuTreeVO> getChildren() { return children; }

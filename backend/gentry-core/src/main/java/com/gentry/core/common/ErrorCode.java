@@ -63,7 +63,14 @@ public enum ErrorCode {
     // ==================== 安全控制 40001-40099 ====================
     TOO_MANY_REQUESTS(40001, "请求过于频繁"),
     DUPLICATE_SUBMIT(40002, "重复提交"),
-    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户");
+    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户"),
+    /**
+     * 非平台超管试图把平台级权限点（{@code sys_menu.is_platform = 1}）分配给角色。
+     *
+     * <p>不能只靠「新建租户时不给」—— 租户管理员握有 {@code system:role:assignMenu}，
+     * 能自己在角色管理里把租户管理权限勾回来。这个码是那条自提权路径的守卫。</p>
+     */
+    PLATFORM_MENU_FORBIDDEN(40004, "无权分配平台级权限");
 
     /**
      * i18n key，由枚举名机械派生：{@code ROLE_NOT_FOUND} → {@code error.role.not.found}。

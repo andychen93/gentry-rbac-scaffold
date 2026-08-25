@@ -196,15 +196,15 @@ Service 单测覆盖 ≥ 90%。
 不需要任何外部依赖，随时可跑：
 
 ```bash
-cd backend  && mvn test          # 135 个测试
-cd frontend && npm test          # 73 个测试（Vitest）
+cd backend  && mvn test          # 353 个测试
+cd frontend && npm test          # 111 个测试（Vitest）
 cd frontend && npx tsc -b        # 类型检查
 ```
 
 需要前后端都起着（`bash scripts/dev_up.sh`）才能跑：
 
 ```bash
-cd frontend && npm run test:e2e          # 42 个 Playwright UI 用例
+cd frontend && npm run test:e2e          # 90 个 Playwright UI 用例
                                          # 首次需 npx playwright install chromium
 ```
 

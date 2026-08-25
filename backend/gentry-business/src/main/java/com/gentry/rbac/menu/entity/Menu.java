@@ -31,6 +31,15 @@ public class Menu {
     private Integer status;
     private Integer isExternal;
     private Integer isCache;
+    /**
+     * 是否平台级权限点：1 = 只能由平台超管（SUPER_ADMIN）持有与分配，0 = 租户级。
+     *
+     * <p>判据放在菜单表而不是角色上：「这个权限点是平台级的」是权限点<b>自身</b>的属性。
+     * 于是两个角色的定义可推导 —— SUPER_ADMIN = 全部菜单，租户 ADMIN = 全部
+     * {@code is_platform = 0} 的菜单。见
+     * {@code doc/design/modules/rbac/modules/平台级权限隔离/详细设计.md}。</p>
+     */
+    private Integer isPlatform;
     // active / query 是历史遗留字段，sys_menu 表无对应列（见建表迁移），忽略持久化，
     // 否则 MyBatis-Flex 的 insert/update 会带上这两列导致 "Unknown column 'active'"。
     @Column(ignore = true)

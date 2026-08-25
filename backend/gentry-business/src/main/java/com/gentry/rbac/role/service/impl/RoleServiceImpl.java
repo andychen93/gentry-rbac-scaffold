@@ -200,6 +200,35 @@ public class RoleServiceImpl implements RoleService {
             if (!invalidIds.isEmpty()) {
                 throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.id.not.found", invalidIds);
             }
+
+            /*
+             * **平台级权限点只能由平台超管分配。**
+             *
+             * 原来这里只校验「menuId 存不存在」，不校验「调用者有没有权分配它」。
+             * 而租户管理员握有 system:role:assignMenu —— 它能在「角色管理 → 权限」里
+             * 把 system:tenant:* 勾给自己的角色，从而管理所有租户。
+             * 所以「新建租户时不给平台级权限」只是必要不充分，这条守卫才是承重的。
+             *
+             * 为什么不用 @SaCheckPermission：注解只能表达「调用者有没有 X 权限」，
+             * 表达不了「调用者**提交的数据**里有没有越权内容」。这属于业务规则。
+             *
+             * 判据 UserContext.isPlatformAdmin() 是既有机制：登录时由 AuthServiceImpl
+             * 按 roleCodes.contains("SUPER_ADMIN") 算好写进 Session。
+             */
+            if (!UserContext.isPlatformAdmin()) {
+                List<Long> platformIds = roleMenuMapper.selectPlatformMenuIdsIn(menuIds);
+                if (!platformIds.isEmpty()) {
+                    /*
+                     * 越权的菜单 ID 只进服务端日志，不进给用户的报错文案：
+                     * 前端已按 isPlatform 隐藏这些节点，能走到这里的要么是过期页面、
+                     * 要么是手工构造请求 —— 后者不该被告知「哪几个是平台级」。
+                     * 而日志里要留下审计痕迹（谁、哪个角色、试了哪些权限点）。
+                     */
+                    log.warn("Rejected platform-menu assignment: userId={}, tenantId={}, roleId={}, menuIds={}",
+                            UserContext.getUserId(), UserContext.getTenantId(), roleId, platformIds);
+                    throw new BizException(ErrorCode.PLATFORM_MENU_FORBIDDEN);
+                }
+            }
         }
 
         // 先删后插
