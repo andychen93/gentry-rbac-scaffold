@@ -30,7 +30,7 @@
   "info.version": "Version",
   "key.deleteConfirm": "Delete key <b>{{key}}</b>? This cannot be undone.",
   "key.deleteTitle": "Delete key",
-  "key.detailTitle": "Key detail",
+  "key.detailTitle": "Key details",
   "key.emptyValue": "(empty)",
   "key.patternPlaceholder": "Key pattern, e.g. Authorization:* or blacklist:*",
   "key.patternRequired": "Please enter a search pattern",

@@ -1,0 +1,106 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { describe, expect, it } from 'vitest';
+
+/**
+ * i18n 防线：`src/` 下不允许出现中文界面文案。
+ *
+ * **为什么是 Vitest 而不是 ESLint**：本仓库没有 ESLint（没有 eslint.config.js、
+ * package.json 里也没有 lint 脚本），为一条规则搭整套工具链不划算。沿用
+ * `theme/argonLessVars.test.ts` 拦裸 hex 的同一套路：一条测试 + 显式豁免清单，
+ * 跟着 `npm test` 一起跑，进的是同一道提交门禁。
+ *
+ * 检测的是**中文字面量**而不是「没调 t()」：后者要做类型/作用域分析才准，
+ * 而前者对本仓库足够——界面文案原本 100% 是中文，翻译漏掉必然留下中文。
+ * 代价是英文硬编码（`<Button>Save</Button>`）拦不住，那类问题靠 code review
+ * 与 E2E 的 I18N-006（逐页断言译文出现）兜。
+ */
+
+const SRC = path.join(process.cwd(), 'src');
+const CJK = /[\u4e00-\u9fff]/;
+
+/**
+ * 豁免清单。加条目必须写清「为什么这里的中文是对的」——
+ * 只写「暂时」「历史原因」的一律不收。
+ */
+const ALLOW: { pattern: RegExp; why: string }[] = [
+  {
+    pattern: /^pages\/dev\//,
+    why: '/dev/style 是样式对照页，为便于跟 Argon 原版比对，AGENTS.md 第八章特批可写死',
+  },
+  {
+    pattern: /^components\/layout\/LocaleSwitcher\.tsx$/,
+    why: '语言选择器显示语言的**自称**（简体中文 / English）。翻译它反而会让对方语言的用户认不出',
+  },
+  {
+    pattern: /^locales\/dictEnum\.ts$/,
+    why: 'POST_NAMES 的值就是中文 label —— sys_user.post_name 列存的是中文串而非字典码，'
+      + '下拉 value 必须与库里一致。改成存字典码要一条数据迁移，见该处注释',
+  },
+];
+
+/** 只扫源码，不扫测试与语言包 */
+function collectSources(dir: string, out: string[] = []): string[] {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      if (entry.name === 'test') continue;
+      collectSources(full, out);
+      continue;
+    }
+    if (!/\.tsx?$/.test(entry.name)) continue;
+    if (/\.test\.tsx?$/.test(entry.name)) continue;
+    out.push(full);
+  }
+  return out;
+}
+
+/**
+ * 去注释，但**保留行号**（把注释内容换成等量空白，换行原样留下）。
+ *
+ * 覆盖三种写法：块注释 `/* *\/`、JSX 注释 `{/* *\/}`、行注释 `//`。
+ * 行注释的处理会误伤 `'http://…'` 这类字符串里的 `//`，但那之后跟中文的情况不存在，
+ * 对本规则无影响。
+ */
+function stripComments(code: string): string {
+  const blanked = code.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
+  return blanked
+    .split('\n')
+    .map((line) => line.replace(/\/\/.*$/, ''))
+    .join('\n');
+}
+
+describe('i18n 防线：src 下不得硬编码中文界面文案', () => {
+  it('除豁免清单外没有中文字面量', () => {
+    const offenders: string[] = [];
+
+    for (const file of collectSources(SRC)) {
+      const rel = path.relative(SRC, file).split(path.sep).join('/');
+      if (ALLOW.some((a) => a.pattern.test(rel))) continue;
+
+      const lines = stripComments(fs.readFileSync(file, 'utf-8')).split('\n');
+      lines.forEach((line, i) => {
+        if (CJK.test(line)) offenders.push(`${rel}:${i + 1}  ${line.trim()}`);
+      });
+    }
+
+    expect(
+      offenders,
+      '这些位置有硬编码中文。文案请进 src/locales/{zh-CN,en-US}/{ns}.json，'
+        + '用 t() 取；确实该保留中文的请加进本文件的 ALLOW 并写明理由。\n'
+        + offenders.join('\n'),
+    ).toEqual([]);
+  });
+
+  it('豁免清单里的路径都还存在（防止条目腐烂）', () => {
+    // 文件被删或改名后豁免条目会静默失效，下次真出问题时拦不住
+    const all = collectSources(SRC).map((f) =>
+      path.relative(SRC, f).split(path.sep).join('/'),
+    );
+    const dead = ALLOW.filter((a) => !all.some((rel) => a.pattern.test(rel)));
+    expect(
+      dead.map((d) => String(d.pattern)),
+      '这些豁免条目已经匹配不到任何文件，请删掉',
+    ).toEqual([]);
+  });
+});

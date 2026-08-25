@@ -22,6 +22,7 @@
 | 系统管理 | 租户、用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户 |
 | 横切基础设施 | 全局异常、自动填充、Jackson 统一序列化、请求日志、限流、防重提交、TraceId |
 | 运维 | Redis 监控（INFO/Key CRUD/慢日志）、Actuator + Prometheus 指标 |
+| 国际化 | 中/英双语开箱可用。后端 `Accept-Language` + `sys_user.language` 三级链、错误码与校验消息本地化；前端 react-i18next，菜单与字典由后端下发派生 key、前端翻译（切语言零 API 往返） |
 | 前端 | 双 Layout（业务系统 / 系统管理）、动态菜单路由、Argon 主题、Pro 组件（ProTable/QueryForm/CrudFormModal…） |
 
 **动手前先读**：`doc/guide/RBAC模块开发指南.md`（业务模块怎么写）、
@@ -305,8 +306,9 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 | Controller | 至少 1 个集成测试 |
 | AOP 切面 | 每个分支至少 1 个用例 |
 | 前端组件 | Pro 组件与布局组件必须有 Vitest 用例 |
-| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 60 个测试全绿） |
-| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 49 个测试全绿） |
+| 前端文案 | **不写中文字面量**，`src/locales/noHardcodedText.test.ts` 会拦（例外要进该文件的 ALLOW 并写明理由） |
+| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 122 个测试全绿） |
+| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 65 个测试全绿） |
 
 TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → 重构。
 测试命名 `方法_场景_预期`。
@@ -314,19 +316,27 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 135 个测试
-cd frontend && npm test          # 前端 73 个测试
+cd backend  && mvn test          # 后端 331 个测试
+cd frontend && npm test          # 前端 108 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```
 
 动了页面或权限，还要跑 UI E2E（需前后端都起着）：
 
 ```bash
-cd frontend && npm run test:e2e  # 42 个 Playwright 用例
+cd frontend && npm run test:e2e  # 83 个 Playwright 用例
 ```
 
 E2E 的登录 Token 由 `e2e/global-setup.ts` 一次性预登录后落盘复用 —— 登录接口有
 IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**，否则整套用例会被限流打挂。
+连续重跑整套用例也会撞限流（每轮 3 次预登录），报 `40001 请求过于频繁`，等 60 秒即可。
+
+浏览器语言由 `playwright.config.ts` 锁成 `zh-CN`（**别删**：Chromium 默认 en-US，
+会让所有断言中文文案的用例集体变红）。验英文界面见 `e2e/14-i18n.spec.ts`。
+
+**改了 `sys_menu` 的 `permission` / `path`，或增删了菜单/字典的 Flyway 迁移，
+必须跑一次 E2E** —— `I18N-007/008` 负责对账语言包 key 与库里派生的 key，
+只有它能发现「permission 改名导致译文静默退化成中文」。
 
 ---
 

@@ -36,3 +36,27 @@ export function rawKeysIn(text: string): string[] {
   }
   return found;
 }
+
+/**
+ * 由 `permission` / `path` 派生菜单 i18n key —— **必须与后端
+ * `MenuI18nKeyResolver.resolve` 逐字一致**。
+ *
+ * 这里刻意重写一遍而不是「相信后端下发的 i18nKey」：对账要的就是两侧独立算一遍再比。
+ * 若只拿后端给的 key 去查语言包，规则本身改错时两边一起错，测不出来。
+ *
+ * ```
+ * system:user:add  -> menu.system.user.add
+ * /system          -> menu.system
+ * ```
+ */
+export function deriveMenuKey(permission?: string | null, routePath?: string | null): string | null {
+  const normalize = (raw: string, sep: string) =>
+    raw
+      .split(sep)
+      .join('.')
+      .replace(/\.{2,}/g, '.') // 折叠连续点：`//system` 会产出 menu..system
+      .replace(/\.+$/, ''); // 去尾点：`/system/` 会产出 menu.system.
+  if (permission && permission.trim()) return `menu.${normalize(permission.trim(), ':')}`;
+  if (routePath && routePath.trim()) return `menu${normalize(routePath.trim(), '/')}`;
+  return null;
+}

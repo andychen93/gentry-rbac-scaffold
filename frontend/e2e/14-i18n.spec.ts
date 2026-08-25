@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { login, gotoPage } from './helpers/auth';
-import { pack, rawKeysIn } from './helpers/i18n';
+import { deriveMenuKey, pack, rawKeysIn } from './helpers/i18n';
 
 /**
  * 国际化验收（I18N）。
@@ -169,6 +169,78 @@ test.describe('国际化 (I18N)', () => {
       expect(rawKeysIn(body), `${path} 有裸 key`).toEqual([]);
     });
   }
+
+  /**
+   * B 类 key 对账。
+   *
+   * **单向断言：语言包 key → 库派生 key**。反向（库里有的 key 语言包必须有）刻意不断言 ——
+   * 派生项目新增菜单时不该让脚手架的测试变红，缺译文由 `makeNavLabel` 的 defaultValue
+   * 回退成库里的中文，是可接受的降级。
+   *
+   * 这条兜的是 `MenuI18nKeyResolver` 注释里那条**隐式依赖**：`permission` 一旦成为
+   * key 的来源，改动它会静默让译文退化成中文，不报错不抛异常。改 permission 而忘了改
+   * `nav.json`，这里会以「孤儿 key」的形式暴露出来。
+   */
+  test('I18N-007 nav.json 无孤儿 key（与库里菜单派生的 key 对账）', async ({ page }) => {
+    await login(page, 'chenli'); // SUPER_ADMIN 才能看到全部菜单（含租户管理）
+
+    const tree = await page.evaluate(async () => {
+      const res = await fetch('/api/v1/menus', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('gentry_token')}` },
+      });
+      return res.json();
+    });
+    expect(tree.code, `菜单接口失败：${JSON.stringify(tree)}`).toBe(0);
+
+    const derived = new Set<string>();
+    const walk = (nodes: { permission?: string | null; path?: string | null; children?: unknown[] }[]) => {
+      for (const n of nodes) {
+        const key = deriveMenuKey(n.permission, n.path);
+        if (key) derived.add(key);
+        if (n.children?.length) walk(n.children as typeof nodes);
+      }
+    };
+    walk(tree.data ?? []);
+    expect(derived.size, '菜单树派生出的 key 数量异常，接口结构变了？').toBeGreaterThan(30);
+
+    for (const locale of ['zh-CN', 'en-US'] as const) {
+      const orphans = Object.keys(pack(locale, 'nav')).filter((k) => !derived.has(k));
+      expect(
+        orphans,
+        `${locale}/nav.json 里这些 key 在库里找不到对应菜单（permission/path 改过？菜单删了？）`,
+      ).toEqual([]);
+    }
+  });
+
+  test('I18N-008 dict.json 无孤儿 key（与库里字典派生的 key 对账）', async ({ page }) => {
+    await login(page, 'chenli');
+
+    const derived = await page.evaluate(async () => {
+      const auth = { Authorization: `Bearer ${localStorage.getItem('gentry_token')}` };
+      const types = await (
+        await fetch('/api/v1/dict/types?pageNum=1&pageSize=200', { headers: auth })
+      ).json();
+      const keys: string[] = [];
+      for (const t of types.data?.list ?? []) {
+        keys.push(`dict.type.${t.dictType}`);
+        const data = await (
+          await fetch(`/api/v1/dict/types/${t.dictType}/data`, { headers: auth })
+        ).json();
+        for (const d of data.data ?? []) keys.push(`dict.${t.dictType}.${d.dictValue}`);
+      }
+      return keys;
+    });
+    const set = new Set(derived);
+    expect(set.size, '字典派生出的 key 数量异常').toBeGreaterThan(15);
+
+    for (const locale of ['zh-CN', 'en-US'] as const) {
+      const orphans = Object.keys(pack(locale, 'dict')).filter((k) => !set.has(k));
+      expect(
+        orphans,
+        `${locale}/dict.json 里这些 key 在库里找不到对应字典项（dict_type/dict_value 改过？项删了？）`,
+      ).toEqual([]);
+    }
+  });
 
   test('I18N-005 顶栏切语言：界面与侧边栏立即变，且不重拉菜单', async ({ page }) => {
     /*

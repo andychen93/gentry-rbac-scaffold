@@ -23,7 +23,7 @@
   "form.dictLabel.placeholder": "Please enter a label",
   "form.dictValue": "Value",
   "form.dictValue.placeholder": "Please enter a value",
-  "form.isDefault": "Default item",
+  "form.isDefault": "Default",
   "header.current": "Dictionary type:",
   "msg.cacheRefreshed": "Cache refreshed",
   "table.action": "Actions",

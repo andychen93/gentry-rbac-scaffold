@@ -1,5 +1,5 @@
 {
-  "action.config": "Settings",
+  "action.config": "Configure",
   "action.create": "New tenant",
   "config.feature.alarm": "Alarm",
   "config.feature.report": "Report",
@@ -45,10 +45,10 @@
   "form.title.create": "Create tenant",
   "form.title.edit": "Edit tenant",
   "status.disabled": "Disabled",
-  "status.normal": "Active",
+  "status.normal": "Normal",
   "table.action": "Actions",
   "table.code": "Tenant code",
   "table.contact": "Contact",
-  "table.expireTime": "Expires",
+  "table.expireTime": "Expiry",
   "table.name": "Tenant name"
 }
