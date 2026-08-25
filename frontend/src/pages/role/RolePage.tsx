@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Button, Tag, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, UserSwitchOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
@@ -10,16 +11,17 @@ import type { RoleListVO } from '../../services/roleApi';
 import { useUserStore } from '../../stores/userStore';
 import RoleFormModal from './RoleFormModal';
 import UserAssignModal from './UserAssignModal';
+import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
 
-const DATA_SCOPE_MAP: Record<number, string> = {
-  1: '全部数据',
-  2: '本部门及子部门',
-  3: '本部门',
-  4: '仅本人',
-  5: '自定义',
-};
+/*
+ * 数据权限档位的文案**不在本文件**。原来这里有一张 DATA_SCOPE_MAP，
+ * RoleFormModal 和 PermissionPage 各有一份 DATA_SCOPE_OPTIONS —— 三份拷贝而且
+ * 已经漂移了（本页写「本部门」，另两处写「本部门数据」）。现在统一取
+ * dict namespace 的 dict.sys_data_scope.*，与库里 sys_data_scope 字典同源。
+ */
 
 export default function RolePage() {
+  const { t } = useTranslation(['role', 'common', 'dict']);
   const navigate = useNavigate();
   const hasPermission = useUserStore((s) => s.hasPermission);
   const qc = useQueryClient();
@@ -33,7 +35,7 @@ export default function RolePage() {
     try {
       // id 是雪花 ID，超过 JS Number 安全整数范围就不能 Number(id)（会精度丢失变成别的 ID）
       await roleApi.updateStatus(id, { status: checked ? 1 : 0 });
-      message.success('状态更新成功');
+      message.success(t('common:msg.statusUpdated'));
       refresh();
     } catch {
       refresh(); // 回滚 Switch 状态
@@ -41,16 +43,16 @@ export default function RolePage() {
   };
 
   const columns: ColumnsType<RoleListVO> = [
-    { title: '角色编码', dataIndex: 'roleCode', key: 'roleCode', width: 140 },
-    { title: '角色名称', dataIndex: 'roleName', key: 'roleName', width: 140 },
+    { title: t('table.code'), dataIndex: 'roleCode', key: 'roleCode', width: 140 },
+    { title: t('table.name'), dataIndex: 'roleName', key: 'roleName', width: 140 },
     {
-      title: '数据权限', dataIndex: 'dataScope', key: 'dataScope', width: 140,
-      render: (v: number) => <Tag>{DATA_SCOPE_MAP[v] ?? '未知'}</Tag>,
+      title: t('table.dataScope'), dataIndex: 'dataScope', key: 'dataScope', width: 140,
+      render: (v: number) => <Tag>{dictLabel(t, DICT_TYPES.dataScope, v)}</Tag>,
     },
-    { title: '关联用户', dataIndex: 'userCount', key: 'userCount', width: 90, align: 'center' },
-    { title: '排序', dataIndex: 'sort', key: 'sort', width: 70, align: 'center' },
+    { title: t('table.userCount'), dataIndex: 'userCount', key: 'userCount', width: 90, align: 'center' },
+    { title: t('common:sort'), dataIndex: 'sort', key: 'sort', width: 70, align: 'center' },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 90, align: 'center',
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: 90, align: 'center',
       render: (s: number, r: RoleListVO) => (
         <StatusSwitch
           id={r.id}
@@ -61,32 +63,32 @@ export default function RolePage() {
       ),
     },
     {
-      title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 170,
+      title: t('common:createTime'), dataIndex: 'createTime', key: 'createTime', width: 170,
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 140, fixed: 'right',
+      title: t('table.action'), key: 'action', width: 140, fixed: 'right',
       render: (_: unknown, r: RoleListVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:role:edit',
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />, perm: 'system:role:edit',
             onClick: () => { setEditingId(r.id); setFormOpen(true); },
           },
           {
-            key: 'perm', label: '权限', icon: <SafetyOutlined />, perm: 'system:role:assignMenu',
+            key: 'perm', label: t('action.perm'), icon: <SafetyOutlined />, perm: 'system:role:assignMenu',
             onClick: () => navigate(`/system/roles/${r.id}/permissions`),
           },
           {
-            key: 'users', label: '绑定用户', icon: <UserSwitchOutlined />,
+            key: 'users', label: t('action.bindUser'), icon: <UserSwitchOutlined />,
             perm: 'system:role:assignUser',
             onClick: () => { setUserModalRole(r); setUserModalOpen(true); },
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:role:remove',
-            danger: true, confirmText: `确定删除角色「${r.roleName}」？`,
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, perm: 'system:role:remove',
+            danger: true, confirmText: t('confirm.delete', { name: r.roleName }),
             onClick: async () => {
               await roleApi.remove(r.id);
-              message.success('删除成功');
+              message.success(t('common:msg.deleteSuccess'));
               refresh();
             },
           },
@@ -104,11 +106,12 @@ export default function RolePage() {
         rowKey="id"
         scroll={{ x: 1100 }}
         querySchema={[
-          { name: 'roleName', label: '角色名称' },
-          { name: 'roleCode', label: '角色编码' },
+          { name: 'roleName', label: t('table.name') },
+          { name: 'roleCode', label: t('table.code') },
           {
-            name: 'status', label: '状态', type: 'select',
-            options: [{ label: '启用', value: 1 }, { label: '禁用', value: 0 }],
+            name: 'status', label: t('common:status'), type: 'select',
+            // 选项取库里 sys_normal_disable 字典（正常/停用），不再硬编码「启用/禁用」
+            options: dictOptions(t, DICT_TYPES.normalDisable, { numeric: true }),
           },
         ]}
         toolbar={
@@ -118,7 +121,7 @@ export default function RolePage() {
               icon={<PlusOutlined />}
               onClick={() => { setEditingId(null); setFormOpen(true); }}
             >
-              新增角色
+              {t('action.create')}
             </Button>
           ) : undefined
         }

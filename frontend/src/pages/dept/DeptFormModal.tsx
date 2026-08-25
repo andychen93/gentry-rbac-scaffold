@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { deptApi } from '../../services/deptApi';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -12,6 +14,7 @@ interface Props {
 }
 
 export default function DeptFormModal({ open, deptId, defaultParentId, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['dept', 'common', 'dict']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const isEdit = deptId !== null;
@@ -53,10 +56,10 @@ export default function DeptFormModal({ open, deptId, defaultParentId, onSuccess
 
       if (isEdit) {
         await deptApi.update(deptId!, payload);
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
       } else {
         await deptApi.create(payload);
-        message.success('新增成功');
+        message.success(t('common:msg.createSuccess'));
       }
       onSuccess();
     } catch (err: any) {
@@ -68,7 +71,7 @@ export default function DeptFormModal({ open, deptId, defaultParentId, onSuccess
 
   return (
     <Modal
-      title={isEdit ? '编辑部门' : '新增部门'}
+      title={isEdit ? t('form.title.edit') : t('form.title.create')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -77,7 +80,7 @@ export default function DeptFormModal({ open, deptId, defaultParentId, onSuccess
       width={560}
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item name="parentId" label="上级部门">
+        <Form.Item name="parentId" label={t('form.parent')}>
           <DeptTreeSelect
             showRoot
             excludeId={isEdit ? deptId : null}
@@ -86,44 +89,44 @@ export default function DeptFormModal({ open, deptId, defaultParentId, onSuccess
 
         <Form.Item
           name="name"
-          label="部门名称"
+          label={t('form.name')}
           rules={[
-            { required: true, message: '请输入部门名称' },
-            { min: 2, max: 50, message: '2-50字符' },
+            { required: true, message: t('form.name.placeholder') },
+            { min: 2, max: 50, message: t('common:valid.len2to50') },
           ]}
         >
-          <Input placeholder="请输入部门名称" />
+          <Input placeholder={t('form.name.placeholder')} />
         </Form.Item>
 
         <Form.Item
           name="phone"
-          label="联系电话"
-          rules={[{ pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号格式' }]}
+          label={t('common:contactPhone')}
+          rules={[{ pattern: /^1[3-9]\d{9}$/, message: t('common:valid.phone') }]}
         >
-          <Input placeholder="请输入联系电话" />
+          <Input placeholder={t('common:placeholder.phone')} />
         </Form.Item>
 
         <Form.Item
           name="email"
-          label="邮箱"
-          rules={[{ type: 'email', message: '请输入正确的邮箱格式' }]}
+          label={t('common:email')}
+          rules={[{ type: 'email', message: t('common:valid.email') }]}
         >
-          <Input placeholder="请输入邮箱" />
+          <Input placeholder={t('common:placeholder.email')} />
         </Form.Item>
 
         <Form.Item
           name="sort"
-          label="显示排序"
-          rules={[{ required: true, message: '请输入排序值' }]}
+          label={t('form.sort')}
+          rules={[{ required: true, message: t('form.sort.required') }]}
         >
-          <InputNumber min={0} max={999} style={{ width: '100%' }} placeholder="排序值" />
+          <InputNumber min={0} max={999} style={{ width: '100%' }} placeholder={t('form.sort.placeholder')} />
         </Form.Item>
 
-        <Form.Item name="status" label="状态">
-          <Select placeholder="请选择状态">
-            <Select.Option value={1}>正常</Select.Option>
-            <Select.Option value={0}>停用</Select.Option>
-          </Select>
+        <Form.Item name="status" label={t('common:status')}>
+          <Select
+            placeholder={t('form.status.placeholder')}
+            options={dictOptions(t, DICT_TYPES.normalDisable, { numeric: true })}
+          />
         </Form.Item>
       </Form>
     </Modal>

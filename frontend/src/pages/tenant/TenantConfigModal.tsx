@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, InputNumber, Switch, Select, message, Spin } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { tenantMgmtApi } from '../../services/tenantApi';
 
 interface Props {
@@ -10,6 +11,7 @@ interface Props {
 }
 
 export default function TenantConfigModal({ open, tenantId, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['tenant', 'common']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(false);
@@ -43,7 +45,7 @@ export default function TenantConfigModal({ open, tenantId, onSuccess, onCancel 
       const values = await form.validateFields();
       setLoading(true);
       await tenantMgmtApi.updateConfig(tenantId!, values);
-      message.success('配置更新成功');
+      message.success(t('config.success'));
       onSuccess();
     } catch (err: any) {
       if (err?.errorFields) return;
@@ -54,7 +56,7 @@ export default function TenantConfigModal({ open, tenantId, onSuccess, onCancel 
 
   return (
     <Modal
-      title="租户配置"
+      title={t('config.title')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -64,42 +66,68 @@ export default function TenantConfigModal({ open, tenantId, onSuccess, onCancel 
     >
       <Spin spinning={fetching}>
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item label="功能开关" style={{ marginBottom: 8 }}>
+          {/*
+            * TODO [清理业务残留] 「视频 / 报警 / 报表」「最大设备数」「地图服务商」是车辆监控
+            * 项目的遗留字段，与 RBAC 脚手架无关。清理要动 sys_tenant 的配置结构（Flyway 迁移
+            * + 后端 DTO），属数据模型变更，不在 i18n 批次内做，先照原样翻。
+            */}
+          <Form.Item label={t('config.features')} style={{ marginBottom: 8 }}>
             <div style={{ display: 'flex', gap: 24 }}>
               <Form.Item name="videoEnabled" valuePropName="checked" noStyle>
-                <Switch checkedChildren="视频" unCheckedChildren="视频" />
+                <Switch
+                  checkedChildren={t('config.feature.video')}
+                  unCheckedChildren={t('config.feature.video')}
+                />
               </Form.Item>
               <Form.Item name="alarmEnabled" valuePropName="checked" noStyle>
-                <Switch checkedChildren="报警" unCheckedChildren="报警" />
+                <Switch
+                  checkedChildren={t('config.feature.alarm')}
+                  unCheckedChildren={t('config.feature.alarm')}
+                />
               </Form.Item>
               <Form.Item name="reportEnabled" valuePropName="checked" noStyle>
-                <Switch checkedChildren="报表" unCheckedChildren="报表" />
+                <Switch
+                  checkedChildren={t('config.feature.report')}
+                  unCheckedChildren={t('config.feature.report')}
+                />
               </Form.Item>
             </div>
           </Form.Item>
 
-          <Form.Item name="maxDevices" label="最大设备数" rules={[{ type: 'number', min: 1, message: '最小为1' }]}>
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="请输入最大设备数" />
+          <Form.Item
+            name="maxDevices"
+            label={t('config.maxDevices')}
+            rules={[{ type: 'number', min: 1, message: t('config.minOne') }]}
+          >
+            <InputNumber min={1} style={{ width: '100%' }} placeholder={t('config.maxDevices.placeholder')} />
           </Form.Item>
 
-          <Form.Item name="maxUsers" label="最大用户数" rules={[{ type: 'number', min: 1, message: '最小为1' }]}>
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="请输入最大用户数" />
+          <Form.Item
+            name="maxUsers"
+            label={t('config.maxUsers')}
+            rules={[{ type: 'number', min: 1, message: t('config.minOne') }]}
+          >
+            <InputNumber min={1} style={{ width: '100%' }} placeholder={t('config.maxUsers.placeholder')} />
           </Form.Item>
 
           <Form.Item
             name="dataRetentionDays"
-            label="数据保留天数"
-            rules={[{ type: 'number', min: 1, message: '最小为1' }]}
+            label={t('config.retentionDays')}
+            rules={[{ type: 'number', min: 1, message: t('config.minOne') }]}
           >
-            <InputNumber min={1} style={{ width: '100%' }} placeholder="请输入数据保留天数" />
+            <InputNumber min={1} style={{ width: '100%' }} placeholder={t('config.retentionDays.placeholder')} />
           </Form.Item>
 
-          <Form.Item name="mapProvider" label="地图服务商">
-            <Select placeholder="请选择地图服务商" allowClear>
-              <Select.Option value="tianditu">天地图</Select.Option>
-              <Select.Option value="amap">高德地图</Select.Option>
-              <Select.Option value="baidu">百度地图</Select.Option>
-            </Select>
+          <Form.Item name="mapProvider" label={t('config.mapProvider')}>
+            <Select
+              placeholder={t('config.mapProvider.placeholder')}
+              allowClear
+              options={[
+                { value: 'tianditu', label: t('config.mapProvider.tianditu') },
+                { value: 'amap', label: t('config.mapProvider.amap') },
+                { value: 'baidu', label: t('config.mapProvider.baidu') },
+              ]}
+            />
           </Form.Item>
         </Form>
       </Spin>

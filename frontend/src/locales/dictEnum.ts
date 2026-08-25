@@ -53,3 +53,21 @@ export function dictOptions(
     label: dictLabel(t, dictType, v),
   }));
 }
+
+/**
+ * 职务候选 —— **这是一个例外：值就是中文 label，不是字典码**。
+ *
+ * `sys_user.post_name` 列存的是「经理」这种中文串，不是 `sys_user_post` 的码
+ * （`CEO`/`Manager`/…）。下拉的 value 必须与库里一致，所以这里不能走
+ * {@link dictOptions}，否则提交上去的值查不到、导入导出也对不上。
+ *
+ * 真正 i18n 需要一条数据迁移把该列改成存字典码 + 后端导入导出配套，属数据模型变更，
+ * 不在 i18n 批次内做。**已知限制：英文界面下职务下拉仍显示中文。**
+ *
+ * 抽到这里的直接原因是漂移：`UserFormModal` 列了 8 个、`EditProfileModal` 只列了 6 个。
+ * 顺序与 {@link DICT_VALUES} 里 `sys_user_post` 的码一一对应。
+ */
+export const POST_NAMES = [
+  '首席执行官', '总监', '经理', '主管',
+  '总架构师', '高级工程师', '工程师', '司机',
+] as const;

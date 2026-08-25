@@ -5,13 +5,19 @@ import {
   EditOutlined, DeleteOutlined, DatabaseOutlined,
 } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
 import { dictApi, DictTypeListVO, DictDataVO } from '../../services/dictApi';
 import TypeFormModal from './TypeFormModal';
 import DataFormModal from './DataFormModal';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
+import { makeDictLabel } from '../../locales/navLabel';
 
 export default function DictPage() {
+  const { t } = useTranslation(['dictMgmt', 'common', 'dict']);
+  // 列表列显示译文（与全站一致）；能改 label 的地方由 DataFormModal 负责锁定
+  const dictLabelOf = makeDictLabel(t);
   const qc = useQueryClient();
   const [activeDict, setActiveDict] = useState<DictTypeListVO | null>(null);
 
@@ -61,14 +67,14 @@ export default function DictPage() {
 
   const handleDeleteType = async (id: number) => {
     await dictApi.removeType(id);
-    message.success('删除成功');
+    message.success(t('common:msg.deleteSuccess'));
     refreshTypes();
     invalidateDictConsumers();   // 删类型会连带逻辑删除其数据项
   };
 
   const handleDeleteData = async (id: number) => {
     await dictApi.removeData(id);
-    message.success('删除成功');
+    message.success(t('common:msg.deleteSuccess'));
     if (activeDict) fetchData(activeDict.dictType);
     invalidateDictConsumers();
   };
@@ -79,7 +85,7 @@ export default function DictPage() {
     setRefreshing(true);
     try {
       await dictApi.refreshCache();
-      message.success('缓存刷新成功');
+      message.success(t('msg.cacheRefreshed'));
       // 后端缓存清完，把前端两层消费方也一起刷新，否则界面看不出任何变化
       invalidateDictConsumers();
       refreshTypes();
@@ -92,30 +98,35 @@ export default function DictPage() {
   };
 
   const typeColumns: ColumnsType<DictTypeListVO> = [
-    { title: '字典名称', dataIndex: 'dictName', key: 'dictName', width: 160 },
-    { title: '字典类型', dataIndex: 'dictType', key: 'dictType', width: 200 },
-    { title: '数据项数', dataIndex: 'dataCount', key: 'dataCount', width: 100, align: 'center' },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 80, align: 'center',
-      render: (s: number) => <Tag color={s === 1 ? 'success' : 'error'}>{s === 1 ? '正常' : '停用'}</Tag>,
+      title: t('table.dictName'), dataIndex: 'dictName', key: 'dictName', width: 160,
+      render: (_v: string, r: DictTypeListVO) => dictLabelOf({ dictLabel: r.dictName, i18nKey: r.i18nKey }),
     },
-    { title: '备注', dataIndex: 'remark', key: 'remark', width: 200, ellipsis: true },
+    { title: t('table.dictType'), dataIndex: 'dictType', key: 'dictType', width: 200 },
+    { title: t('table.dataCount'), dataIndex: 'dataCount', key: 'dataCount', width: 100, align: 'center' },
     {
-      title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180,
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: 80, align: 'center',
+      render: (s: number) => (
+        <Tag color={s === 1 ? 'success' : 'error'}>{t(`dict.${DICT_TYPES.normalDisable}.${s}`, { ns: 'dict' })}</Tag>
+      ),
+    },
+    { title: t('common:remark'), dataIndex: 'remark', key: 'remark', width: 200, ellipsis: true },
+    {
+      title: t('common:createTime'), dataIndex: 'createTime', key: 'createTime', width: 180,
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 110, fixed: 'right',
+      title: t('table.action'), key: 'action', width: 110, fixed: 'right',
       render: (_: unknown, record: DictTypeListVO) => (
         <RowActions items={[
-          { key: 'data', label: '数据', icon: <DatabaseOutlined />, onClick: () => handleEnterData(record) },
+          { key: 'data', label: t('action.data'), icon: <DatabaseOutlined />, onClick: () => handleEnterData(record) },
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />,
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />,
             onClick: () => { setEditingType(record); setTypeModalMode('edit'); setTypeModalOpen(true); },
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
-            confirmText: '确定删除该字典类型？',
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, danger: true,
+            confirmText: t('confirm.deleteType'),
             onClick: () => handleDeleteType(record.id),
           },
         ]} />
@@ -124,33 +135,40 @@ export default function DictPage() {
   ];
 
   const dataColumns: ColumnsType<DictDataVO> = [
-    { title: '字典标签', dataIndex: 'dictLabel', key: 'dictLabel', width: 120 },
-    { title: '字典键值', dataIndex: 'dictValue', key: 'dictValue', width: 120 },
     {
-      title: '样式', dataIndex: 'cssClass', key: 'cssClass', width: 100,
+      title: t('data.table.label'), dataIndex: 'dictLabel', key: 'dictLabel', width: 120,
+      render: (_v: string, r: DictDataVO) => dictLabelOf(r),
+    },
+    { title: t('data.table.value'), dataIndex: 'dictValue', key: 'dictValue', width: 120 },
+    {
+      title: t('data.table.cssClass'), dataIndex: 'cssClass', key: 'cssClass', width: 100,
       render: (v: string) => v ? <Tag color={{ primary: 'blue', success: 'green', warning: 'orange', danger: 'red' }[v] || 'default'}>{v}</Tag> : '-',
     },
     {
-      title: '是否默认', dataIndex: 'isDefault', key: 'isDefault', width: 100, align: 'center',
-      render: (v: number) => <Tag color={v === 1 ? 'success' : 'default'}>{v === 1 ? '是' : '否'}</Tag>,
+      title: t('data.table.isDefault'), dataIndex: 'isDefault', key: 'isDefault', width: 100, align: 'center',
+      render: (v: number) => (
+        <Tag color={v === 1 ? 'success' : 'default'}>{v === 1 ? t('common:yes') : t('common:no')}</Tag>
+      ),
     },
-    { title: '排序', dataIndex: 'sort', key: 'sort', width: 80, align: 'center' },
+    { title: t('common:sort'), dataIndex: 'sort', key: 'sort', width: 80, align: 'center' },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 80, align: 'center',
-      render: (s: number) => <Tag color={s === 1 ? 'success' : 'error'}>{s === 1 ? '正常' : '停用'}</Tag>,
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: 80, align: 'center',
+      render: (s: number) => (
+        <Tag color={s === 1 ? 'success' : 'error'}>{t(`dict.${DICT_TYPES.normalDisable}.${s}`, { ns: 'dict' })}</Tag>
+      ),
     },
-    { title: '备注', dataIndex: 'remark', key: 'remark', width: 160, ellipsis: true },
+    { title: t('common:remark'), dataIndex: 'remark', key: 'remark', width: 160, ellipsis: true },
     {
-      title: '操作', key: 'action', width: 90,
+      title: t('table.action'), key: 'action', width: 90,
       render: (_: unknown, record: DictDataVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />,
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />,
             onClick: () => { setEditingData(record); setDataModalMode('edit'); setDataModalOpen(true); },
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
-            confirmText: '确定删除该数据项？',
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, danger: true,
+            confirmText: t('confirm.deleteData'),
             onClick: () => handleDeleteData(record.id),
           },
         ]} />
@@ -164,8 +182,12 @@ export default function DictPage() {
       <>
         <Card style={{ marginBottom: 16 }}>
           <Space>
-            <Button icon={<ArrowLeftOutlined />} onClick={handleBackToList}>返回列表</Button>
-            <span>字典类型：<strong>{activeDict.dictName}</strong>（{activeDict.dictType}）</span>
+            <Button icon={<ArrowLeftOutlined />} onClick={handleBackToList}>{t('action.backToList')}</Button>
+            <span>
+              {t('header.current')}
+              <strong>{dictLabelOf({ dictLabel: activeDict.dictName, i18nKey: activeDict.i18nKey })}</strong>
+              {` (${activeDict.dictType})`}
+            </span>
           </Space>
         </Card>
         <Card>
@@ -176,9 +198,11 @@ export default function DictPage() {
                 icon={<PlusOutlined />}
                 onClick={() => { setEditingData(null); setDataModalMode('create'); setDataModalOpen(true); }}
               >
-                新增数据项
+                {t('action.createData')}
               </Button>
-              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>刷新缓存</Button>
+              <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>
+                {t('action.refreshCache')}
+              </Button>
             </Space>
           </div>
           <Table<DictDataVO>
@@ -211,11 +235,11 @@ export default function DictPage() {
         rowKey="id"
         scroll={{ x: 1000 }}
         querySchema={[
-          { name: 'dictName', label: '字典名称' },
-          { name: 'dictType', label: '字典类型' },
+          { name: 'dictName', label: t('table.dictName') },
+          { name: 'dictType', label: t('table.dictType') },
           {
-            name: 'status', label: '状态', type: 'select',
-            options: [{ label: '正常', value: 1 }, { label: '停用', value: 0 }],
+            name: 'status', label: t('common:status'), type: 'select',
+            options: dictOptions(t, DICT_TYPES.normalDisable, { numeric: true }),
           },
         ]}
         toolbar={
@@ -225,9 +249,11 @@ export default function DictPage() {
               icon={<PlusOutlined />}
               onClick={() => { setEditingType(null); setTypeModalMode('create'); setTypeModalOpen(true); }}
             >
-              新增类型
+              {t('action.createType')}
             </Button>
-            <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>刷新缓存</Button>
+            <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>
+              {t('action.refreshCache')}
+            </Button>
           </Space>
         }
       />

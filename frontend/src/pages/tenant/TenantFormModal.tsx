@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, DatePicker, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { tenantMgmtApi } from '../../services/tenantApi';
 import type { TenantCreateResultVO } from '../../services/tenantApi';
 import dayjs from 'dayjs';
@@ -13,6 +14,7 @@ interface Props {
 }
 
 export default function TenantFormModal({ open, tenantId, onSuccess, onCreated, onCancel }: Props) {
+  const { t } = useTranslation(['tenant', 'common']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const isEdit = tenantId !== null;
@@ -48,7 +50,7 @@ export default function TenantFormModal({ open, tenantId, onSuccess, onCreated, 
       if (isEdit) {
         const { code, ...updateData } = values;
         await tenantMgmtApi.update(tenantId!, { ...updateData, expireTime });
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
         onSuccess();
       } else {
         const res = await tenantMgmtApi.create({ ...values, expireTime });
@@ -63,7 +65,7 @@ export default function TenantFormModal({ open, tenantId, onSuccess, onCreated, 
 
   return (
     <Modal
-      title={isEdit ? '编辑租户' : '新增租户'}
+      title={isEdit ? t('form.title.edit') : t('form.title.create')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -74,48 +76,48 @@ export default function TenantFormModal({ open, tenantId, onSuccess, onCreated, 
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Form.Item
           name="code"
-          label="租户编码"
+          label={t('form.code')}
           rules={[
-            { required: true, message: '请输入租户编码' },
-            { pattern: /^[a-zA-Z0-9]{6,20}$/, message: '6-20字符，仅字母数字' },
+            { required: true, message: t('form.code.placeholder') },
+            { pattern: /^[a-zA-Z0-9]{6,20}$/, message: t('form.code.hint') },
           ]}
         >
-          <Input placeholder="请输入租户编码" disabled={isEdit} />
+          <Input placeholder={t('form.code.placeholder')} disabled={isEdit} />
         </Form.Item>
 
         <Form.Item
           name="name"
-          label="租户名称"
+          label={t('form.name')}
           rules={[
-            { required: true, message: '请输入租户名称' },
-            { min: 2, max: 100, message: '2-100字符' },
+            { required: true, message: t('form.name.placeholder') },
+            { min: 2, max: 100, message: t('form.name.hint') },
           ]}
         >
-          <Input placeholder="请输入租户名称" />
+          <Input placeholder={t('form.name.placeholder')} />
         </Form.Item>
 
-        <Form.Item name="contact" label="联系人" rules={[{ max: 50, message: '最长50字符' }]}>
-          <Input placeholder="请输入联系人" />
+        <Form.Item name="contact" label={t('table.contact')} rules={[{ max: 50, message: t('common:valid.max50') }]}>
+          <Input placeholder={t('common:placeholder.contact')} />
         </Form.Item>
 
         <Form.Item
           name="phone"
-          label="联系电话"
-          rules={[{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }]}
+          label={t('common:contactPhone')}
+          rules={[{ pattern: /^1[3-9]\d{9}$/, message: t('common:valid.phone') }]}
         >
-          <Input placeholder="请输入联系电话" />
+          <Input placeholder={t('common:placeholder.phone')} />
         </Form.Item>
 
-        <Form.Item name="email" label="邮箱" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
-          <Input placeholder="请输入邮箱" />
+        <Form.Item name="email" label={t('common:email')} rules={[{ type: 'email', message: t('common:valid.email') }]}>
+          <Input placeholder={t('common:placeholder.email')} />
         </Form.Item>
 
-        <Form.Item name="expireTime" label="到期时间">
-          <DatePicker showTime style={{ width: '100%' }} placeholder="不选则永不过期" />
+        <Form.Item name="expireTime" label={t('form.expireTime')}>
+          <DatePicker showTime style={{ width: '100%' }} placeholder={t('form.expireTime.placeholder')} />
         </Form.Item>
 
-        <Form.Item name="remark" label="备注" rules={[{ max: 500, message: '最长500字符' }]}>
-          <Input.TextArea rows={3} placeholder="请输入备注" />
+        <Form.Item name="remark" label={t('common:remark')} rules={[{ max: 500, message: t('common:valid.max500') }]}>
+          <Input.TextArea rows={3} placeholder={t('common:placeholder.remark')} />
         </Form.Item>
       </Form>
     </Modal>

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Radio, Switch, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { menuApi } from '../../services/menuApi';
 import IconPicker from '../../components/common/IconPicker';
+import { DICT_TYPES, dictLabel } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -18,6 +20,7 @@ const TYPE_MENU = 2;
 const TYPE_BUTTON = 3;
 
 export default function MenuFormModal({ open, menuId, parentId, parentName, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['menuMgmt', 'common', 'dict']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [menuType, setMenuType] = useState<number>(TYPE_DIR);
@@ -42,7 +45,7 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
           isCache: d.isCache === 1,
         });
       }).catch(() => {
-        message.error('菜单不存在');
+        message.error(t('msg.notFound'));
         onCancel();
       });
     } else if (open) {
@@ -81,7 +84,7 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
           isExternal: values.isExternal ? 1 : 0,
           isCache: values.isCache ? 1 : 0,
         });
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
       } else {
         await menuApi.create({
           parentId: parentId ?? 0,
@@ -97,7 +100,7 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
           isExternal: values.isExternal ? 1 : 0,
           isCache: values.isCache ? 1 : 0,
         });
-        message.success('新增成功');
+        message.success(t('common:msg.createSuccess'));
       }
       onSuccess();
     } catch (err: any) {
@@ -108,9 +111,9 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
   };
 
   const getTitle = () => {
-    if (isEdit) return '编辑菜单';
-    if (parentName) return `新增子菜单 - ${parentName}`;
-    return '新增菜单';
+    if (isEdit) return t('form.title.edit');
+    if (parentName) return t('form.title.createChild', { parent: parentName });
+    return t('form.title.create');
   };
 
   return (
@@ -125,29 +128,30 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         {/* 菜单类型 */}
-        <Form.Item name="type" label="菜单类型" rules={[{ required: true, message: '请选择菜单类型' }]}>
+        <Form.Item name="type" label={t('form.type')} rules={[{ required: true, message: t('form.type.required') }]}>
+          {/* 三个档位的文案取 sys_menu_type 字典，不再各页硬编码 */}
           <Radio.Group disabled={isEdit} onChange={(e) => handleTypeChange(e.target.value)}>
-            <Radio.Button value={TYPE_DIR}>目录</Radio.Button>
-            <Radio.Button value={TYPE_MENU}>菜单</Radio.Button>
-            <Radio.Button value={TYPE_BUTTON}>按钮</Radio.Button>
+            <Radio.Button value={TYPE_DIR}>{dictLabel(t, DICT_TYPES.menuType, TYPE_DIR)}</Radio.Button>
+            <Radio.Button value={TYPE_MENU}>{dictLabel(t, DICT_TYPES.menuType, TYPE_MENU)}</Radio.Button>
+            <Radio.Button value={TYPE_BUTTON}>{dictLabel(t, DICT_TYPES.menuType, TYPE_BUTTON)}</Radio.Button>
           </Radio.Group>
         </Form.Item>
 
         {/* 菜单名称 */}
         <Form.Item
           name="name"
-          label="菜单名称"
+          label={t('form.name')}
           rules={[
-            { required: true, message: '请输入菜单名称' },
-            { min: 2, max: 50, message: '2-50字符' },
+            { required: true, message: t('form.name.placeholder') },
+            { min: 2, max: 50, message: t('common:valid.len2to50') },
           ]}
         >
-          <Input placeholder="请输入菜单名称" />
+          <Input placeholder={t('form.name.placeholder')} />
         </Form.Item>
 
         {/* 图标（目录、菜单显示） */}
         {menuType !== TYPE_BUTTON && (
-          <Form.Item name="icon" label="菜单图标">
+          <Form.Item name="icon" label={t('form.icon')}>
             <IconPicker />
           </Form.Item>
         )}
@@ -156,10 +160,10 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
         {menuType !== TYPE_BUTTON && (
           <Form.Item
             name="path"
-            label="路由地址"
-            rules={menuType === TYPE_MENU ? [{ required: true, message: '路由地址不能为空' }] : []}
+            label={t('form.path')}
+            rules={menuType === TYPE_MENU ? [{ required: true, message: t('form.path.required') }] : []}
           >
-            <Input placeholder="请输入路由地址" />
+            <Input placeholder={t('form.path.placeholder')} />
           </Form.Item>
         )}
 
@@ -167,10 +171,10 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
         {menuType === TYPE_MENU && (
           <Form.Item
             name="component"
-            label="组件路径"
-            rules={[{ required: true, message: '组件路径不能为空' }]}
+            label={t('form.component')}
+            rules={[{ required: true, message: t('form.component.required') }]}
           >
-            <Input placeholder="请输入组件路径" />
+            <Input placeholder={t('form.component.placeholder')} />
           </Form.Item>
         )}
 
@@ -178,34 +182,37 @@ export default function MenuFormModal({ open, menuId, parentId, parentName, onSu
         {(menuType === TYPE_MENU || menuType === TYPE_BUTTON) && (
           <Form.Item
             name="permission"
-            label="权限标识"
-            rules={menuType === TYPE_BUTTON ? [{ required: true, message: '按钮权限标识不能为空' }] : []}
+            label={t('form.permission')}
+            rules={menuType === TYPE_BUTTON ? [{ required: true, message: t('form.permission.required') }] : []}
           >
-            <Input placeholder="如 system:user:add" />
+            <Input placeholder={t('form.permission.placeholder')} />
           </Form.Item>
         )}
 
         {/* 排序 */}
-        <Form.Item name="sort" label="显示排序" rules={[{ required: true, message: '请输入排序值' }]}>
+        <Form.Item name="sort" label={t('form.sort')} rules={[{ required: true, message: t('form.sort.required') }]}>
           <InputNumber min={0} max={999} style={{ width: '100%' }} />
         </Form.Item>
 
         {/* 状态 */}
-        <Form.Item name="status" label="状态" valuePropName="checked">
-          <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+        <Form.Item name="status" label={t('common:status')} valuePropName="checked">
+          <Switch checkedChildren={t('common:enable')} unCheckedChildren={t('common:disable')} />
         </Form.Item>
 
         {/* 以下仅菜单类型显示 */}
         {menuType === TYPE_MENU && (
           <>
-            <Form.Item name="visible" label="是否显示" valuePropName="checked">
-              <Switch checkedChildren="显示" unCheckedChildren="隐藏" />
+            <Form.Item name="visible" label={t('form.visible')} valuePropName="checked">
+              <Switch
+                checkedChildren={t('common:visible.show')}
+                unCheckedChildren={t('common:visible.hide')}
+              />
             </Form.Item>
-            <Form.Item name="isExternal" label="是否外链" valuePropName="checked">
-              <Switch checkedChildren="是" unCheckedChildren="否" />
+            <Form.Item name="isExternal" label={t('form.isExternal')} valuePropName="checked">
+              <Switch checkedChildren={t('common:yes')} unCheckedChildren={t('common:no')} />
             </Form.Item>
-            <Form.Item name="isCache" label="是否缓存" valuePropName="checked">
-              <Switch checkedChildren="是" unCheckedChildren="否" />
+            <Form.Item name="isCache" label={t('form.isCache')} valuePropName="checked">
+              <Switch checkedChildren={t('common:yes')} unCheckedChildren={t('common:no')} />
             </Form.Item>
           </>
         )}

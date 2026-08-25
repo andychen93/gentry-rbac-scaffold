@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, Radio, Select, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../services/userApi';
+import { DICT_TYPES, dictOptions, POST_NAMES } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -14,6 +16,7 @@ interface Props {
  * 提交走 authApi.updateProfile。
  */
 export default function EditProfileModal({ open, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['profile', 'common', 'user', 'dict']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -36,7 +39,7 @@ export default function EditProfileModal({ open, onSuccess, onCancel }: Props) {
       const values = await form.validateFields();
       setLoading(true);
       await authApi.updateProfile(values);
-      message.success('资料修改成功');
+      message.success(t('edit.success'));
       form.resetFields();
       onSuccess();
     } catch (err: any) {
@@ -47,34 +50,31 @@ export default function EditProfileModal({ open, onSuccess, onCancel }: Props) {
   };
 
   return (
-    <Modal title="编辑资料" open={open} onOk={handleOk}
+    <Modal title={t('edit.title')} open={open} onOk={handleOk}
       onCancel={() => { form.resetFields(); onCancel(); }}
       confirmLoading={loading} destroyOnHidden>
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item name="nickname" label="昵称"
-          rules={[{ required: true, message: '请输入昵称' }, { min: 2, max: 20, message: '2-20字符' }]}>
-          <Input placeholder="请输入昵称" />
+        <Form.Item name="nickname" label={t('common:nickname')}
+          rules={[{ required: true, message: t('common:placeholder.nickname') }, { min: 2, max: 20, message: t('user:form.nickname.hint') }]}>
+          <Input placeholder={t('common:placeholder.nickname')} />
         </Form.Item>
-        <Form.Item name="phone" label="手机号" rules={[{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确' }]}>
-          <Input placeholder="请输入手机号" />
+        <Form.Item name="phone" label={t('common:phone')} rules={[{ pattern: /^1[3-9]\d{9}$/, message: t('common:valid.phone') }]}>
+          <Input placeholder={t('user:form.phone.placeholder')} />
         </Form.Item>
-        <Form.Item name="email" label="邮箱" rules={[{ type: 'email', message: '邮箱格式不正确' }]}>
-          <Input placeholder="请输入邮箱" />
+        <Form.Item name="email" label={t('common:email')} rules={[{ type: 'email', message: t('common:valid.email') }]}>
+          <Input placeholder={t('common:placeholder.email')} />
         </Form.Item>
-        <Form.Item name="gender" label="性别">
-          <Radio.Group>
-            <Radio value={0}>未知</Radio><Radio value={1}>男</Radio><Radio value={2}>女</Radio>
-          </Radio.Group>
+        <Form.Item name="gender" label={t('common:gender')}>
+          <Radio.Group options={dictOptions(t, DICT_TYPES.gender, { numeric: true })} />
         </Form.Item>
-        <Form.Item name="postName" label="职务">
-          <Select placeholder="请选择职务" allowClear>
-            <Select.Option value="首席执行官">首席执行官</Select.Option>
-            <Select.Option value="总监">总监</Select.Option>
-            <Select.Option value="经理">经理</Select.Option>
-            <Select.Option value="主管">主管</Select.Option>
-            <Select.Option value="高级工程师">高级工程师</Select.Option>
-            <Select.Option value="工程师">工程师</Select.Option>
-          </Select>
+        {/* 职务的 value 是中文 label 本身，见 locales/dictEnum.ts 的 POST_NAMES 注释。
+            原来这里只列了 6 个、UserFormModal 列了 8 个，现在同源 */}
+        <Form.Item name="postName" label={t('user:form.post')}>
+          <Select
+            placeholder={t('user:form.post.placeholder')}
+            allowClear
+            options={POST_NAMES.map((n) => ({ value: n, label: n }))}
+          />
         </Form.Item>
       </Form>
     </Modal>

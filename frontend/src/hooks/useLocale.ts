@@ -43,7 +43,8 @@ export function useLocale() {
       //    导出/定时通知这些后端场景，不该回滚 UI
       if (useUserStore.getState().isLoggedIn) {
         userApi.updateMyLanguage(toBackendLocale(next)).catch(() => {
-          message.warning(i18n.t('common:locale.persistFailed', '语言偏好保存失败'));
+          // 不写 defaultValue：那会变成同一句话的第二份真源，和语言包漂移时无人发现
+          message.warning(i18n.t('common:locale.persistFailed'));
         });
       }
     },

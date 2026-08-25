@@ -1,1 +1,21 @@
-{}
+{
+  "action.create": "新增参数",
+  "action.refreshCache": "刷新缓存",
+  "confirm.delete": "确定删除参数「{{key}}」？",
+  "form.key.placeholder": "如 sys.login.maxFailCount",
+  "form.key.required": "请输入参数键",
+  "form.name.placeholder": "如：登录失败最大次数",
+  "form.remark.placeholder": "备注说明",
+  "form.title.create": "新增参数",
+  "form.title.edit": "编辑参数",
+  "form.type.placeholder": "选择类型",
+  "form.value.placeholder": "参数值",
+  "msg.cacheRefreshed": "缓存已刷新",
+  "table.action": "操作",
+  "table.key": "参数键",
+  "table.name": "参数名称",
+  "table.value": "参数值",
+  "type.business": "业务",
+  "type.system": "系统",
+  "valid.max100": "最长100字符"
+}

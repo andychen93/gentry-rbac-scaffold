@@ -4,31 +4,26 @@ import {
 } from 'antd';
 import * as AllIcons from '@ant-design/icons';
 import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO, MenuQueryDTO } from '../../services/menuApi';
 import { useUserStore } from '../../stores/userStore';
 import { RowActions } from '../../components/pro';
 import MenuFormModal from './MenuFormModal';
 import type { ColumnsType } from 'antd/es/table';
+import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
+import { makeNavLabel } from '../../locales/navLabel';
 
-/** 菜单类型映射 */
-const menuTypeMap: Record<number, { label: string; color: string }> = {
-  1: { label: '目录', color: 'cyan' },
-  2: { label: '菜单', color: 'blue' },
-  3: { label: '按钮', color: 'orange' },
-};
-
-/** 状态映射 */
-const statusMap: Record<number, { label: string; color: string }> = {
-  0: { label: '禁用', color: 'error' },
-  1: { label: '启用', color: 'success' },
-};
-
-/** 可见性映射 */
-const visibleMap: Record<number, { label: string; color: string }> = {
-  0: { label: '隐藏', color: 'red' },
-  1: { label: '显示', color: 'green' },
-};
+/*
+ * 只留颜色，文案全部走字典/语言包。
+ *
+ * 原来这三张 Map 各带一份中文 label，其中 menuTypeMap 与 dict.sys_menu_type.*、
+ * statusMap 与 dict.sys_normal_disable.* 是重复真源，而且 statusMap 写「启用/禁用」、
+ * 字典写「正常/停用」，已经漂移。
+ */
+const TYPE_COLOR: Record<number, string> = { 1: 'cyan', 2: 'blue', 3: 'orange' };
+const STATUS_COLOR: Record<number, string> = { 0: 'error', 1: 'success' };
+const VISIBLE_COLOR: Record<number, string> = { 0: 'red', 1: 'green' };
 
 /** 渲染图标 */
 const renderIcon = (iconName: string | null) => {
@@ -51,6 +46,8 @@ function collectAllKeys(list: MenuTreeVO[]): string[] {
 }
 
 export default function MenuPage() {
+  const { t } = useTranslation(['menuMgmt', 'common', 'dict', 'nav']);
+  const navLabel = makeNavLabel(t);
   const [form] = Form.useForm();
   const hasPermission = useUserStore((s) => s.hasPermission);
 
@@ -109,7 +106,7 @@ export default function MenuPage() {
   const handleDelete = async (id: number) => {
     try {
       await menuApi.remove(id);
-      message.success('删除成功');
+      message.success(t('common:msg.deleteSuccess'));
       fetchTree();
     } catch { /* handled */ }
   };
@@ -124,7 +121,7 @@ export default function MenuPage() {
   const handleAddChild = (record: MenuTreeVO) => {
     setEditingMenuId(null);
     setParentMenuId(record.id);
-    setParentMenuName(record.name);
+    setParentMenuName(navLabel(record));
     setFormModalOpen(true);
   };
 
@@ -142,7 +139,7 @@ export default function MenuPage() {
         sort: record.sort,
         status: record.status === 1 ? 0 : 1,
       });
-      message.success('状态更新成功');
+      message.success(t('common:msg.statusUpdated'));
       fetchTree();
     } catch { /* handled */ }
   };
@@ -154,80 +151,85 @@ export default function MenuPage() {
         sort: record.sort,
         visible: record.visible === 1 ? 0 : 1,
       });
-      message.success('可见性更新成功');
+      message.success(t('msg.visibleUpdated'));
       fetchTree();
     } catch { /* handled */ }
   };
 
   const columns: ColumnsType<MenuTreeVO> = [
     {
-      title: '菜单名称', dataIndex: 'name', key: 'name',
-      render: (name: string, record: MenuTreeVO) => (
+      title: t('table.name'), dataIndex: 'name', key: 'name',
+      // 菜单名是 B 类内容：后端下发 i18nKey，前端翻；派生不出 key 时回退库里的 name
+      render: (_name: string, record: MenuTreeVO) => (
         <Space size={4}>
           {record.icon && renderIcon(record.icon)}
-          <span>{name}</span>
+          <span>{navLabel(record)}</span>
         </Space>
       ),
     },
     {
-      title: '图标', dataIndex: 'icon', key: 'icon', width: 80, align: 'center',
+      title: t('table.icon'), dataIndex: 'icon', key: 'icon', width: 80, align: 'center',
       render: (icon: string | null) => renderIcon(icon),
     },
     {
-      title: '类型', dataIndex: 'type', key: 'type', width: 80, align: 'center',
-      render: (type: number) => {
-        const item = menuTypeMap[type];
-        return item ? <Tag color={item.color}>{item.label}</Tag> : type;
-      },
+      title: t('common:type'), dataIndex: 'type', key: 'type', width: 80, align: 'center',
+      render: (type: number) =>
+        TYPE_COLOR[type] ? (
+          <Tag color={TYPE_COLOR[type]}>{dictLabel(t, DICT_TYPES.menuType, type)}</Tag>
+        ) : (
+          type
+        ),
     },
-    { title: '排序', dataIndex: 'sort', key: 'sort', width: 80, align: 'center' },
+    { title: t('common:sort'), dataIndex: 'sort', key: 'sort', width: 80, align: 'center' },
     {
-      title: '权限标识', dataIndex: 'permission', key: 'permission', width: 180,
+      title: t('table.permission'), dataIndex: 'permission', key: 'permission', width: 180,
       render: (perm: string | null) => perm ? <Tag color="blue">{perm}</Tag> : '-',
     },
-    { title: '路由地址', dataIndex: 'path', key: 'path', width: 160, render: (v: string | null) => v || '-' },
-    { title: '组件路径', dataIndex: 'component', key: 'component', width: 160, render: (v: string | null) => v || '-' },
+    { title: t('table.path'), dataIndex: 'path', key: 'path', width: 160, render: (v: string | null) => v || '-' },
+    { title: t('table.component'), dataIndex: 'component', key: 'component', width: 160, render: (v: string | null) => v || '-' },
     {
-      title: '可见', dataIndex: 'visible', key: 'visible', width: 80, align: 'center',
-      render: (visible: number, record: MenuTreeVO) => {
-        const item = visibleMap[visible];
-        return item ? (
+      title: t('table.visible'), dataIndex: 'visible', key: 'visible', width: 80, align: 'center',
+      render: (visible: number, record: MenuTreeVO) =>
+        VISIBLE_COLOR[visible] ? (
           <a onClick={() => handleVisibleChange(record)}>
-            <Tag color={item.color}>{item.label}</Tag>
+            <Tag color={VISIBLE_COLOR[visible]}>
+              {visible === 1 ? t('common:visible.show') : t('common:visible.hide')}
+            </Tag>
           </a>
-        ) : visible;
-      },
+        ) : (
+          visible
+        ),
     },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: 80, align: 'center',
-      render: (status: number, record: MenuTreeVO) => {
-        const item = statusMap[status];
-        return item ? (
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: 80, align: 'center',
+      render: (status: number, record: MenuTreeVO) =>
+        STATUS_COLOR[status] ? (
           <a onClick={() => handleStatusChange(record)}>
-            <Tag color={item.color}>{item.label}</Tag>
+            <Tag color={STATUS_COLOR[status]}>{dictLabel(t, DICT_TYPES.normalDisable, status)}</Tag>
           </a>
-        ) : status;
-      },
+        ) : (
+          status
+        ),
     },
     {
-      title: '操作', key: 'action', width: 110,
+      title: t('table.action'), key: 'action', width: 110,
       render: (_: unknown, record: MenuTreeVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:menu:edit',
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />, perm: 'system:menu:edit',
             onClick: () => handleEdit(record),
           },
           // 按钮类型(type=3)没有下级，不展示「新增下级」
           ...(record.type !== 3 ? [{
-            key: 'add', label: '新增下级', icon: <PlusOutlined />, perm: 'system:menu:add',
+            key: 'add', label: t('action.addChild'), icon: <PlusOutlined />, perm: 'system:menu:add',
             onClick: () => handleAddChild(record),
           }] : []),
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:menu:remove',
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, perm: 'system:menu:remove',
             danger: true,
             confirmText: record.children?.length
-              ? `将同时删除所有子菜单和角色关联，确定删除「${record.name}」？`
-              : `确定删除菜单「${record.name}」？`,
+              ? t('confirm.deleteWithChildren', { name: navLabel(record) })
+              : t('confirm.delete', { name: navLabel(record) }),
             onClick: () => handleDelete(record.id),
           },
         ]} />
@@ -242,33 +244,36 @@ export default function MenuPage() {
         <Form form={form} component={false}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} md={8} lg={6}>
-              <Form.Item name="name" label="菜单名称" style={{ marginBottom: 0 }}>
-                <Input placeholder="请输入菜单名称" style={{ width: '100%' }} allowClear />
+              <Form.Item name="name" label={t('table.name')} style={{ marginBottom: 0 }}>
+                <Input placeholder={t('query.namePlaceholder')} style={{ width: '100%' }} allowClear />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8} lg={6}>
-              <Form.Item name="status" label="状态" style={{ marginBottom: 0 }}>
-                <Select placeholder="请选择" style={{ width: '100%' }} allowClear>
-                  <Select.Option value={1}>启用</Select.Option>
-                  <Select.Option value={0}>禁用</Select.Option>
-                </Select>
+              <Form.Item name="status" label={t('common:status')} style={{ marginBottom: 0 }}>
+                <Select
+                  placeholder={t('common:placeholder.select')}
+                  style={{ width: '100%' }}
+                  allowClear
+                  options={dictOptions(t, DICT_TYPES.normalDisable, { numeric: true })}
+                />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8} lg={6}>
-              <Form.Item name="type" label="类型" style={{ marginBottom: 0 }}>
-                <Select placeholder="请选择" style={{ width: '100%' }} allowClear>
-                  <Select.Option value={1}>目录</Select.Option>
-                  <Select.Option value={2}>菜单</Select.Option>
-                  <Select.Option value={3}>按钮</Select.Option>
-                </Select>
+              <Form.Item name="type" label={t('common:type')} style={{ marginBottom: 0 }}>
+                <Select
+                  placeholder={t('common:placeholder.select')}
+                  style={{ width: '100%' }}
+                  allowClear
+                  options={dictOptions(t, DICT_TYPES.menuType, { numeric: true })}
+                />
               </Form.Item>
             </Col>
             {/* 查询/重置靠右，与 ProTable 的 QueryForm 保持一致 */}
             <Col flex="auto" style={{ textAlign: 'right' }}>
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space>
-                  <Button type="primary" onClick={handleSearch}>查询</Button>
-                  <Button onClick={handleReset}>重置</Button>
+                  <Button type="primary" onClick={handleSearch}>{t('common:query')}</Button>
+                  <Button onClick={handleReset}>{t('common:reset')}</Button>
                 </Space>
               </Form.Item>
             </Col>
@@ -281,14 +286,14 @@ export default function MenuPage() {
         <div style={{ marginBottom: 16 }}>
           <Space>
             {hasPermission('system:menu:add') && (
-              <Button type="primary" onClick={handleAdd}>新增菜单</Button>
+              <Button type="primary" onClick={handleAdd}>{t('action.create')}</Button>
             )}
             <Button
               onClick={handleToggleExpand}
             >
-              {isExpandAll ? '折叠全部' : '展开全部'}
+              {isExpandAll ? t('common:collapseAll') : t('common:expandAll')}
             </Button>
-            <Button onClick={fetchTree}>刷新</Button>
+            <Button onClick={fetchTree}>{t('common:refresh')}</Button>
           </Space>
         </div>
 

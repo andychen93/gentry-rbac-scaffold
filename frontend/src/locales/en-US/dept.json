@@ -1,1 +1,17 @@
-{}
+{
+  "action.addChild": "Add child",
+  "action.create": "New department",
+  "confirm.delete": "Delete department \"{{name}}\"?",
+  "form.name": "Department name",
+  "form.name.placeholder": "Please enter a department name",
+  "form.parent": "Parent department",
+  "form.sort": "Display order",
+  "form.sort.placeholder": "Order",
+  "form.sort.required": "Please enter a sort order",
+  "form.status.placeholder": "Select a status",
+  "form.title.create": "Create department",
+  "form.title.edit": "Edit department",
+  "query.namePlaceholder": "Please enter a department name",
+  "table.action": "Actions",
+  "table.name": "Department"
+}

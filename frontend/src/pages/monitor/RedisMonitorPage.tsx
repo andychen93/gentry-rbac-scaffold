@@ -17,6 +17,7 @@ import {
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import {
   redisMonitorApi,
   type RedisKeyDefineVO,
@@ -37,6 +38,7 @@ const DEFAULT_PATTERN = 'Authorization:*';
 const AUTO_REFRESH_INTERVAL_MS = 30_000;
 
 export default function RedisMonitorPage() {
+  const { t } = useTranslation(['monitor', 'common', 'nav']);
   const hasPermission = useUserStore((s) => s.hasPermission);
   const canList = hasPermission('monitor:redis:key:list');
   const canQuery = hasPermission('monitor:redis:key:query');
@@ -82,7 +84,7 @@ export default function RedisMonitorPage() {
     async (nextPattern: string, nextPage: number, nextSize: number) => {
       if (!canList) return;
       if (!nextPattern || !nextPattern.trim()) {
-        message.warning('请输入搜索条件');
+        message.warning(t('key.patternRequired'));
         return;
       }
       setLoadingKeys(true);
@@ -140,17 +142,22 @@ export default function RedisMonitorPage() {
 
   const handleDelete = (record: RedisKeyVO) => {
     Modal.confirm({
-      title: '删除 Key',
+      title: t('key.deleteTitle'),
       content: (
         <span style={{ wordBreak: 'break-all' }}>
-          确认删除 Key <b>{record.key}</b>？此操作不可恢复
+          <Trans
+            i18nKey="key.deleteConfirm"
+            ns="monitor"
+            values={{ key: record.key }}
+            components={{ b: <b /> }}
+          />
         </span>
       ),
       okType: 'danger',
       onOk: async () => {
         try {
           await redisMonitorApi.deleteKey(record.key);
-          message.success('已删除');
+          message.success(t('common:msg.deleteSuccess'));
           fetchKeys(pattern, pageNum, pageSize);
         } catch {
           // 错误已由 request 拦截器统一提示
@@ -167,7 +174,7 @@ export default function RedisMonitorPage() {
       render: (v: string) => <span style={{ fontFamily: 'monospace' }}>{v}</span>,
     },
     {
-      title: '类型',
+      title: t('common:type'),
       dataIndex: 'type',
       width: 100,
       render: (v: string) => <Tag color="blue">{v}</Tag>,
@@ -176,22 +183,22 @@ export default function RedisMonitorPage() {
       title: 'TTL',
       dataIndex: 'ttl',
       width: 140,
-      render: (v: number) => formatTtl(v),
+      render: (v: number) => formatTtl(v, t),
     },
     {
-      title: '操作',
+      title: t('table.action'),
       key: 'action',
       width: 90,
       render: (_: unknown, record: RedisKeyVO) => (
         <RowActions items={[
           ...(canQuery ? [{
-            key: 'view', label: '查看', icon: <EyeOutlined />,
+            key: 'view', label: t('common:view'), icon: <EyeOutlined />,
             onClick: () => handleView(record),
           }] : []),
           // 只传 danger（红色样式）不传 confirmText：handleDelete 内部已有 Modal.confirm，
           // 再包一层 Popconfirm 会让用户确认两次
           ...(canDelete ? [{
-            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true,
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, danger: true,
             onClick: () => handleDelete(record),
           }] : []),
         ]} />
@@ -233,7 +240,7 @@ export default function RedisMonitorPage() {
       <Card size="small" style={{ marginBottom: 16 }}>
         <Space>
           <Input
-            placeholder="Key 模式，如 Authorization:* 或 blacklist:*"
+            placeholder={t('key.patternPlaceholder')}
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             onPressEnter={handleSearch}
@@ -246,10 +253,10 @@ export default function RedisMonitorPage() {
             onClick={handleSearch}
             disabled={!canList}
           >
-            搜索
+            {t('common:search')}
           </Button>
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            支持通配符 *，单次扫描上限 10000 Key
+            {t('key.scanHint')}
           </Typography.Text>
         </Space>
       </Card>
@@ -265,7 +272,7 @@ export default function RedisMonitorPage() {
             pageSize,
             total: keyTotal,
             showSizeChanger: true,
-            showTotal: (t) => `共 ${t} 条`,
+            showTotal: (count) => t('common:total', { count }),
             onChange: (p, s) => {
               setPageNum(p);
               setPageSize(s);
@@ -287,19 +294,20 @@ export default function RedisMonitorPage() {
           marginBottom: 12,
         }}
       >
-        <h2 style={{ margin: 0 }}>Redis 监控</h2>
+        {/* 页面标题复用菜单的派生 key，不另建词条 —— 它就是菜单名 */}
+        <h2 style={{ margin: 0 }}>{t('menu.monitor.redis.info', { ns: 'nav' })}</h2>
         <Space>
-          <Tooltip title="开启后每 30 秒自动刷新监控信息 Tab">
-            <Typography.Text type="secondary">自动刷新</Typography.Text>
+          <Tooltip title={t('autoRefresh.hint')}>
+            <Typography.Text type="secondary">{t('autoRefresh')}</Typography.Text>
           </Tooltip>
           <Switch
             checked={autoRefresh}
             onChange={setAutoRefresh}
-            checkedChildren="开"
-            unCheckedChildren="关"
+            checkedChildren={t('common:switch.on')}
+            unCheckedChildren={t('common:switch.off')}
           />
           <Button icon={<ReloadOutlined />} loading={loadingInfo} onClick={fetchMonitor}>
-            刷新
+            {t('common:refresh')}
           </Button>
         </Space>
       </div>
@@ -308,9 +316,9 @@ export default function RedisMonitorPage() {
         activeKey={activeTab}
         onChange={(k) => setActiveTab(k as 'monitor' | 'keys' | 'slowlog')}
         items={[
-          { key: 'monitor', label: '监控信息', children: monitorPanel },
-          { key: 'keys', label: 'Key 管理', children: keysPanel, disabled: !canList },
-          { key: 'slowlog', label: '慢查询日志', children: <SlowLogTable /> },
+          { key: 'monitor', label: t('tab.monitor'), children: monitorPanel },
+          { key: 'keys', label: t('tab.keys'), children: keysPanel, disabled: !canList },
+          { key: 'slowlog', label: t('tab.slowlog'), children: <SlowLogTable /> },
         ]}
       />
 

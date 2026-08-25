@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Card, Button, Space, Spin, Tree, Radio, message, Typography,
 } from 'antd';
-import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { roleApi } from '../../services/roleApi';
 import { menuApi } from '../../services/menuApi';
 import { deptApi } from '../../services/deptApi';
@@ -11,6 +11,8 @@ import type { RoleDetailVO } from '../../services/roleApi';
 import type { MenuTreeVO } from '../../services/menuApi';
 import type { DeptTreeVO } from '../../services/deptApi';
 import type { Key } from 'react';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
+import { makeNavLabel } from '../../locales/navLabel';
 
 const { Title, Text } = Typography;
 
@@ -22,20 +24,17 @@ interface TreeNode {
   children?: TreeNode[];
 }
 
-const DATA_SCOPE_OPTIONS = [
-  { value: 1, label: '全部数据' },
-  { value: 2, label: '本部门及子部门数据' },
-  { value: 3, label: '本部门数据' },
-  { value: 4, label: '仅本人数据' },
-  { value: 5, label: '自定义' },
-];
-
-/** 递归转换菜单树（key 转字符串，见 TreeNode 注释） */
-function transformMenuTree(list: MenuTreeVO[]): TreeNode[] {
+/**
+ * 递归转换菜单树（key 转字符串，见 TreeNode 注释）。
+ *
+ * title 走 `makeNavLabel`：菜单名是 B 类内容，后端下发 `i18nKey`、前端翻。
+ * 直接用 `item.name` 会让英文界面的权限树整棵是中文。
+ */
+function transformMenuTree(list: MenuTreeVO[], navLabel: (n: MenuTreeVO) => string): TreeNode[] {
   return list.map((item) => ({
     key: String(item.id),
-    title: item.name,
-    children: item.children?.length ? transformMenuTree(item.children) : undefined,
+    title: navLabel(item),
+    children: item.children?.length ? transformMenuTree(item.children, navLabel) : undefined,
   }));
 }
 
@@ -78,6 +77,8 @@ function collectLeafKeys(nodes: TreeNode[]): Set<string> {
 }
 
 export default function PermissionPage() {
+  // 数据权限档位取 dict namespace（dict.sys_data_scope.*），原来这里有一份硬编码拷贝
+  const { t } = useTranslation(['role', 'common', 'dict']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   // roleId 保持字符串：它是雪花 ID，超过 JS Number 安全整数范围（2^53-1），
@@ -102,7 +103,7 @@ export default function PermissionPage() {
   // 初始化并行加载
   useEffect(() => {
     if (!roleId) {
-      message.error('角色ID无效');
+      message.error(t('perm.invalidId'));
       navigate('/system/roles');
       return;
     }
@@ -117,7 +118,7 @@ export default function PermissionPage() {
         const detail = roleRes.data;
         setRoleDetail(detail);
 
-        const mTree = transformMenuTree(menuRes.data);
+        const mTree = transformMenuTree(menuRes.data, makeNavLabel(t));
         setMenuTreeData(mTree);
 
         const dTree = transformDeptTree(deptRes.data);
@@ -137,7 +138,7 @@ export default function PermissionPage() {
         setSelectedDeptKeys((detail.deptIds || []).map(String));
       })
       .catch(() => {
-        message.error('加载角色信息失败');
+        message.error(t('perm.loadFailed'));
         navigate('/system/roles');
       })
       .finally(() => setInitLoading(false));
@@ -186,7 +187,7 @@ export default function PermissionPage() {
   const handleSave = async () => {
     // 前端校验
     if (dataScope === 5 && selectedDeptKeys.length === 0) {
-      message.error('自定义数据权限必须选择部门');
+      message.error(t('perm.customDeptRequired'));
       return;
     }
 
@@ -209,7 +210,7 @@ export default function PermissionPage() {
         roleApi.updateDataScope(roleId, { dataScope, deptIds }),
       ]);
 
-      message.success('权限保存成功');
+      message.success(t('perm.saveSuccess'));
       navigate('/system/roles');
     } catch {
       // handled by interceptor
@@ -221,7 +222,7 @@ export default function PermissionPage() {
   if (initLoading) {
     return (
       <div style={{ textAlign: 'center', padding: 100 }}>
-        <Spin size="large" tip="加载中..." />
+        <Spin size="large" tip={t('common:loading')} />
       </div>
     );
   }
@@ -233,26 +234,26 @@ export default function PermissionPage() {
         <Space style={{ width: '100%', justifyContent: 'space-between' }}>
           <Space>
             <Button onClick={() => navigate('/system/roles')}>
-              返回
+              {t('common:back')}
             </Button>
             <Title level={5} style={{ margin: 0 }}>
-              角色权限分配 - {roleDetail?.roleName}
+              {t('perm.title', { name: roleDetail?.roleName ?? '' })}
             </Title>
           </Space>
           <Button type="primary" loading={saving} onClick={handleSave}>
-            保存
+            {t('common:save')}
           </Button>
         </Space>
       </Card>
 
       <div style={{ display: 'flex', gap: 16 }}>
         {/* 菜单权限卡片 */}
-        <Card title="菜单权限" style={{ flex: 1 }}>
+        <Card title={t('perm.menu')} style={{ flex: 1 }}>
           <Space style={{ marginBottom: 12 }}>
-            <Button size="small" onClick={handleSelectAll}>全选</Button>
-            <Button size="small" onClick={handleClearAll}>清空</Button>
+            <Button size="small" onClick={handleSelectAll}>{t('common:selectAll')}</Button>
+            <Button size="small" onClick={handleClearAll}>{t('common:clear')}</Button>
             <Text type="secondary">
-              已选 {checkedMenuKeys.length + halfCheckedMenuKeys.length} 项
+              {t('perm.selected', { count: checkedMenuKeys.length + halfCheckedMenuKeys.length })}
             </Text>
           </Space>
           <Tree
@@ -266,16 +267,16 @@ export default function PermissionPage() {
         </Card>
 
         {/* 数据权限卡片 */}
-        <Card title="数据权限" style={{ flex: 1 }}>
+        <Card title={t('perm.data')} style={{ flex: 1 }}>
           <div style={{ marginBottom: 16 }}>
-            <Text strong style={{ display: 'block', marginBottom: 8 }}>数据权限范围</Text>
+            <Text strong style={{ display: 'block', marginBottom: 8 }}>{t('perm.dataScopeLabel')}</Text>
             <Radio.Group
               value={dataScope}
               onChange={(e) => setDataScope(e.target.value)}
               optionType="default"
             >
               <Space direction="vertical">
-                {DATA_SCOPE_OPTIONS.map((opt) => (
+                {dictOptions(t, DICT_TYPES.dataScope, { numeric: true }).map((opt) => (
                   <Radio key={opt.value} value={opt.value}>{opt.label}</Radio>
                 ))}
               </Space>
@@ -285,7 +286,8 @@ export default function PermissionPage() {
           {dataScope === 5 && (
             <div>
               <Text strong style={{ display: 'block', marginBottom: 8 }}>
-                自定义部门 <Text type="secondary">（已选 {selectedDeptKeys.length} 个）</Text>
+                {t('perm.customDept')}{' '}
+                <Text type="secondary">{t('perm.customDeptCount', { count: selectedDeptKeys.length })}</Text>
               </Text>
               <Tree
                 checkable

@@ -1,5 +1,6 @@
 import { Card, Empty, theme } from 'antd';
 import ReactECharts from 'echarts-for-react';
+import { useTranslation } from 'react-i18next';
 import type { RedisCommandStatVO } from '../../../services/monitorApi';
 
 interface Props {
@@ -11,11 +12,12 @@ const TOP = 10;
 export default function CommandStatsChart({ stats }: Props) {
   // 必须在下面的空数据 early return 之前取（Rules of Hooks：hook 不能在条件 return 之后）
   const { token } = theme.useToken();
+  const { t } = useTranslation('monitor');
 
   if (!stats || stats.length === 0) {
     return (
-      <Card title="命令调用 TOP 10" size="small">
-        <Empty description="暂无命令统计数据" style={{ padding: 40 }} />
+      <Card title={t('cmd.title')} size="small">
+        <Empty description={t('cmd.empty')} style={{ padding: 40 }} />
       </Card>
     );
   }
@@ -27,15 +29,19 @@ export default function CommandStatsChart({ stats }: Props) {
   const pieData = top.map((s) => ({ name: s.name, value: s.calls || 0 }));
   if (others.length > 0) {
     const sumOthers = others.reduce((acc, cur) => acc + (cur.calls || 0), 0);
-    if (sumOthers > 0) pieData.push({ name: '其他', value: sumOthers });
+    if (sumOthers > 0) pieData.push({ name: t('cmd.others'), value: sumOthers });
   }
 
   const option = {
-    tooltip: { trigger: 'item', formatter: '{b}<br/>calls: {c}<br/>占比: {d}%' },
+    /*
+     * formatter 里的 `{b}` `{c}` `{d}` 是 **ECharts** 的占位符，不是 i18next 的。
+     * i18next 只认双花括号，所以整串原样进语言包不会被误替换。
+     */
+    tooltip: { trigger: 'item', formatter: t('cmd.tooltip') },
     legend: { type: 'scroll', orient: 'horizontal', bottom: 0 },
     series: [
       {
-        name: '命令调用',
+        name: t('cmd.series'),
         type: 'pie',
         radius: ['35%', '65%'],
         avoidLabelOverlap: true,
@@ -48,7 +54,7 @@ export default function CommandStatsChart({ stats }: Props) {
   };
 
   return (
-    <Card title="命令调用 TOP 10" size="small">
+    <Card title={t('cmd.title')} size="small">
       <ReactECharts option={option} style={{ height: 300 }} notMerge />
     </Card>
   );

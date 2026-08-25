@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button, Space, Tag, message, Drawer, Descriptions, Modal } from 'antd';
 import { DownloadOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
 import UserTableSelect from '../../components/common/UserTableSelect';
@@ -10,6 +11,7 @@ import { logApi } from '../../services/logApi';
 import type { OperLogListVO, OperLogDetailVO } from '../../services/logApi';
 
 export default function OperLogPage() {
+  const { t } = useTranslation(['log', 'common']);
   const qc = useQueryClient();
   const [exportFilters, setExportFilters] = useState<Record<string, unknown>>({});
   const [detailOpen, setDetailOpen] = useState(false);
@@ -30,12 +32,12 @@ export default function OperLogPage() {
 
   const handleClean = () => {
     Modal.confirm({
-      title: '清空操作日志',
-      content: '此操作将清空30天前的日志数据且无法恢复，确定继续？',
+      title: t('oper.clean.title'),
+      content: t('oper.clean.content'),
       okType: 'danger',
       onOk: async () => {
         await logApi.cleanOperLogs({ beforeDays: 30 });
-        message.success('清理成功');
+        message.success(t('msg.cleaned'));
         refresh();
       },
     });
@@ -44,33 +46,40 @@ export default function OperLogPage() {
   const handleExport = async () => {
     try {
       await logApi.exportOperLogs(exportFilters);
-      message.success('导出成功');
+      message.success(t('common:msg.exportSuccess'));
     } catch {
-      message.error('导出失败，请稍后重试');
+      message.error(t('msg.exportFailed'));
     }
   };
 
   const columns: ColumnsType<OperLogListVO> = [
     // 雪花 ID 是 18 位数字，width 100 装不下必然折行
-    { title: '日志编号', dataIndex: 'id', key: 'id', width: 190 },
-    { title: '操作用户', dataIndex: 'operator', key: 'operator', width: 120 },
-    { title: '操作模块', dataIndex: 'module', key: 'module', width: 120 },
-    { title: '动作', dataIndex: 'type', key: 'type', width: 100 },
-    { title: 'IP地址', dataIndex: 'operatorIp', key: 'operatorIp', width: 150 },
+    { title: t('oper.table.id'), dataIndex: 'id', key: 'id', width: 190 },
+    { title: t('oper.table.operator'), dataIndex: 'operator', key: 'operator', width: 120 },
+    /*
+     * module / type 列的**值**来自 @Log(module="订单", type="INSERT") 注解字面量，
+     * 库里存的就是中文。这一版 @Log 不做 i18n（见设计 §9.4），所以值仍是中文，
+     * 只有表头翻译。下个版本给注解加 key 后这里一并改成 t()。
+     */
+    { title: t('oper.table.module'), dataIndex: 'module', key: 'module', width: 120 },
+    { title: t('oper.table.type'), dataIndex: 'type', key: 'type', width: 100 },
+    { title: t('common:ip'), dataIndex: 'operatorIp', key: 'operatorIp', width: 150 },
     {
-      title: '执行结果', dataIndex: 'status', key: 'status', width: 100,
-      render: (s: number) => <Tag color={s === 1 ? 'success' : 'error'}>{s === 1 ? '成功' : '失败'}</Tag>,
+      title: t('oper.table.result'), dataIndex: 'status', key: 'status', width: 100,
+      render: (s: number) => (
+        <Tag color={s === 1 ? 'success' : 'error'}>{s === 1 ? t('result.success') : t('result.fail')}</Tag>
+      ),
     },
     {
-      title: '耗时(ms)', dataIndex: 'costTime', key: 'costTime', width: 100, align: 'right',
+      title: t('oper.table.cost'), dataIndex: 'costTime', key: 'costTime', width: 100, align: 'right',
       render: (v: number) => v ?? '—',
     },
-    { title: '操作时间', dataIndex: 'operateTime', key: 'operateTime', width: 180 },
+    { title: t('oper.table.time'), dataIndex: 'operateTime', key: 'operateTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 70, fixed: 'right',
+      title: t('table.action'), key: 'action', width: 70, fixed: 'right',
       render: (_: unknown, r: OperLogListVO) => (
         <RowActions items={[
-          { key: 'view', label: '详情', icon: <EyeOutlined />, onClick: () => handleViewDetail(r.id) },
+          { key: 'view', label: t('common:detail'), icon: <EyeOutlined />, onClick: () => handleViewDetail(r.id) },
         ]} />
       ),
     },
@@ -85,23 +94,26 @@ export default function OperLogPage() {
         rowKey="id"
         scroll={{ x: 1300 }}
         querySchema={[
-          { name: 'operator', label: '操作用户', type: 'node', node: <UserTableSelect /> },
-          { name: 'module', label: '模块', type: 'node', node: <MenuTableSelect /> },
+          { name: 'operator', label: t('oper.table.operator'), type: 'node', node: <UserTableSelect /> },
+          { name: 'module', label: t('oper.query.module'), type: 'node', node: <MenuTableSelect /> },
           {
-            name: 'status', label: '结果', type: 'select',
-            options: [{ label: '成功', value: 1 }, { label: '失败', value: 0 }],
+            name: 'status', label: t('oper.query.result'), type: 'select',
+            options: [
+              { label: t('result.success'), value: 1 },
+              { label: t('result.fail'), value: 0 },
+            ],
           },
         ]}
         onFiltersChange={setExportFilters}
         toolbar={
           <Space>
-            <Button icon={<DownloadOutlined />} onClick={handleExport}>导出</Button>
-            <Button danger icon={<DeleteOutlined />} onClick={handleClean}>清空</Button>
+            <Button icon={<DownloadOutlined />} onClick={handleExport}>{t('common:export')}</Button>
+            <Button danger icon={<DeleteOutlined />} onClick={handleClean}>{t('oper.action.clean')}</Button>
           </Space>
         }
       />
       <Drawer
-        title="操作日志详情"
+        title={t('oper.detail.title')}
         open={detailOpen}
         onClose={() => { setDetailOpen(false); setDetail(null); }}
         width={560}
@@ -109,19 +121,19 @@ export default function OperLogPage() {
       >
         {detail && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="模块">{detail.module}</Descriptions.Item>
-            <Descriptions.Item label="类型">{detail.type}</Descriptions.Item>
-            <Descriptions.Item label="描述">{detail.title}</Descriptions.Item>
-            <Descriptions.Item label="操作人">{detail.operator}</Descriptions.Item>
-            <Descriptions.Item label="IP">{detail.operatorIp}</Descriptions.Item>
-            <Descriptions.Item label="请求方法">{detail.method}</Descriptions.Item>
-            <Descriptions.Item label="请求URL">{detail.requestUrl}</Descriptions.Item>
-            <Descriptions.Item label="请求参数"><pre style={{ maxHeight: 200, overflow: 'auto', fontSize: 12 }}>{detail.requestParams}</pre></Descriptions.Item>
-            {detail.responseResult && <Descriptions.Item label="响应结果"><pre style={{ maxHeight: 200, overflow: 'auto', fontSize: 12 }}>{detail.responseResult}</pre></Descriptions.Item>}
-            <Descriptions.Item label="状态"><Tag color={detail.status === 1 ? 'success' : 'error'}>{detail.status === 1 ? '成功' : '失败'}</Tag></Descriptions.Item>
-            {detail.errorMsg && <Descriptions.Item label="错误信息"><pre style={{ color: 'red', fontSize: 12 }}>{detail.errorMsg}</pre></Descriptions.Item>}
-            <Descriptions.Item label="耗时">{detail.costTime}ms</Descriptions.Item>
-            <Descriptions.Item label="操作时间">{detail.operateTime}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.module')}>{detail.module}</Descriptions.Item>
+            <Descriptions.Item label={t('common:type')}>{detail.type}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.desc')}>{detail.title}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.operator')}>{detail.operator}</Descriptions.Item>
+            <Descriptions.Item label={t('common:ip')}>{detail.operatorIp}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.method')}>{detail.method}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.url')}>{detail.requestUrl}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.params')}><pre style={{ maxHeight: 200, overflow: 'auto', fontSize: 12 }}>{detail.requestParams}</pre></Descriptions.Item>
+            {detail.responseResult && <Descriptions.Item label={t('oper.detail.response')}><pre style={{ maxHeight: 200, overflow: 'auto', fontSize: 12 }}>{detail.responseResult}</pre></Descriptions.Item>}
+            <Descriptions.Item label={t('common:status')}><Tag color={detail.status === 1 ? 'success' : 'error'}>{detail.status === 1 ? t('result.success') : t('result.fail')}</Tag></Descriptions.Item>
+            {detail.errorMsg && <Descriptions.Item label={t('oper.detail.errorMsg')}><pre style={{ color: 'red', fontSize: 12 }}>{detail.errorMsg}</pre></Descriptions.Item>}
+            <Descriptions.Item label={t('oper.detail.cost')}>{detail.costTime}ms</Descriptions.Item>
+            <Descriptions.Item label={t('oper.table.time')}>{detail.operateTime}</Descriptions.Item>
           </Descriptions>
         )}
       </Drawer>

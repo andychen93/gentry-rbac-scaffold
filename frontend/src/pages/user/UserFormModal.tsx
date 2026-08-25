@@ -4,13 +4,7 @@ import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
 import { useTranslation } from 'react-i18next';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
-import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
-
-/**
- * 职务候选。与 sys_user_post 字典的 dict_label 一致（库里 8 条）。
- * 之所以是中文常量而不是字典码：post_name 列存的就是这个中文串，见下方 Form.Item 注释。
- */
-const POST_NAMES = ['首席执行官', '总监', '经理', '主管', '总架构师', '高级工程师', '工程师', '司机'];
+import { DICT_TYPES, dictOptions, POST_NAMES } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;

@@ -129,7 +129,8 @@ export async function ensureLoggedIn(page: Page, username = 'admin') {
  * 此时 App 先渲染 loading 门再重新拉菜单。不等它，断言就会打在 loading 界面上。
  */
 async function waitReady(page: Page) {
-  await expect(page.getByText('恢复登录状态...')).toHaveCount(0, { timeout: 15000 });
+  // 用 testid 而不是文案：文案进了语言包，英文环境下按中文断言会永远为真、等于没等
+  await expect(page.getByTestId('session-restore')).toHaveCount(0, { timeout: 15000 });
   await page.waitForLoadState('networkidle');
 }
 

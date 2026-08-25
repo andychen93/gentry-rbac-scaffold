@@ -3,6 +3,7 @@ import { Button, Modal, Form, Input, Select, Space, Tag, message } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ProTable, RowActions } from '../../components/pro';
 import { configApi } from '../../services/configApi';
 import type { ConfigVO } from '../../services/configApi';
@@ -12,6 +13,7 @@ import { useUserStore } from '../../stores/userStore';
  * 系统参数配置页（key-value CRUD + 缓存刷新）。
  */
 export default function ConfigPage() {
+  const { t } = useTranslation(['config', 'common']);
   const qc = useQueryClient();
   const hasPermission = useUserStore((s) => s.hasPermission);
   const [formOpen, setFormOpen] = useState(false);
@@ -34,7 +36,7 @@ export default function ConfigPage() {
     setRefreshing(true);
     try {
       await configApi.refreshCache();
-      message.success('缓存已刷新');
+      message.success(t('msg.cacheRefreshed'));
       refresh();
     } catch {
       /* 错误提示由 request 拦截器统一弹 */
@@ -56,10 +58,10 @@ export default function ConfigPage() {
     try {
       if (editingId) {
         await configApi.update(editingId, values);
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
       } else {
         await configApi.create(values);
-        message.success('新增成功');
+        message.success(t('common:msg.createSuccess'));
       }
       setFormOpen(false);
       refresh();
@@ -71,27 +73,29 @@ export default function ConfigPage() {
   };
 
   const columns: ColumnsType<ConfigVO> = [
-    { title: '参数名称', dataIndex: 'configName', key: 'configName', width: 160 },
-    { title: '参数键', dataIndex: 'configKey', key: 'configKey', width: 220 },
-    { title: '参数值', dataIndex: 'configValue', key: 'configValue', width: 200 },
+    { title: t('table.name'), dataIndex: 'configName', key: 'configName', width: 160 },
+    { title: t('table.key'), dataIndex: 'configKey', key: 'configKey', width: 220 },
+    { title: t('table.value'), dataIndex: 'configValue', key: 'configValue', width: 200 },
     {
-      title: '类型', dataIndex: 'configType', key: 'configType', width: 80,
-      render: (t: string) => (t === 'Y' ? <Tag color="blue">系统</Tag> : <Tag>业务</Tag>),
+      title: t('common:type'), dataIndex: 'configType', key: 'configType', width: 80,
+      // 参数原名叫 t，会遮蔽翻译函数 t —— 改名 configType
+      render: (configType: string) =>
+        configType === 'Y' ? <Tag color="blue">{t('type.system')}</Tag> : <Tag>{t('type.business')}</Tag>,
     },
-    { title: '备注', dataIndex: 'remark', key: 'remark', ellipsis: true },
-    { title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: 180 },
+    { title: t('common:remark'), dataIndex: 'remark', key: 'remark', ellipsis: true },
+    { title: t('common:createTime'), dataIndex: 'createTime', key: 'createTime', width: 180 },
     {
-      title: '操作', key: 'action', width: 90, fixed: 'right',
+      title: t('table.action'), key: 'action', width: 90, fixed: 'right',
       render: (_: unknown, r: ConfigVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:config:edit',
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />, perm: 'system:config:edit',
             onClick: () => { setEditingId(r.id); form.setFieldsValue(r); setFormOpen(true); },
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, danger: true, perm: 'system:config:remove',
-            confirmText: `确定删除参数「${r.configKey}」？`,
-            onClick: async () => { await configApi.remove(r.id); message.success('删除成功'); refresh(); },
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, danger: true, perm: 'system:config:remove',
+            confirmText: t('confirm.delete', { key: r.configKey }),
+            onClick: async () => { await configApi.remove(r.id); message.success(t('common:msg.deleteSuccess')); refresh(); },
           },
         ]} />
       ),
@@ -107,8 +111,8 @@ export default function ConfigPage() {
         rowKey="id"
         scroll={{ x: 1000 }}
         querySchema={[
-          { name: 'configKey', label: '参数键' },
-          { name: 'configName', label: '参数名称' },
+          { name: 'configKey', label: t('table.key') },
+          { name: 'configName', label: t('table.name') },
         ]}
         toolbar={
           /* 必须用 Space 撑间距：ProTable 的 toolbar 只是塞进一个普通 div，
@@ -117,39 +121,43 @@ export default function ConfigPage() {
             {hasPermission('system:config:add') && (
               <Button type="primary" icon={<PlusOutlined />}
                 onClick={() => { setEditingId(null); form.resetFields(); setFormOpen(true); }}>
-                新增参数
+                {t('action.create')}
               </Button>
             )}
             {hasPermission('system:config:refresh') && (
               <Button icon={<ReloadOutlined />} loading={refreshing} onClick={handleRefreshCache}>
-                刷新缓存
+                {t('action.refreshCache')}
               </Button>
             )}
           </Space>
         }
       />
 
-      <Modal title={editingId ? '编辑参数' : '新增参数'} open={formOpen} onOk={handleSave}
+      <Modal title={editingId ? t('form.title.edit') : t('form.title.create')} open={formOpen} onOk={handleSave}
         onCancel={() => setFormOpen(false)} confirmLoading={saving} width={560}>
         <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-          <Form.Item name="configName" label="参数名称" rules={[{ max: 100, message: '最长100字符' }]}>
-            <Input placeholder="如：登录失败最大次数" />
+          <Form.Item name="configName" label={t('table.name')} rules={[{ max: 100, message: t('valid.max100') }]}>
+            <Input placeholder={t('form.name.placeholder')} />
           </Form.Item>
-          <Form.Item name="configKey" label="参数键"
-            rules={[{ required: true, message: '请输入参数键' }, { max: 100 }]}>
-            <Input placeholder="如 sys.login.maxFailCount" disabled={editingId !== null} />
+          <Form.Item name="configKey" label={t('table.key')}
+            rules={[{ required: true, message: t('form.key.required') }, { max: 100 }]}>
+            <Input placeholder={t('form.key.placeholder')} disabled={editingId !== null} />
           </Form.Item>
-          <Form.Item name="configValue" label="参数值" rules={[{ max: 500 }]}>
-            <Input placeholder="参数值" />
+          <Form.Item name="configValue" label={t('table.value')} rules={[{ max: 500 }]}>
+            <Input placeholder={t('form.value.placeholder')} />
           </Form.Item>
-          <Form.Item name="configType" label="类型">
-            <Select placeholder="选择类型" allowClear>
-              <Select.Option value="N">业务</Select.Option>
-              <Select.Option value="Y">系统</Select.Option>
-            </Select>
+          <Form.Item name="configType" label={t('common:type')}>
+            <Select
+              placeholder={t('form.type.placeholder')}
+              allowClear
+              options={[
+                { value: 'N', label: t('type.business') },
+                { value: 'Y', label: t('type.system') },
+              ]}
+            />
           </Form.Item>
-          <Form.Item name="remark" label="备注" rules={[{ max: 500 }]}>
-            <Input.TextArea rows={2} placeholder="备注说明" />
+          <Form.Item name="remark" label={t('common:remark')} rules={[{ max: 500 }]}>
+            <Input.TextArea rows={2} placeholder={t('form.remark.placeholder')} />
           </Form.Item>
         </Form>
       </Modal>

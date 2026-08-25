@@ -3,11 +3,15 @@ import request from './request';
 export interface DictTypeListVO {
   id: number; dictName: string; dictType: string; dataCount: number;
   status: number; remark: string; createTime: string;
+  /** 后端由 dict_type 派生（`dict.type.*`），渲染走 `makeDictLabel`；派生不出时为 null */
+  i18nKey?: string | null;
 }
 export interface DictDataVO {
   id: number; dictType: string; dictLabel: string; dictValue: string;
   cssClass: string; listClass: string; isDefault: number; sort: number;
   status: number; remark: string;
+  /** 后端由 dict_type + dict_value 派生（`dict.{type}.{value}`），可为 null */
+  i18nKey?: string | null;
 }
 interface PageResult<T> { list: T[]; total: number; pageNum: number; pageSize: number; pages: number; }
 

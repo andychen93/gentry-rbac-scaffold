@@ -27,7 +27,7 @@ test.describe('租户管理 (T-001 ~ T-005)', () => {
     await login(page, 'admin', 'Abc@123456');
     // ADMIN 的菜单里没有租户管理，直接访问会落到「无权限」或被重定向走
     await page.goto('/system/tenants');
-    await expect(page.getByText('恢复登录状态...')).toHaveCount(0, { timeout: 15000 });
+    await expect(page.getByTestId('session-restore')).toHaveCount(0, { timeout: 15000 });
     await page.waitForLoadState('networkidle');
     await expect(page.getByText('默认租户')).toHaveCount(0);
   });

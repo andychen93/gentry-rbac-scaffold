@@ -3,12 +3,14 @@ import {
   Card, Table, Button, Input, Select, Space, Form, Tag, message, Row, Col,
 } from 'antd';
 import { EditOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { deptApi } from '../../services/deptApi';
 import type { DeptTreeVO, DeptQueryParams } from '../../services/deptApi';
 import { useUserStore } from '../../stores/userStore';
 import { RowActions } from '../../components/pro';
 import DeptFormModal from './DeptFormModal';
 import type { ColumnsType } from 'antd/es/table';
+import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
 
 /** 递归收集所有部门 ID（用于展开全部） */
 function collectAllKeys(list: DeptTreeVO[]): string[] {
@@ -24,6 +26,7 @@ function collectAllKeys(list: DeptTreeVO[]): string[] {
 }
 
 export default function DeptPage() {
+  const { t } = useTranslation(['dept', 'common', 'dict']);
   const [form] = Form.useForm();
   const hasPermission = useUserStore((s) => s.hasPermission);
 
@@ -81,7 +84,7 @@ export default function DeptPage() {
   const handleDelete = async (id: number) => {
     try {
       await deptApi.remove(id);
-      message.success('删除成功');
+      message.success(t('common:msg.deleteSuccess'));
       fetchTree();
     } catch { /* handled */ }
   };
@@ -105,35 +108,36 @@ export default function DeptPage() {
   };
 
   const columns: ColumnsType<DeptTreeVO> = [
-    { title: '部门名称', dataIndex: 'name', key: 'name', width: '30%' },
-    { title: '排序', dataIndex: 'sort', key: 'sort', width: '10%', align: 'center' },
+    { title: t('table.name'), dataIndex: 'name', key: 'name', width: '30%' },
+    { title: t('common:sort'), dataIndex: 'sort', key: 'sort', width: '10%', align: 'center' },
     {
-      title: '状态', dataIndex: 'status', key: 'status', width: '15%', align: 'center',
+      title: t('common:status'), dataIndex: 'status', key: 'status', width: '15%', align: 'center',
+      // 文案取 sys_normal_disable 字典（正常/停用），与状态列的其他页面一致
       render: (status: number) => (
         <Tag color={status === 1 ? 'blue' : 'default'}>
-          {status === 1 ? '正常' : '停用'}
+          {dictLabel(t, DICT_TYPES.normalDisable, status)}
         </Tag>
       ),
     },
     {
-      title: '创建时间', dataIndex: 'createTime', key: 'createTime', width: '20%',
+      title: t('common:createTime'), dataIndex: 'createTime', key: 'createTime', width: '20%',
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 110,
+      title: t('table.action'), key: 'action', width: 110,
       render: (_: unknown, record: DeptTreeVO) => (
         <RowActions items={[
           {
-            key: 'edit', label: '编辑', icon: <EditOutlined />, perm: 'system:dept:edit',
+            key: 'edit', label: t('common:edit'), icon: <EditOutlined />, perm: 'system:dept:edit',
             onClick: () => handleEdit(record.id),
           },
           {
-            key: 'add', label: '新增下级', icon: <PlusOutlined />, perm: 'system:dept:add',
+            key: 'add', label: t('action.addChild'), icon: <PlusOutlined />, perm: 'system:dept:add',
             onClick: () => handleAddChild(record.id),
           },
           {
-            key: 'del', label: '删除', icon: <DeleteOutlined />, perm: 'system:dept:remove',
-            danger: true, confirmText: `确定删除部门「${record.name}」？`,
+            key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, perm: 'system:dept:remove',
+            danger: true, confirmText: t('confirm.delete', { name: record.name }),
             onClick: () => handleDelete(record.id),
           },
         ]} />
@@ -148,24 +152,26 @@ export default function DeptPage() {
         <Form form={form} component={false}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} md={8} lg={6}>
-              <Form.Item name="name" label="部门名称" style={{ marginBottom: 0 }}>
-                <Input placeholder="请输入部门名称" style={{ width: '100%' }} allowClear />
+              <Form.Item name="name" label={t('table.name')} style={{ marginBottom: 0 }}>
+                <Input placeholder={t('query.namePlaceholder')} style={{ width: '100%' }} allowClear />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8} lg={6}>
-              <Form.Item name="status" label="状态" style={{ marginBottom: 0 }}>
-                <Select placeholder="请选择" style={{ width: '100%' }} allowClear>
-                  <Select.Option value={1}>正常</Select.Option>
-                  <Select.Option value={0}>停用</Select.Option>
-                </Select>
+              <Form.Item name="status" label={t('common:status')} style={{ marginBottom: 0 }}>
+                <Select
+                  placeholder={t('common:placeholder.select')}
+                  style={{ width: '100%' }}
+                  allowClear
+                  options={dictOptions(t, DICT_TYPES.normalDisable, { numeric: true })}
+                />
               </Form.Item>
             </Col>
             {/* 查询/重置靠右，与 ProTable 的 QueryForm 保持一致 */}
             <Col flex="auto" style={{ textAlign: 'right' }}>
               <Form.Item style={{ marginBottom: 0 }}>
                 <Space>
-                  <Button type="primary" onClick={handleSearch}>查询</Button>
-                  <Button onClick={handleReset}>重置</Button>
+                  <Button type="primary" onClick={handleSearch}>{t('common:query')}</Button>
+                  <Button onClick={handleReset}>{t('common:reset')}</Button>
                 </Space>
               </Form.Item>
             </Col>
@@ -179,15 +185,15 @@ export default function DeptPage() {
           <Space>
             {hasPermission('system:dept:add') && (
               <Button type="primary" onClick={handleAdd}>
-                新增部门
+                {t('action.create')}
               </Button>
             )}
             <Button
               onClick={handleToggleExpand}
             >
-              {isExpandAll ? '折叠全部' : '展开全部'}
+              {isExpandAll ? t('common:collapseAll') : t('common:expandAll')}
             </Button>
-            <Button onClick={fetchTree}>刷新</Button>
+            <Button onClick={fetchTree}>{t('common:refresh')}</Button>
           </Space>
         </div>
 

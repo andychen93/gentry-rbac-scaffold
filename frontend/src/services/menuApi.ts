@@ -7,6 +7,11 @@ export interface MenuTreeVO {
   id: number;
   parentId: number;
   name: string;
+  /**
+   * 后端由 `permission` / `path` 派生的 i18n key（`MenuI18nKeyResolver`），派生不出时为 null。
+   * 渲染一律 `label = t(i18nKey, { ns: 'nav', defaultValue: name })`，见 `locales/navLabel.ts`。
+   */
+  i18nKey?: string | null;
   icon: string | null;
   type: number;
   sort: number;
@@ -25,6 +30,8 @@ export interface MenuVO {
   id: number;
   parentId: number;
   name: string;
+  /** 同 {@link MenuTreeVO.i18nKey} */
+  i18nKey?: string | null;
   icon: string | null;
   type: number;
   sort: number;

@@ -1,1 +1,13 @@
-{}
+{
+  "action.changePwd": "修改密码",
+  "action.edit": "编辑资料",
+  "edit.success": "资料修改成功",
+  "edit.title": "编辑资料",
+  "pwd.confirm": "确认密码",
+  "pwd.new": "新密码",
+  "pwd.old": "原密码",
+  "pwd.old.placeholder": "请输入原密码",
+  "pwd.success": "密码修改成功，请重新登录",
+  "pwd.title": "修改密码",
+  "title": "个人中心"
+}

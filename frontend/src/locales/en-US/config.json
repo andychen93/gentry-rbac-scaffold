@@ -1,1 +1,21 @@
-{}
+{
+  "action.create": "New parameter",
+  "action.refreshCache": "Refresh cache",
+  "confirm.delete": "Delete parameter \"{{key}}\"?",
+  "form.key.placeholder": "e.g. sys.login.maxFailCount",
+  "form.key.required": "Please enter a parameter key",
+  "form.name.placeholder": "e.g. Max login failures",
+  "form.remark.placeholder": "Notes",
+  "form.title.create": "Create parameter",
+  "form.title.edit": "Edit parameter",
+  "form.type.placeholder": "Select a type",
+  "form.value.placeholder": "Value",
+  "msg.cacheRefreshed": "Cache refreshed",
+  "table.action": "Actions",
+  "table.key": "Key",
+  "table.name": "Name",
+  "table.value": "Value",
+  "type.business": "Business",
+  "type.system": "System",
+  "valid.max100": "At most 100 characters"
+}

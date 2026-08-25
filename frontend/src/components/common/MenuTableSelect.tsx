@@ -4,6 +4,7 @@ import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO } from '../../services/menuApi';
 import type { ApiResult, PageQuery, PageResult } from '../../types/api';
 import { useTranslation } from 'react-i18next';
+import { DICT_TYPES, dictLabel } from '../../locales/dictEnum';
 
 /** 拍平后的菜单行（只保留下拉表格要显示的字段 + 层级路径） */
 export interface MenuFlatVO {
@@ -13,9 +14,6 @@ export interface MenuFlatVO {
   /** 「系统管理 / 用户管理」这样的祖先路径，用于区分同名菜单 */
   fullPath: string;
 }
-
-/** 模块级常量拿不到 t，只存 key */
-const TYPE_KEYS: Record<number, string> = { 1: 'menuType.1', 2: 'menuType.2', 3: 'menuType.3' };
 
 /**
  * 把菜单树拍平成列表，只保留目录与菜单（type 1/2），丢掉按钮。
@@ -75,7 +73,7 @@ interface Props {
  * 没有完全同名的行，反之菜单里也有从未产生日志的项 —— 选中后查不到结果是正常的。
  */
 const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'dict']);
   const pseudoRecord = value ? ({ name: value } as MenuFlatVO) : null;
 
   return (
@@ -83,11 +81,16 @@ const MenuTableSelect: React.FC<Props> = ({ value, onChange, placeholder }) => {
       cacheKey="menuTableSelect"
       service={listMenusPaged}
       columns={[
+        /*
+         * name 列**故意不翻译**：labelField 也是 name，选中后提交的就是这一列的值，
+         * 而 sys_oper_log.module 存的是 @Log(module="…") 注解里的中文字面量。
+         * 显示英文、提交英文，筛选就永远查不到结果。@Log 的 i18n 见下个版本计划。
+         */
         { title: t('name'), dataIndex: 'name', width: 130 },
         {
-          title: t('type'), dataIndex: 'type', width: 70,
           // 参数原名叫 t，会遮蔽翻译函数 t —— 改名 type
-          render: (type: number) => (TYPE_KEYS[type] ? t(TYPE_KEYS[type]) : '-'),
+          title: t('type'), dataIndex: 'type', width: 70,
+          render: (type: number) => dictLabel(t, DICT_TYPES.menuType, type),
         },
         { title: t('position'), dataIndex: 'fullPath', ellipsis: true },
       ]}

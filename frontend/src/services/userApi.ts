@@ -1,4 +1,5 @@
-import request from './request';
+import request, { rawFetchHeaders } from './request';
+import i18n from '../locales';
 import type { MenuNavItem } from '../types/menu';
 
 export interface LoginDTO {
@@ -222,12 +223,11 @@ async function downloadExcel(url: string, params: Record<string, unknown>, filen
   Object.entries(params || {}).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') query.append(k, String(v));
   });
-  const token = localStorage.getItem('gentry_token');
   const sep = url.includes('?') ? '&' : '?';
   const response = await fetch(`${url}${sep}${query.toString()}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: rawFetchHeaders(),
   });
-  if (!response.ok) throw new Error('下载失败');
+  if (!response.ok) throw new Error(i18n.t('err.downloadFailed'));
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);
   const link = document.createElement('a');
@@ -243,13 +243,12 @@ async function downloadExcel(url: string, params: Record<string, unknown>, filen
 async function uploadFile<T>(url: string, file: File): Promise<T> {
   const form = new FormData();
   form.append('file', file);
-  const token = localStorage.getItem('gentry_token');
   const response = await fetch(url, {
     method: 'POST',
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: rawFetchHeaders(),
     body: form,
   });
   const json = await response.json();
-  if (json.code !== 0) throw new Error(json.message || '上传失败');
+  if (json.code !== 0) throw new Error(json.message || i18n.t('err.uploadFailed'));
   return json.data as T;
 }

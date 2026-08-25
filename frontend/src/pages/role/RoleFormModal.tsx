@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Switch, Select, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { roleApi } from '../../services/roleApi';
+import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
 
 interface Props {
   open: boolean;
@@ -9,15 +11,9 @@ interface Props {
   onCancel: () => void;
 }
 
-const DATA_SCOPE_OPTIONS = [
-  { value: 1, label: '全部数据' },
-  { value: 2, label: '本部门及子部门数据' },
-  { value: 3, label: '本部门数据' },
-  { value: 4, label: '仅本人数据' },
-  { value: 5, label: '自定义' },
-];
-
 export default function RoleFormModal({ open, roleId, onSuccess, onCancel }: Props) {
+  // 数据权限档位取 dict namespace（dict.sys_data_scope.*），原来这里有一份硬编码拷贝
+  const { t } = useTranslation(['role', 'common', 'dict']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const isEdit = roleId !== null;
@@ -54,7 +50,7 @@ export default function RoleFormModal({ open, roleId, onSuccess, onCancel }: Pro
           status: values.status ? 1 : 0,
           remark: values.remark,
         });
-        message.success('编辑成功');
+        message.success(t('common:msg.updateSuccess'));
       } else {
         await roleApi.create({
           roleCode: values.roleCode,
@@ -64,7 +60,7 @@ export default function RoleFormModal({ open, roleId, onSuccess, onCancel }: Pro
           status: values.status ? 1 : 0,
           remark: values.remark,
         });
-        message.success('新增成功');
+        message.success(t('common:msg.createSuccess'));
       }
       onSuccess();
     } catch (err: any) {
@@ -76,7 +72,7 @@ export default function RoleFormModal({ open, roleId, onSuccess, onCancel }: Pro
 
   return (
     <Modal
-      title={isEdit ? '编辑角色' : '新增角色'}
+      title={isEdit ? t('form.title.edit') : t('form.title.create')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -87,44 +83,44 @@ export default function RoleFormModal({ open, roleId, onSuccess, onCancel }: Pro
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <Form.Item
           name="roleCode"
-          label="角色编码"
+          label={t('form.code')}
           rules={[
-            { required: true, message: '请输入角色编码' },
-            { pattern: /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/, message: '字母开头，2-50字符，仅字母数字下划线' },
+            { required: true, message: t('form.code.placeholder') },
+            { pattern: /^[a-zA-Z][a-zA-Z0-9_]{1,49}$/, message: t('form.code.hint') },
           ]}
         >
-          <Input placeholder="请输入角色编码" disabled={isEdit} />
+          <Input placeholder={t('form.code.placeholder')} disabled={isEdit} />
         </Form.Item>
 
         <Form.Item
           name="roleName"
-          label="角色名称"
+          label={t('form.name')}
           rules={[
-            { required: true, message: '请输入角色名称' },
-            { min: 2, max: 50, message: '2-50字符' },
+            { required: true, message: t('form.name.placeholder') },
+            { min: 2, max: 50, message: t('common:valid.len2to50') },
           ]}
         >
-          <Input placeholder="请输入角色名称" />
+          <Input placeholder={t('form.name.placeholder')} />
         </Form.Item>
 
-        <Form.Item name="dataScope" label="数据权限">
-          <Select options={DATA_SCOPE_OPTIONS} />
+        <Form.Item name="dataScope" label={t('form.dataScope')}>
+          <Select options={dictOptions(t, DICT_TYPES.dataScope, { numeric: true })} />
         </Form.Item>
 
         <Form.Item
           name="sort"
-          label="排序"
-          rules={[{ required: true, message: '请输入排序' }]}
+          label={t('common:sort')}
+          rules={[{ required: true, message: t('form.sort.required') }]}
         >
           <InputNumber min={0} max={999} style={{ width: '100%' }} />
         </Form.Item>
 
-        <Form.Item name="status" label="状态" valuePropName="checked">
-          <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+        <Form.Item name="status" label={t('common:status')} valuePropName="checked">
+          <Switch checkedChildren={t('common:enable')} unCheckedChildren={t('common:disable')} />
         </Form.Item>
 
-        <Form.Item name="remark" label="备注" rules={[{ max: 500, message: '最长500字符' }]}>
-          <Input.TextArea rows={3} placeholder="请输入备注" />
+        <Form.Item name="remark" label={t('common:remark')} rules={[{ max: 500, message: t('common:valid.max500') }]}>
+          <Input.TextArea rows={3} placeholder={t('common:placeholder.remark')} />
         </Form.Item>
       </Form>
     </Modal>

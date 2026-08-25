@@ -2,10 +2,12 @@ import { ReloadOutlined } from '@ant-design/icons';
 import { Button, Card, InputNumber, message, Modal, Space, Table, Tag, Typography } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import { useCallback, useEffect, useState } from 'react';
+import { Trans, useTranslation } from 'react-i18next';
 import { redisMonitorApi, type RedisSlowLogVO } from '../../../services/monitorApi';
 import { useUserStore } from '../../../stores/userStore';
 
 export default function SlowLogTable() {
+  const { t } = useTranslation(['monitor', 'common']);
   const hasPermission = useUserStore((s) => s.hasPermission);
   const canReset = hasPermission('monitor:redis:slowlog:reset');
 
@@ -31,12 +33,12 @@ export default function SlowLogTable() {
 
   const handleReset = () => {
     Modal.confirm({
-      title: '清空慢查询日志',
-      content: '此操作会清空 Redis 端所有慢日志，不可恢复。确认继续？',
+      title: t('slowlog.resetTitle'),
+      content: t('slowlog.resetConfirm'),
       okType: 'danger',
       onOk: async () => {
         await redisMonitorApi.resetSlowLog();
-        message.success('慢日志已清空');
+        message.success(t('slowlog.resetDone'));
         fetchLogs(limit);
       },
     });
@@ -45,20 +47,20 @@ export default function SlowLogTable() {
   const columns: ColumnsType<RedisSlowLogVO> = [
     { title: 'ID', dataIndex: 'id', width: 80 },
     {
-      title: '时间',
+      title: t('slowlog.time'),
       dataIndex: 'timestamp',
       width: 180,
       render: (ts: number) => new Date(ts * 1000).toLocaleString(),
     },
     {
-      title: '耗时',
+      title: t('slowlog.cost'),
       dataIndex: 'durationMicros',
       width: 120,
       sorter: (a, b) => (a.durationMicros ?? 0) - (b.durationMicros ?? 0),
       render: (us: number) => formatDuration(us),
     },
     {
-      title: '命令',
+      title: t('slowlog.command'),
       dataIndex: 'args',
       ellipsis: true,
       render: (args: string[]) => (
@@ -68,7 +70,7 @@ export default function SlowLogTable() {
       ),
     },
     {
-      title: '客户端',
+      title: t('slowlog.client'),
       dataIndex: 'clientAddress',
       width: 160,
       render: (addr: string, r) => (
@@ -84,7 +86,7 @@ export default function SlowLogTable() {
     <>
       <Card size="small" style={{ marginBottom: 16 }}>
         <Space>
-          <span>条数：</span>
+          <span>{t('slowlog.limit')}</span>
           <InputNumber
             value={limit}
             onChange={(v) => setLimit(Number(v) || 20)}
@@ -98,15 +100,16 @@ export default function SlowLogTable() {
             loading={loading}
             onClick={() => fetchLogs(limit)}
           >
-            刷新
+            {t('common:refresh')}
           </Button>
           {canReset && (
             <Button danger onClick={handleReset}>
-              清空慢日志
+              {t('slowlog.reset')}
             </Button>
           )}
           <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-            慢日志阈值通过 <code>config set slowlog-log-slower-than &lt;us&gt;</code> 设置，默认 10000 微秒
+            {/* 整句进语言包，<c> 之间的命令由译文提供（中英文语序不同） */}
+            <Trans i18nKey="slowlog.hint" ns="monitor" components={{ c: <code /> }} />
           </Typography.Text>
         </Space>
       </Card>

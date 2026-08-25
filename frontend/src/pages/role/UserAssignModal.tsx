@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Modal, Transfer, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { roleApi } from '../../services/roleApi';
 import { userApi } from '../../services/userApi';
 
@@ -24,6 +25,7 @@ interface TransferItem {
  * 这边是「一个角色挂哪些用户」，都写 sys_user_role。
  */
 export default function UserAssignModal({ open, roleId, roleName, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation('role');
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
   const [dataSource, setDataSource] = useState<TransferItem[]>([]);
   const [loading, setLoading] = useState(false);
@@ -66,7 +68,7 @@ export default function UserAssignModal({ open, roleId, roleName, onSuccess, onC
     try {
       // 雪花 ID 原样传字符串，不能 map(Number)（会精度丢失变成不存在的 ID）
       await roleApi.assignUsers(roleId, { userIds: targetKeys });
-      message.success('绑定用户成功');
+      message.success(t('assign.success'));
       onSuccess();
     } catch {
       /* 错误提示由 request 拦截器统一弹 */
@@ -77,7 +79,7 @@ export default function UserAssignModal({ open, roleId, roleName, onSuccess, onC
 
   return (
     <Modal
-      title={roleName ? `绑定用户 - ${roleName}` : '绑定用户'}
+      title={roleName ? t('assign.titleWith', { name: roleName }) : t('assign.title')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -90,7 +92,7 @@ export default function UserAssignModal({ open, roleId, roleName, onSuccess, onC
         targetKeys={targetKeys}
         onChange={(keys) => setTargetKeys(keys as string[])}
         render={(item) => item.title}
-        titles={['可选用户', '已绑定用户']}
+        titles={[t('assign.available'), t('assign.picked')]}
         listStyle={{ width: 280, height: 320 }}
         showSearch
         disabled={fetching}

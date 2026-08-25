@@ -1,5 +1,5 @@
 import { Modal, Typography, Alert, Space, Button, message } from 'antd';
-import { CopyOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import type { TenantCreateResultVO } from '../../services/tenantApi';
 
 const { Text, Paragraph } = Typography;
@@ -11,45 +11,47 @@ interface Props {
 }
 
 export default function PasswordShowModal({ open, result, onConfirm }: Props) {
+  const { t } = useTranslation(['tenant', 'common']);
+
   const handleCopy = () => {
     if (result?.adminPassword) {
       navigator.clipboard.writeText(result.adminPassword).then(() => {
-        message.success('密码已复制到剪贴板');
+        message.success(t('created.copied'));
       });
     }
   };
 
   return (
     <Modal
-      title="租户创建成功"
+      title={t('created.title')}
       open={open}
       onCancel={onConfirm}
       destroyOnHidden
       width={480}
       footer={[
         <Button key="confirm" type="primary" onClick={onConfirm}>
-          我已记录，关闭
+          {t('created.close')}
         </Button>,
       ]}
     >
       <Alert
         type="warning"
         showIcon
-        message="请妥善保管管理员密码，此密码仅展示一次，关闭后无法再次查看"
+        message={t('created.warning')}
         style={{ marginBottom: 24 }}
       />
       {result && (
         <Space direction="vertical" style={{ width: '100%' }} size="middle">
           <div>
-            <Text type="secondary">租户编码：</Text>
+            <Text type="secondary">{t('created.tenantCode')}</Text>
             <Text strong>{result.tenantCode}</Text>
           </div>
           <div>
-            <Text type="secondary">管理员用户名：</Text>
+            <Text type="secondary">{t('created.adminUsername')}</Text>
             <Text strong>{result.adminUsername}</Text>
           </div>
           <div>
-            <Text type="secondary">管理员初始密码：</Text>
+            <Text type="secondary">{t('created.adminPassword')}</Text>
             <Space>
               <Paragraph
                 copyable={{ tooltips: false, onCopy: handleCopy }}
@@ -62,7 +64,7 @@ export default function PasswordShowModal({ open, result, onConfirm }: Props) {
                 </Text>
               </Paragraph>
               <Button size="small" onClick={handleCopy}>
-                复制
+                {t('common:copy')}
               </Button>
             </Space>
           </div>

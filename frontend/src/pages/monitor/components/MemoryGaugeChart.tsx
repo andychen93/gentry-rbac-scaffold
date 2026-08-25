@@ -1,5 +1,6 @@
 import { Card, Typography, theme } from 'antd';
 import ReactECharts from 'echarts-for-react';
+import { useTranslation } from 'react-i18next';
 import { formatBytes } from '../../../utils/format';
 
 interface Props {
@@ -10,8 +11,9 @@ interface Props {
 
 export default function MemoryGaugeChart({ usedMemory, maxMemory, percent }: Props) {
   // ECharts 的 option 是普通对象，拿不到 CSS 变量也吃不到 antd 样式，
-  // 只能把 token 值显式传进去
+  // 只能把 token 值显式传进去；文案同理，得从 t() 取好再塞进 option
   const { token } = theme.useToken();
+  const { t } = useTranslation('monitor');
 
   const option = {
     series: [
@@ -45,17 +47,17 @@ export default function MemoryGaugeChart({ usedMemory, maxMemory, percent }: Pro
           fontSize: 20,
           offsetCenter: [0, '70%'],
         },
-        data: [{ value: Number(percent) || 0, name: '使用率' }],
+        data: [{ value: Number(percent) || 0, name: t('memory.usage') }],
       },
     ],
   };
 
   return (
-    <Card title="内存使用率" size="small">
+    <Card title={t('memory.title')} size="small">
       <ReactECharts option={option} style={{ height: 260 }} notMerge />
       <div style={{ textAlign: 'center' }}>
         <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-          {formatBytes(usedMemory)} / {maxMemory > 0 ? formatBytes(maxMemory) : '未限制'}
+          {formatBytes(usedMemory)} / {maxMemory > 0 ? formatBytes(maxMemory) : t('info.unlimited')}
         </Typography.Text>
       </div>
     </Card>

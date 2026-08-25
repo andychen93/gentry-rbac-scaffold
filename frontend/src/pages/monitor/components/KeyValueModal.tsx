@@ -1,5 +1,6 @@
 import { Descriptions, Modal, Skeleton, Tag, theme } from 'antd';
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { redisMonitorApi, type RedisKeyVO } from '../../../services/monitorApi';
 import { formatTtl } from '../../../utils/format';
 
@@ -11,6 +12,7 @@ interface Props {
 
 export default function KeyValueModal({ open, keyName, onClose }: Props) {
   const { token } = theme.useToken();
+  const { t } = useTranslation(['monitor', 'common']);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<RedisKeyVO | null>(null);
 
@@ -26,7 +28,7 @@ export default function KeyValueModal({ open, keyName, onClose }: Props) {
 
   return (
     <Modal
-      title="Key 详情"
+      title={t('key.detailTitle')}
       open={open}
       onCancel={onClose}
       onOk={onClose}
@@ -41,12 +43,12 @@ export default function KeyValueModal({ open, keyName, onClose }: Props) {
             <Descriptions.Item label="Key">
               <span style={{ wordBreak: 'break-all' }}>{data.key}</span>
             </Descriptions.Item>
-            <Descriptions.Item label="类型">
+            <Descriptions.Item label={t('common:type')}>
               <Tag color="blue">{data.type}</Tag>
             </Descriptions.Item>
-            <Descriptions.Item label="TTL">{formatTtl(data.ttl)}</Descriptions.Item>
+            <Descriptions.Item label="TTL">{formatTtl(data.ttl, t)}</Descriptions.Item>
           </Descriptions>
-          <div style={{ marginTop: 12, fontWeight: 500 }}>Value：</div>
+          <div style={{ marginTop: 12, fontWeight: 500 }}>{t('key.value')}</div>
           <pre
             style={{
               marginTop: 8,
@@ -59,7 +61,7 @@ export default function KeyValueModal({ open, keyName, onClose }: Props) {
               wordBreak: 'break-all',
             }}
           >
-            {data.value ?? '（空值）'}
+            {data.value ?? t('key.emptyValue')}
           </pre>
         </>
       )}

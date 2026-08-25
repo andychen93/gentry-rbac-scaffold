@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Modal, Form, Input, message } from 'antd';
+import { useTranslation } from 'react-i18next';
 import { authApi } from '../../services/userApi';
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
  * 改密成功后后端会踢下线，前端延迟跳登录页。
  */
 export default function ChangePasswordModal({ open, onSuccess, onCancel }: Props) {
+  const { t } = useTranslation(['profile', 'common', 'user']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
@@ -21,7 +23,7 @@ export default function ChangePasswordModal({ open, onSuccess, onCancel }: Props
       const values = await form.validateFields();
       setLoading(true);
       await authApi.updatePassword({ oldPassword: values.oldPassword, newPassword: values.newPassword });
-      message.success('密码修改成功，请重新登录');
+      message.success(t('pwd.success'));
       form.resetFields();
       onSuccess();
       // 后端已踢下线（黑名单 + kickout），清 token 跳登录
@@ -37,31 +39,31 @@ export default function ChangePasswordModal({ open, onSuccess, onCancel }: Props
   };
 
   return (
-    <Modal title="修改密码" open={open} onOk={handleOk}
+    <Modal title={t('pwd.title')} open={open} onOk={handleOk}
       onCancel={() => { form.resetFields(); onCancel(); }}
       confirmLoading={loading} destroyOnHidden>
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
-        <Form.Item name="oldPassword" label="原密码" rules={[{ required: true, message: '请输入原密码' }]}>
-          <Input.Password placeholder="请输入原密码" />
+        <Form.Item name="oldPassword" label={t('pwd.old')} rules={[{ required: true, message: t('pwd.old.placeholder') }]}>
+          <Input.Password placeholder={t('pwd.old.placeholder')} />
         </Form.Item>
-        <Form.Item name="newPassword" label="新密码"
+        <Form.Item name="newPassword" label={t('pwd.new')}
           rules={[
-            { required: true, message: '请输入新密码' },
-            { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: '8-20位，含大小写字母和数字' },
+            { required: true, message: t('common:placeholder.newPassword') },
+            { pattern: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d@$!%*?&]{8,20}$/, message: t('common:valid.password') },
           ]}>
-          <Input.Password placeholder="请输入新密码" />
+          <Input.Password placeholder={t('common:placeholder.newPassword')} />
         </Form.Item>
-        <Form.Item name="confirmPassword" label="确认密码" dependencies={['newPassword']}
+        <Form.Item name="confirmPassword" label={t('pwd.confirm')} dependencies={['newPassword']}
           rules={[
-            { required: true, message: '请确认密码' },
+            { required: true, message: t('user:pwd.confirmRequired') },
             ({ getFieldValue }) => ({
               validator(_, value) {
                 if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                return Promise.reject(new Error('两次密码不一致'));
+                return Promise.reject(new Error(t('user:pwd.mismatch')));
               },
             }),
           ]}>
-          <Input.Password placeholder="请再次输入密码" />
+          <Input.Password placeholder={t('user:pwd.confirmPlaceholder')} />
         </Form.Item>
       </Form>
     </Modal>

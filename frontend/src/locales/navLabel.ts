@@ -1,9 +1,14 @@
 import type { TFunction } from 'i18next';
 
-/** 能被翻译的导航节点：库里的原始名 + 后端派生的 key */
+/**
+ * 能被翻译的导航节点：库里的原始名 + 后端派生的 key。
+ *
+ * `i18nKey` 允许 `null`：后端 `MenuI18nKeyResolver` 在 permission 与 path 都为空时返回 null
+ * （Jackson NON_NULL 通常会省掉该字段，但契约上是可空的）。两种「没有 key」都走 name 兜底。
+ */
 export interface TranslatableNode {
   name: string;
-  i18nKey?: string;
+  i18nKey?: string | null;
 }
 
 /**
@@ -29,6 +34,6 @@ export function makeNavLabel(t: TFunction) {
 
 /** 字典标签同理，只是 namespace 换成 dict、兜底字段是 dictLabel */
 export function makeDictLabel(t: TFunction) {
-  return (node: { dictLabel: string; i18nKey?: string }): string =>
+  return (node: { dictLabel: string; i18nKey?: string | null }): string =>
     node.i18nKey ? t(node.i18nKey, { ns: 'dict', defaultValue: node.dictLabel }) : node.dictLabel;
 }

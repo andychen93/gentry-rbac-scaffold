@@ -174,7 +174,7 @@ const MenuList: React.FC<MenuListProps> = ({
             onClick={onRetry}
             block
           >
-            重试
+            {t('common:retry')}
           </Button>
         )}
       </div>

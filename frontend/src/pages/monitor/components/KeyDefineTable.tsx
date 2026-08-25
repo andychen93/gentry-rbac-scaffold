@@ -1,5 +1,6 @@
 import { Button, Card, Table, Tag } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { useTranslation } from 'react-i18next';
 import type { RedisKeyDefineVO } from '../../../services/monitorApi';
 import { formatTtl } from '../../../utils/format';
 
@@ -9,34 +10,36 @@ interface Props {
 }
 
 export default function KeyDefineTable({ defines, onQuickSearch }: Props) {
+  const { t } = useTranslation(['monitor', 'common']);
+
   const columns: ColumnsType<RedisKeyDefineVO> = [
-    { title: '类型', dataIndex: 'keyType', width: 150 },
+    { title: t('common:type'), dataIndex: 'keyType', width: 150 },
     {
-      title: 'Key 模板',
+      title: t('keyDefine.template'),
       dataIndex: 'keyTemplate',
       render: (v: string) => <Tag color="processing">{v}</Tag>,
     },
-    { title: '说明', dataIndex: 'description' },
+    { title: t('keyDefine.desc'), dataIndex: 'description' },
     {
       title: 'TTL',
       dataIndex: 'timeout',
       width: 140,
-      render: (v: number) => formatTtl(v),
+      render: (v: number) => formatTtl(v, t),
     },
     {
-      title: '操作',
+      title: t('table.action'),
       key: 'action',
       width: 100,
       render: (_: unknown, record: RedisKeyDefineVO) => (
         <Button type="link" size="small" onClick={() => onQuickSearch(record.keyTemplate)}>
-          查询 Key
+          {t('keyDefine.query')}
         </Button>
       ),
     },
   ];
 
   return (
-    <Card title="Key 定义" size="small">
+    <Card title={t('keyDefine.title')} size="small">
       <Table<RedisKeyDefineVO>
         rowKey="keyType"
         columns={columns}

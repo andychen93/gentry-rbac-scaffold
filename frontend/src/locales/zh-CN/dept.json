@@ -1,1 +1,17 @@
-{}
+{
+  "action.addChild": "新增下级",
+  "action.create": "新增部门",
+  "confirm.delete": "确定删除部门「{{name}}」？",
+  "form.name": "部门名称",
+  "form.name.placeholder": "请输入部门名称",
+  "form.parent": "上级部门",
+  "form.sort": "显示排序",
+  "form.sort.placeholder": "排序值",
+  "form.sort.required": "请输入排序值",
+  "form.status.placeholder": "请选择状态",
+  "form.title.create": "新增部门",
+  "form.title.edit": "编辑部门",
+  "query.namePlaceholder": "请输入部门名称",
+  "table.action": "操作",
+  "table.name": "部门名称"
+}

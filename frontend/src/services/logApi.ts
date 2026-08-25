@@ -1,4 +1,5 @@
-import request from './request';
+import request, { rawFetchHeaders } from './request';
+import i18n from '../locales';
 
 export interface OperLogListVO {
   id: number; module: string; type: string; title: string; operator: string;
@@ -41,12 +42,11 @@ async function downloadCsv(url: string, params: Record<string, unknown>, filenam
       query.append(key, String(value));
     }
   });
-  const token = localStorage.getItem('gentry_token');
   const response = await fetch(`${url}?${query.toString()}`, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    headers: rawFetchHeaders(),
   });
   if (!response.ok) {
-    throw new Error('导出失败');
+    throw new Error(i18n.t('err.exportFailed'));
   }
   const blob = await response.blob();
   const objectUrl = URL.createObjectURL(blob);

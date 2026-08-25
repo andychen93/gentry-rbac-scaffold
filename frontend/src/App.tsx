@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useMemo, useEffect } from 'react';
 import { Spin, Typography } from 'antd';
+import { useTranslation } from 'react-i18next';
 import LoginPage from './pages/login/LoginPage';
 import PermissionPage from './pages/role/PermissionPage';
 import ProfilePage from './pages/profile/ProfilePage';
@@ -12,6 +13,7 @@ import { useUserStore } from './stores/userStore';
 import { toRouteConfigs, getComponentLoader } from './utils/menuMapper';
 
 export default function App() {
+  const { t } = useTranslation();
   const menus = useUserStore((s) => s.menus);
   const isLoggedIn = useUserStore((s) => s.isLoggedIn);
   const token = useUserStore((s) => s.token);
@@ -33,12 +35,17 @@ export default function App() {
 
   const firstRoute = dynamicRoutes[0]?.path ?? '/login';
 
-  // loading 门必须在所有 hooks 之后（Rules of Hooks：条件 return 不能在 hooks 之前）
+  /*
+   * loading 门必须在所有 hooks 之后（Rules of Hooks：条件 return 不能在 hooks 之前）。
+   *
+   * `data-testid="session-restore"` 是给 E2E 用的：原先靠断言「恢复登录状态...」
+   * 这句中文来等门消失，文案一进语言包，英文环境下那个断言就永远为真、等于没等。
+   */
   if (token && !userInfo) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16 }}>
+      <div data-testid="session-restore" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', gap: 16 }}>
         <Spin size="large" />
-        <Typography.Text type="secondary" style={{ fontSize: 14 }}>恢复登录状态...</Typography.Text>
+        <Typography.Text type="secondary" style={{ fontSize: 14 }}>{t('restoringSession')}</Typography.Text>
       </div>
     );
   }

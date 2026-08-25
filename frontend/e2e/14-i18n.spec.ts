@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { login, gotoPage } from './helpers/auth';
-import { pack } from './helpers/i18n';
+import { pack, rawKeysIn } from './helpers/i18n';
 
 /**
  * 国际化验收（I18N）。
@@ -20,13 +20,6 @@ const userEn = pack('en-US', 'user');
 const homeEn = pack('en-US', 'home');
 const loginEn = pack('en-US', 'login');
 
-/**
- * 裸 key 特征：译文里不会出现 `action.create` 这种点分小写标识符。
- * 命中说明 key 没在语言包里（t() 缺 key 时原样返回 key）。
- */
-const RAW_KEY =
-  /\b(action|form|table|msg|pwd|stat|identity|quickLinks|newModule|tab|captcha|tenant|placeholder|valid|confirm|roleAssign|app)\.[a-zA-Z][a-zA-Z0-9.]*/;
-
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => window.localStorage.setItem('gentry_locale', 'en-US'));
 });
@@ -45,7 +38,7 @@ test.describe('国际化 (I18N)', () => {
     // 登录页整页没有 C 类数据（租户名除外，默认部署下只有内置租户），可以全页扫中文
     const body = await page.locator('body').innerText();
     expect(/[\u4e00-\u9fff]/.test(body), `登录页有中文残留：\n${body}`).toBe(false);
-    expect(RAW_KEY.test(body), `登录页有裸 key：\n${body}`).toBe(false);
+    expect(rawKeysIn(body), '登录页有裸 key').toEqual([]);
   });
 
   test('I18N-002 用户管理页表头与工具栏英文', async ({ page }) => {
@@ -64,8 +57,7 @@ test.describe('国际化 (I18N)', () => {
     }
     await expect(page.getByRole('button', { name: userEn['action.create'] })).toBeVisible();
 
-    const body = await page.locator('body').innerText();
-    expect(RAW_KEY.test(body), `用户页有裸 key：\n${body}`).toBe(false);
+    expect(rawKeysIn(await page.locator('body').innerText()), '用户页有裸 key').toEqual([]);
   });
 
   test('I18N-003 前端校验提示与后端错误码都随 Accept-Language 走英文', async ({ page }) => {
@@ -114,7 +106,7 @@ test.describe('国际化 (I18N)', () => {
     await expect(page.getByText(pack('en-US', 'nav')['menu.system.user']).first()).toBeVisible();
 
     const body = await page.locator('body').innerText();
-    expect(RAW_KEY.test(body), `工作台有裸 key：\n${body}`).toBe(false);
+    expect(rawKeysIn(body), '工作台有裸 key').toEqual([]);
     /*
      * 这里**不做整页中文扫描**：页面上剩的中文是 C 类数据（nickname「管理员」、
      * deptName「总公司」、roleName「管理员」）和一个真实文件名，都是库里的值，
@@ -133,6 +125,50 @@ test.describe('国际化 (I18N)', () => {
       expect(body, `工作台还有硬编码中文「${gone}」`).not.toContain(gone);
     }
   });
+
+  /**
+   * 全站巡检。
+   *
+   * 每页只钉两件事：**该页 namespace 的代表性译文出现了**（说明 namespace 加载并命中）
+   * 且**整页没有裸 key**（说明没有 key 拼错或漏加词条）。
+   *
+   * 刻意不做整页 CJK 扫描 —— 列表里全是 C 类数据（部门名、角色名、日志的 module 字面量），
+   * 那些本就该是库里的中文。逐页断言译文才是能真正定位问题的形态。
+   */
+  const PAGE_CHECKS: { path: string; account?: string; expect: string[] }[] = [
+    { path: '/system/roles', expect: ['role:table.code', 'role:action.create', 'common:status'] },
+    // 树默认展开，所以按钮显示的是「折叠全部」而不是「展开全部」
+    { path: '/system/dept', expect: ['dept:table.name', 'dept:action.create', 'common:collapseAll'] },
+    { path: '/system/menu', expect: ['menuMgmt:table.permission', 'menuMgmt:action.create'] },
+    { path: '/system/dict', expect: ['dictMgmt:table.dictType', 'dictMgmt:action.createType'] },
+    { path: '/system/config', expect: ['config:table.key', 'config:action.refreshCache'] },
+    { path: '/monitor/operlog', expect: ['log:oper.table.id', 'log:oper.action.clean'] },
+    { path: '/monitor/loginlog', expect: ['log:login.table.loginType', 'log:login.action.clean'] },
+    { path: '/monitor/online', expect: ['common:loginIp', 'common:browser'] },
+    { path: '/system/tenants', account: 'chenli', expect: ['tenant:table.code', 'tenant:action.create'] },
+    {
+      path: '/monitor-center/redis',
+      account: 'chenli',
+      expect: ['monitor:tab.keys', 'monitor:info.title', 'monitor:autoRefresh'],
+    },
+    { path: '/profile', expect: ['profile:action.changePwd', 'profile:action.edit'] },
+  ];
+
+  for (const { path, account, expect: keys } of PAGE_CHECKS) {
+    test(`I18N-006 ${path} 英文渲染且无裸 key`, async ({ page }) => {
+      await login(page, account ?? 'admin');
+      await gotoPage(page, path);
+
+      const body = await page.locator('body').innerText();
+      for (const spec of keys) {
+        const [ns, key] = spec.split(':');
+        const expected = pack('en-US', ns)[key];
+        expect(expected, `语言包缺 ${spec}`).toBeTruthy();
+        expect(body, `${path} 未渲染 ${spec}（"${expected}"）`).toContain(expected);
+      }
+      expect(rawKeysIn(body), `${path} 有裸 key`).toEqual([]);
+    });
+  }
 
   test('I18N-005 顶栏切语言：界面与侧边栏立即变，且不重拉菜单', async ({ page }) => {
     /*

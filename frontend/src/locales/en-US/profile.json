@@ -1,1 +1,13 @@
-{}
+{
+  "action.changePwd": "Change password",
+  "action.edit": "Edit profile",
+  "edit.success": "Profile updated",
+  "edit.title": "Edit profile",
+  "pwd.confirm": "Confirm password",
+  "pwd.new": "New password",
+  "pwd.old": "Current password",
+  "pwd.old.placeholder": "Please enter your current password",
+  "pwd.success": "Password changed, please sign in again",
+  "pwd.title": "Change password",
+  "title": "My profile"
+}

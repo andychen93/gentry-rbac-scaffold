@@ -1,6 +1,7 @@
 import { message } from 'antd';
 import { LogoutOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
 import { logApi, OnlineUserVO } from '../../services/logApi';
@@ -36,35 +37,36 @@ async function listOnlineUsersPaged(
 }
 
 export default function OnlineUserPage() {
+  const { t } = useTranslation(['log', 'common']);
   const qc = useQueryClient();
 
   const handleForceLogout = async (record: OnlineUserVO) => {
     try {
       await logApi.forceLogout(record.tokenId);
-      message.success('已强制下线');
+      message.success(t('online.msg.forced'));
       qc.invalidateQueries({ queryKey: ['online-users'] });
     } catch { /* handled by interceptor */ }
   };
 
   const columns: ColumnsType<OnlineUserVO> = [
-    { title: '用户名', dataIndex: 'username', key: 'username', width: 110 },
-    { title: '昵称', dataIndex: 'nickname', key: 'nickname', width: 110 },
-    { title: '部门', dataIndex: 'deptName', key: 'deptName', width: 120 },
-    { title: '登录IP', dataIndex: 'loginIp', key: 'loginIp', width: 130 },
-    { title: '登录地点', dataIndex: 'location', key: 'location', width: 110 },
-    { title: '浏览器', dataIndex: 'browser', key: 'browser', width: 110 },
-    { title: '操作系统', dataIndex: 'os', key: 'os', width: 120 },
+    { title: t('common:username'), dataIndex: 'username', key: 'username', width: 110 },
+    { title: t('common:nickname'), dataIndex: 'nickname', key: 'nickname', width: 110 },
+    { title: t('common:dept'), dataIndex: 'deptName', key: 'deptName', width: 120 },
+    { title: t('common:loginIp'), dataIndex: 'loginIp', key: 'loginIp', width: 130 },
+    { title: t('common:location'), dataIndex: 'location', key: 'location', width: 110 },
+    { title: t('common:browser'), dataIndex: 'browser', key: 'browser', width: 110 },
+    { title: t('common:os'), dataIndex: 'os', key: 'os', width: 120 },
     {
-      title: '登录时间', dataIndex: 'loginTime', key: 'loginTime', width: 170,
+      title: t('common:loginTime'), dataIndex: 'loginTime', key: 'loginTime', width: 170,
       render: (v: string) => v?.replace('T', ' '),
     },
     {
-      title: '操作', key: 'action', width: 70, fixed: 'right',
+      title: t('table.action'), key: 'action', width: 70, fixed: 'right',
       render: (_: unknown, record: OnlineUserVO) => (
         <RowActions items={[
           {
-            key: 'force', label: '强退', icon: <LogoutOutlined />, danger: true,
-            confirmText: `确定强制下线用户「${record.username}」？这将中断其当前所有操作`,
+            key: 'force', label: t('online.action.force'), icon: <LogoutOutlined />, danger: true,
+            confirmText: t('online.confirm.force', { username: record.username }),
             onClick: () => handleForceLogout(record),
           },
         ]} />
@@ -80,7 +82,7 @@ export default function OnlineUserPage() {
       rowKey="tokenId"
       scroll={{ x: 1100 }}
       querySchema={[
-        { name: 'username', label: '用户名' },
+        { name: 'username', label: t('common:username') },
       ]}
     />
   );
