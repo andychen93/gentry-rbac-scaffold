@@ -60,7 +60,10 @@ function collectSources(dir: string, out: string[] = []): string[] {
 function stripComments(code: string): string {
   const blanked = code.replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '));
   return blanked
-    .split('\n')
+    // \r?\n：Windows 上 git autocrlf 会 checkout 出 CRLF，行尾的 \r 是 JS 正则的行终止符，
+    // `.` 匹配不到它，`/\/\/.*$/` 因此失配 → 注释剥离失效、所有中文注释被误报。
+    // 按 \r?\n 切（丢弃 \r），行号不变，跨平台一致。
+    .split(/\r?\n/)
     .map((line) => line.replace(/\/\/.*$/, ''))
     .join('\n');
 }
