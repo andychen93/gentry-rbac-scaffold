@@ -2,6 +2,7 @@ package com.gentry.rbac.user.service.impl;
 
 import com.gentry.core.config.CaptchaProperties;
 import com.gentry.core.exception.BizException;
+import com.gentry.rbac.config.SysConfigResolver;
 import com.gentry.rbac.user.service.CaptchaService;
 import com.gentry.rbac.user.vo.CaptchaVO;
 import org.junit.jupiter.api.BeforeEach;
@@ -17,7 +18,9 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -29,12 +32,16 @@ class CaptchaServiceImplTest {
 
     @Mock private StringRedisTemplate redis;
     @Mock private ValueOperations<String, String> valueOps;
+    @Mock private SysConfigResolver sysConfig;
 
     private CaptchaService service;
 
     @BeforeEach
     void setup() {
-        service = new CaptchaServiceImpl(redis, new CaptchaProperties()); // 默认 math/300s
+        service = new CaptchaServiceImpl(redis, new CaptchaProperties(), sysConfig); // 默认 math/300s
+        // 默认场景：开关交给 yml 默认值（true），需要关的用例自行 stub
+        lenient().when(sysConfig.getBoolean(eq(SysConfigResolver.KEY_CAPTCHA_ENABLED), anyBoolean()))
+                .thenAnswer(inv -> inv.getArgument(1));
     }
 
     @Test
@@ -44,6 +51,14 @@ class CaptchaServiceImplTest {
         assertThat(vo.getUuid()).isNotBlank();
         assertThat(vo.getImg()).startsWith("data:image/png;base64,");
         verify(valueOps).set(startsWith("captcha:"), anyString(), eq(300L), eq(TimeUnit.SECONDS));
+    }
+
+    @Test
+    void generate_disabledBySysConfig_returnsNullWithoutTouchingRedis() {
+        // sys.captcha.enabled=false：不发图、不写 Redis（登录页据此不渲染验证码框）
+        when(sysConfig.getBoolean(eq(SysConfigResolver.KEY_CAPTCHA_ENABLED), anyBoolean())).thenReturn(false);
+        assertThat(service.generate()).isNull();
+        verifyNoInteractions(redis);
     }
 
     @Test

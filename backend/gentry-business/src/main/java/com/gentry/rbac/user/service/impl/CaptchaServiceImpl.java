@@ -3,6 +3,7 @@ package com.gentry.rbac.user.service.impl;
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.config.CaptchaProperties;
 import com.gentry.core.exception.BizException;
+import com.gentry.rbac.config.SysConfigResolver;
 import com.gentry.rbac.user.service.CaptchaService;
 import com.gentry.rbac.user.vo.CaptchaVO;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -22,6 +23,11 @@ import java.util.concurrent.TimeUnit;
  * 验证码服务实现：算术验证码（默认）或字符验证码，答案存 Redis，java.awt 绘图。
  *
  * <p>Spring Boot 默认 headless=true，服务端 AWT 绘图可用。</p>
+ *
+ * <p>开关来源与 {@code AuthServiceImpl#login} 的校验侧一致：
+ * {@code sys.captcha.enabled}（sys_config，页面上可改）优先，yml {@code gentry.captcha.enabled} 兜底。
+ * 关闭时 {@link #generate()} 返回 {@code null}，前端登录页据此不渲染验证码输入框 ——
+ * 此前 generate() 无条件发图，页面上关了开关登录页仍显示验证码框，看起来像「配置不生效」。</p>
  */
 @Service
 public class CaptchaServiceImpl implements CaptchaService {
@@ -32,15 +38,21 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private final StringRedisTemplate redis;
     private final CaptchaProperties properties;
+    private final SysConfigResolver sysConfigResolver;
     private final java.util.Random random = new java.util.Random();
 
-    public CaptchaServiceImpl(StringRedisTemplate redis, CaptchaProperties properties) {
+    public CaptchaServiceImpl(StringRedisTemplate redis, CaptchaProperties properties,
+                              SysConfigResolver sysConfigResolver) {
         this.redis = redis;
         this.properties = properties;
+        this.sysConfigResolver = sysConfigResolver;
     }
 
     @Override
     public CaptchaVO generate() {
+        if (!sysConfigResolver.getBoolean(SysConfigResolver.KEY_CAPTCHA_ENABLED, properties.isEnabled())) {
+            return null;   // 开关关闭：不发图，前端隐藏验证码框
+        }
         String text;
         String answer;
         if ("math".equalsIgnoreCase(properties.getType())) {

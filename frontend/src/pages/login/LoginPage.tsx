@@ -30,8 +30,9 @@ export default function LoginPage() {
   const refreshCaptcha = useCallback(() => {
     authApi.getCaptcha()
       .then((res) => {
-        setCaptchaImg(res.data.img);
-        setCaptchaUuid(res.data.uuid);
+        // 开关关闭（sys.captcha.enabled=false）时后端返回 data:null → 无图，验证码框不渲染
+        setCaptchaImg(res.data?.img ?? '');
+        setCaptchaUuid(res.data?.uuid ?? '');
       })
       .catch(() => {
         // 验证码不可用时不阻塞登录（后端可能关闭了验证码开关）
@@ -90,26 +91,25 @@ export default function LoginPage() {
     }
   };
 
-  // 验证码输入项（两个 Tab 共用同一张图）
-  const captchaItem = (
+  // 验证码输入项（两个 Tab 共用同一张图）；开关关闭时后端不发图，此处在 DOM 里整个消失
+  // —— 否则框还在且必填，用户没图可看，等于登录被锁死
+  const captchaItem = captchaImg ? (
     <Form.Item name="captcha" rules={[{ required: true, message: t('captcha.placeholder') }]}>
       <Input
         prefix={<SafetyOutlined />}
         placeholder={t('captcha')}
         suffix={
-          captchaImg ? (
-            <img
-              src={captchaImg}
-              alt={t('captcha')}
-              onClick={refreshCaptcha}
-              title={t('captcha.refresh')}
-              style={{ height: 32, cursor: 'pointer', borderRadius: 4 }}
-            />
-          ) : null
+          <img
+            src={captchaImg}
+            alt={t('captcha')}
+            onClick={refreshCaptcha}
+            title={t('captcha.refresh')}
+            style={{ height: 32, cursor: 'pointer', borderRadius: 4 }}
+          />
         }
       />
     </Form.Item>
-  );
+  ) : null;
 
   const tabItems = [
     {

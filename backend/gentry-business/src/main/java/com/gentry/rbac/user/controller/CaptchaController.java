@@ -20,7 +20,7 @@ public class CaptchaController {
         this.captchaService = captchaService;
     }
 
-    /** 获取登录验证码图片 */
+    /** 获取登录验证码图片；验证码开关关闭时 data 为 null（前端隐藏验证码框） */
     @GetMapping("/captcha")
     public R<CaptchaVO> captcha() {
         return R.ok(captchaService.generate());

@@ -126,9 +126,9 @@ export const authApi = {
   updatePassword: (data: { oldPassword: string; newPassword: string }) =>
     request.put('/api/v1/auth/password', data),
 
-  // 获取登录验证码（公开接口，返回 data URI 图片 + uuid）
+  // 获取登录验证码（公开接口，返回 data URI 图片 + uuid；验证码开关关闭时 data 为 null）
   getCaptcha: () =>
-    request.get<any, { code: number; data: { uuid: string; img: string } }>('/api/v1/auth/captcha'),
+    request.get<any, { code: number; data: { uuid: string; img: string } | null }>('/api/v1/auth/captcha'),
 
   // 获取当前用户完整资料（含手机/邮箱/职务等，仅需登录）
   getProfile: () =>

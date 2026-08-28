@@ -9,7 +9,12 @@ import com.gentry.rbac.user.vo.CaptchaVO;
  */
 public interface CaptchaService {
 
-    /** 生成验证码图片与唯一标识 */
+    /**
+     * 生成验证码图片与唯一标识。
+     *
+     * @return 验证码 VO；开关关闭（sys_config {@code sys.captcha.enabled} 或 yml 兜底为 false）时返回
+     *         {@code null}，前端登录页据此不渲染验证码输入框
+     */
     CaptchaVO generate();
 
     /**
