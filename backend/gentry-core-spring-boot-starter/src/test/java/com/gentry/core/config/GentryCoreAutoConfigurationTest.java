@@ -1,6 +1,8 @@
 package com.gentry.core.config;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
+import org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 
 import java.nio.file.Files;
@@ -10,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 自动装配契约测试。全栈行为（Bean 真正起作用）由 gentry-start 的 14 个 IT 覆盖，
- * 这里只锁两个静态契约：imports 登记 + 扫描包正确。
+ * 这里只锁三个静态契约：imports 登记 + 扫描包正确 + 先于 WebMvc 自动配置。
  */
 class GentryCoreAutoConfigurationTest {
 
@@ -28,5 +30,15 @@ class GentryCoreAutoConfigurationTest {
         ComponentScan scan = GentryCoreAutoConfiguration.class.getAnnotation(ComponentScan.class);
         assertThat(scan).isNotNull();
         assertThat(scan.value()).containsExactly("com.gentry.core");
+    }
+
+    @Test
+    void 注解_先于WebMvc自动配置注册() {
+        // I18nConfig 的 localeResolver 与 Boot WebMvc 的同名条件 Bean 竞争，
+        // 必须保持 core 在前、Boot 侧 @ConditionalOnMissingBean 让路；
+        // 误删该顺序会回归成 Boot 的 AcceptHeaderLocaleResolver（IT 有兜底，这里显式锁契约）。
+        AutoConfigureBefore before = GentryCoreAutoConfiguration.class.getAnnotation(AutoConfigureBefore.class);
+        assertThat(before).isNotNull();
+        assertThat(before.value()).containsExactly(WebMvcAutoConfiguration.class);
     }
 }

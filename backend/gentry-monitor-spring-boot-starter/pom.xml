@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>gentry-monitor</artifactId>
-    <name>Gentry Monitor</name>
-    <description>监控模块：Redis 监控等</description>
+    <artifactId>gentry-monitor-spring-boot-starter</artifactId>
+    <name>Gentry Monitor Spring Boot Starter</name>
+    <description>监控 starter（Redis 监控等），消费方引依赖即得整套监控域</description>
 
     <dependencies>
         <dependency>
@@ -31,6 +31,11 @@
         </dependency>
 
         <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

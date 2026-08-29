@@ -21,8 +21,9 @@
     <modules>
         <module>gentry-core-spring-boot-starter</module>
         <module>gentry-rbac-spring-boot-starter</module>
-        <module>gentry-monitor</module>
+        <module>gentry-monitor-spring-boot-starter</module>
         <module>gentry-start</module>
+        <module>gentry-bom</module>
     </modules>
 
     <properties>
@@ -54,7 +55,7 @@
             </dependency>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-monitor</artifactId>
+                <artifactId>gentry-monitor-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
