@@ -12,7 +12,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Flyway 双流契约防回归：平台迁移必须能在 starter 的 gentry-rbac/ 目录下被发现
  * （classpath*: 是 Spring 方言，跨 jar 枚举必须带星号），且平台段不越界 V999。
- * 真正执行迁移的是其余 14 个业务 IT（起真实上下文跑 Flyway）。
+ * 真正执行迁移的是其余 13 个业务 IT（起真实上下文跑 Flyway）。
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @ActiveProfiles({"mysql", "test"})
