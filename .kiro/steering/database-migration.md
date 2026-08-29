@@ -5,7 +5,7 @@ fileMatchPattern: '**/*.sql'
 
 # 数据库迁移约定（改 SQL 时生效）
 
-## 本脚手架支持三种数据库
+## 本平台支持三种数据库
 
 MySQL（默认）/ PostgreSQL / SQLite，用 Spring Profile 切换，一套业务代码不用改。
 连接配置在 `application-{mysql,postgresql,sqlite}.yml`，切换方法见 README「切换数据库」。

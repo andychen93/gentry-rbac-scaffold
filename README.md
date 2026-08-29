@@ -96,7 +96,7 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 │   │       └── mysql/ …      # 平台流各方言迁移
 │   ├── gentry-monitor-spring-boot-starter/   # 运维监控（Redis 监控）
 │   ├── gentry-bom/           # 三个 starter 的版本收口，消费项目引它
-│   └── gentry-start/         # 狗粮：启动入口 + 全栈 IT + 演示业务包
+│   └── gentry-start/         # 狗粮：启动入口 + 全栈 IT（演示业务包待补）
 │       └── src/main/resources/db/migration/
 │           ├── common/       # 项目流三库通用迁移（V1000 起，狗粮自用）
 │           └── mysql/ …      # 项目流各方言迁移
@@ -182,7 +182,7 @@ Service 单测覆盖 ≥ 90%。
 3. `application.yml` 最小清单：datasource + redis + sa-token（`jwt-secret-key` 外置）+
    `spring.messages.basename: i18n/messages,i18n/error,i18n/validation,i18n/export` +
    `mybatis-flex.mapper-locations: classpath*:mapper/**/*.xml` + Flyway 双流 locations
-   （模板直接抄 `backend/gentry-start/src/main/resources/application-mysql.yml`）
+   （模板抄 `backend/gentry-start/src/main/resources/application.yml` + `application-mysql.yml` 两个文件）
 4. 项目迁移**自 V1000 起**（V1–V999 是平台保留段，禁止复制/修改平台段迁移）
 5. 只想要横切能力、不要 RBAC？`gentry.rbac.enabled=false`；不要 Redis 监控？
    `gentry.monitor.enabled=false`

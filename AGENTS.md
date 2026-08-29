@@ -81,7 +81,7 @@ TanStack Query 5 / Less
 | `gentry-rbac-spring-boot-starter` | RBAC + 通知业务域 + Flyway 平台流迁移（jar 内 `db/migration/gentry-rbac/`，V1–V999 平台保留段），jar 分发，自动装配 | core-starter |
 | `gentry-monitor-spring-boot-starter` | 运维监控（Redis 监控），jar 分发，自动装配 | core-starter |
 | `gentry-bom` | 三个 starter 的版本收口（dependencyManagement），消费项目引它对齐版本 | 无 |
-| `gentry-start` | 狗粮：启动入口 + 项目流 Flyway 迁移（`db/migration/`，V1000 起）+ 全栈 IT + 演示业务包 | 三个 starter |
+| `gentry-start` | 狗粮：启动入口 + 项目流 Flyway 迁移（`db/migration/`，V1000 起）+ 全栈 IT（演示业务包待补） | 三个 starter |
 | `gentry-parent` | 父 POM，聚合上述模块并管理第三方版本 | 无 |
 
 装配靠各 starter 的 `META-INF/spring/...AutoConfiguration.imports`，不靠主类包扫描。
@@ -152,7 +152,7 @@ flyway-core / flyway-mysql 已随 rbac-starter 传递，不用自己声明。
 不需要 `@ComponentScan("com.gentry")`、不需要 `@MapperScan`、不需要
 `@EnableScheduling` —— 全部由 starter 的 `AutoConfiguration.imports` 装配。
 
-**③ 最小 application.yml**（完整模板抄 `gentry-start` 的 `application-mysql.yml`）：
+**③ 最小 application.yml**（完整模板抄 `gentry-start` 的 `application.yml` + `application-mysql.yml` **两个文件**：主 yml 有 sa-token/mybatis-flex/messages/redis，profile yml 有 datasource 与 flyway locations）：
 
 ```yaml
 spring:
@@ -165,6 +165,7 @@ spring:
 mybatis-flex:
   mapper-locations: classpath*:mapper/**/*.xml    # 平台 Mapper XML 在 jar 内
 sa-token:
+  token-style: jwt-simple                       # JWT + Redis Session 模式，漏了会退回默认 token 风格
   jwt-secret-key: ${SA_TOKEN_JWT_SECRET_KEY}      # 外置，别提交
 ```
 
@@ -192,7 +193,7 @@ sa-token:
 | P0 | 实体基类 | `BaseEntity`, `TenantEntity` |
 | P0 | 自动填充 | `AutoFillHandler` |
 | P0 | 多租户拦截 | `GentryTenantManager`, `@IgnoreTenant` |
-| P0 | 权限接口 | `StpInterfaceImpl`（在 business/rbac/security） |
+| P0 | 权限接口 | `StpInterfaceImpl`（在 rbac-starter 的 `rbac/security`） |
 | P1 | Jackson 配置 | `JacksonConfig`（Long→String、日期格式、NON_NULL、Asia/Shanghai） |
 | P1 | 请求日志 | `RequestLogFilter`（慢请求告警、敏感字段脱敏） |
 | P1 | 数据权限 | `@DataScope`, `DataScopeAspect`, `DataScopeContext` |
@@ -359,7 +360,7 @@ DictType → DictData                 （按 dict_type 字符串关联）
 
 ## 七、数据库规范（三库支持）
 
-本脚手架同一套业务代码支持 MySQL（默认）/ PostgreSQL / SQLite，通过 Spring Profile 切换：
+本平台同一套业务代码支持 MySQL（默认）/ PostgreSQL / SQLite，通过 Spring Profile 切换：
 
 ```bash
 bash scripts/dev_up.sh                 # 默认 db=mysql
@@ -378,7 +379,7 @@ bash scripts/dev_up.sh --db=sqlite     # 文件型库，不需要起容器
 
 `spring.flyway.locations` 同时列两组（保持 `classpath:` 前缀，不要写成 `classpath*:`，
 Flyway 的 ClassPathScanner 走 `ClassLoader.getResources()` 天然跨 jar 枚举），
-模板抄 `gentry-start` 的 `application-mysql.yml`。**项目侧禁止复制、修改平台段迁移**
+模板抄 `gentry-start` 的 `application.yml` + `application-{profile}.yml` 两个文件。**项目侧禁止复制、修改平台段迁移**
 —— 版本段保留是防撞的唯一手段。详细的兼容写法表、何时需要分方言，见
 `.kiro/steering/database-migration.md`。
 
