@@ -17,9 +17,9 @@
     <dependencies>
         <dependency>
             <groupId>com.gentry</groupId>
-            <artifactId>gentry-core</artifactId>
+            <artifactId>gentry-core-spring-boot-starter</artifactId>
         </dependency>
-        <!-- Spring Data Redis：直接操作 Redis（Sa-Token Redis 集成已经在 gentry-core 传递） -->
+        <!-- Spring Data Redis：直接操作 Redis（Sa-Token Redis 集成已经在 gentry-core-spring-boot-starter 传递） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-redis</artifactId>

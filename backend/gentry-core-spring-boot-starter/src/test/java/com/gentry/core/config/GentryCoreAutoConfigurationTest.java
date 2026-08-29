@@ -1,6 +1,10 @@
 package com.gentry.core.config;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.context.annotation.ComponentScan;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -12,15 +16,16 @@ class GentryCoreAutoConfigurationTest {
 
     @Test
     void imports文件_登记了core自动装配类() throws Exception {
-        String content = java.nio.file.Files.readString(java.nio.file.Path.of(
+        // 相对路径读源文件，依赖 surefire 工作目录 = 模块根（gentry-core-spring-boot-starter/）这一默认行为。
+        // 刻意不走 classpath 读取：classpath 上其他 starter 若带同名 imports 资源，会读错文件。
+        String content = Files.readString(Path.of(
                 "src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"));
         assertThat(content.trim()).isEqualTo("com.gentry.core.config.GentryCoreAutoConfiguration");
     }
 
     @Test
     void 注解_扫描com_gentry_core包() {
-        org.springframework.context.annotation.ComponentScan scan =
-                GentryCoreAutoConfiguration.class.getAnnotation(org.springframework.context.annotation.ComponentScan.class);
+        ComponentScan scan = GentryCoreAutoConfiguration.class.getAnnotation(ComponentScan.class);
         assertThat(scan).isNotNull();
         assertThat(scan.value()).containsExactly("com.gentry.core");
     }

@@ -221,7 +221,7 @@ class ErrorMessageConstraintTest {
         Set<String> declared = new java.util.LinkedHashSet<>(List.of(m.group(1).split(",")));
 
         // 扫 i18n 目录下的所有 basename（去掉 _zh_CN / _en_US 后缀）
-        Path i18nDir = locateBackendRoot().resolve("gentry-core/src/main/resources/i18n");
+        Path i18nDir = locateBackendRoot().resolve("gentry-core-spring-boot-starter/src/main/resources/i18n");
         Set<String> actual = new java.util.TreeSet<>();
         try (Stream<Path> s = Files.list(i18nDir)) {
             s.filter(f -> f.getFileName().toString().endsWith(".properties")).forEach(f -> {
@@ -285,20 +285,20 @@ class ErrorMessageConstraintTest {
 
     // ==================== 辅助 ====================
 
-    /** 从测试工作目录向上找到含 gentry-core 的 backend 根目录 */
+    /** 从测试工作目录向上找到含 gentry-core-spring-boot-starter 的 backend 根目录 */
     private Path locateBackendRoot() {
         Path p = Paths.get("").toAbsolutePath();
         for (int i = 0; i < 6 && p != null; i++, p = p.getParent()) {
-            if (Files.isDirectory(p.resolve("gentry-core")) && Files.isDirectory(p.resolve("gentry-business"))) {
+            if (Files.isDirectory(p.resolve("gentry-core-spring-boot-starter")) && Files.isDirectory(p.resolve("gentry-business"))) {
                 return p;
             }
         }
-        throw new IllegalStateException("找不到 backend 根目录（应含 gentry-core 与 gentry-business）");
+        throw new IllegalStateException("找不到 backend 根目录（应含 gentry-core-spring-boot-starter 与 gentry-business）");
     }
 
     private List<Path> sourceFiles(Path backendRoot) throws IOException {
         List<Path> all = new ArrayList<>();
-        for (String mod : List.of("gentry-core", "gentry-business", "gentry-monitor")) {
+        for (String mod : List.of("gentry-core-spring-boot-starter", "gentry-business", "gentry-monitor")) {
             Path base = backendRoot.resolve(mod).resolve("src/main/java");
             if (!Files.isDirectory(base)) continue;
             try (Stream<Path> s = Files.walk(base)) {

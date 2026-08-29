@@ -19,7 +19,7 @@
     <description>多租户 RBAC 权限脚手架（Spring Boot 3 + MyBatis-Flex + Sa-Token + PostgreSQL）</description>
 
     <modules>
-        <module>gentry-core</module>
+        <module>gentry-core-spring-boot-starter</module>
         <module>gentry-business</module>
         <module>gentry-monitor</module>
         <module>gentry-start</module>
@@ -44,7 +44,7 @@
         <dependencies>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-core</artifactId>
+                <artifactId>gentry-core-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

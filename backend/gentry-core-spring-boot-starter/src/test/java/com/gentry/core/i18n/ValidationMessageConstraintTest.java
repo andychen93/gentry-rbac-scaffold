@@ -171,7 +171,7 @@ class ValidationMessageConstraintTest {
     private Path locateBackendRoot() {
         Path p = Paths.get("").toAbsolutePath();
         for (int i = 0; i < 6 && p != null; i++, p = p.getParent()) {
-            if (Files.isDirectory(p.resolve("gentry-core")) && Files.isDirectory(p.resolve("gentry-business"))) {
+            if (Files.isDirectory(p.resolve("gentry-core-spring-boot-starter")) && Files.isDirectory(p.resolve("gentry-business"))) {
                 return p;
             }
         }
@@ -180,7 +180,7 @@ class ValidationMessageConstraintTest {
 
     private List<Path> sourceFiles(Path backendRoot) throws IOException {
         List<Path> all = new ArrayList<>();
-        for (String mod : List.of("gentry-core", "gentry-business", "gentry-monitor")) {
+        for (String mod : List.of("gentry-core-spring-boot-starter", "gentry-business", "gentry-monitor")) {
             Path base = backendRoot.resolve(mod).resolve("src/main/java");
             if (!Files.isDirectory(base)) continue;
             try (Stream<Path> s = Files.walk(base)) {
