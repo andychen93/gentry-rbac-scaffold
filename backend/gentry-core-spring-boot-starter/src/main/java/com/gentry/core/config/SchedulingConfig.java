@@ -11,7 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * 任务跑在线程池而非默认单线程，避免日志清理等任务相互阻塞。</p>
  *
  * <p>需配合 {@link org.springframework.scheduling.annotation.EnableScheduling}（已在
- * GentryApplication 开启）。</p>
+ * {@link GentryCoreAutoConfiguration} 开启，随 starter 对消费方生效）。</p>
  *
  * <p>注意：@Scheduled 任务跑在调度线程，没有 UserContext（ThreadLocal 为空），
  * 任务内如需跨租户操作须显式 {@code @IgnoreTenant} 或
