@@ -1,14 +1,17 @@
 # 技术宪法 (AGENTS.md)
 
-> **适用范围**：基于本脚手架派生的所有项目 —— 全栈开发的强制约定
+> **适用范围**：基于本平台派生的所有项目 —— 全栈开发的强制约定。
+> 平台能力以 starter jar 分发，新项目**引依赖而非 fork**（见第三章「新项目接入」）
 > **本文件是唯一权威**。与其他文档冲突时以本文件为准；本文件与代码冲突时，先改文件再改代码。
 
 ---
 
 ## 零、这个仓库是什么
 
-一个**多租户 RBAC 权限脚手架**。它不是示例工程，是所有新项目的起点：clone 之后
-权限体系、布局体系、横切基础设施已经跑通并有测试覆盖，你只需要往里加业务模块。
+一个**多租户 RBAC 权限平台**。横切基础设施、RBAC、监控收敛为 Spring Boot starter
+jar 分发；本仓库是平台的**唯一迭代源**，同时用 `gentry-start` 当第一个消费者（狗粮）
+验证 starter 好不好用。权限体系、布局体系、横切基础设施已经跑通并有测试覆盖，
+消费项目从写自己的业务模块开始，而不是从搭架子开始。
 
 已经交付的能力：
 
@@ -22,7 +25,7 @@
 | 平台级权限隔离 | `sys_menu.is_platform` 标记平台级权限点，租户管理员既拿不到也分配不了 |
 | 系统管理 | 租户、用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户 |
 | 横切基础设施 | 全局异常、自动填充、Jackson 统一序列化、请求日志、限流、防重提交、TraceId |
-| 运维 | Redis 监控（INFO/Key CRUD/慢日志）、Actuator + Prometheus 指标 |
+| 运维 | Redis 监控（INFO/Key CRUD/慢日志）、Actuator + Prometheus 指标（以上能力随 starter jar 分发，自动装配） |
 | 国际化 | 中/英双语开箱可用。后端 `Accept-Language` + `sys_user.language` 三级链、错误码与校验消息本地化；前端 react-i18next，菜单与字典由后端下发派生 key、前端翻译（切语言零 API 往返） |
 | 前端 | 双 Layout（业务系统 / 系统管理）、动态菜单路由、Argon 主题、Pro 组件（ProTable/QueryForm/CrudFormModal…） |
 
@@ -74,13 +77,17 @@ TanStack Query 5 / Less
 
 | 模块 | 职责 | 依赖 |
 |------|------|------|
-| `gentry-core` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单） | 无 |
-| `gentry-business` | 业务逻辑，按业务域分包（现有 `rbac`，新业务平级新增） | core |
-| `gentry-monitor` | 运维监控（Redis 监控） | core |
-| `gentry-start` | 启动入口 + Flyway 迁移（3 种数据库方言）+ 配置 | 全部 |
+| `gentry-core-spring-boot-starter` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单），jar 分发，自动装配 | 无 |
+| `gentry-rbac-spring-boot-starter` | RBAC + 通知业务域 + Flyway 平台流迁移（jar 内 `db/migration/gentry-rbac/`，V1–V999 平台保留段），jar 分发，自动装配 | core-starter |
+| `gentry-monitor-spring-boot-starter` | 运维监控（Redis 监控），jar 分发，自动装配 | core-starter |
+| `gentry-bom` | 三个 starter 的版本收口（dependencyManagement），消费项目引它对齐版本 | 无 |
+| `gentry-start` | 狗粮：启动入口 + 项目流 Flyway 迁移（`db/migration/`，V1000 起）+ 全栈 IT + 演示业务包 | 三个 starter |
+| `gentry-parent` | 父 POM，聚合上述模块并管理第三方版本 | 无 |
 
-新业务域**不要**新建 Maven 模块，在 `gentry-business` 下加包即可；
-只有独立部署诉求出现时才拆模块。
+装配靠各 starter 的 `META-INF/spring/...AutoConfiguration.imports`，不靠主类包扫描。
+业务域位置：**狗粮演示业务放 `gentry-start` 的 `com.gentry.start` 下；真实项目业务放
+消费项目自己仓库；不要再往 starter 里加业务域**（starter 只装平台能力，装了业务
+所有消费项目被迫继承你的业务）。
 
 ### 分层规则
 
@@ -101,11 +108,80 @@ com.gentry.{domain}.{module}/
 ├── entity/  dto/  vo/  enums/
 ```
 
-照抄 `com.gentry.rbac.dept`（最小完整样例：树形 + 数据权限 + 操作日志）。
+照抄 `com.gentry.rbac.dept`（rbac-starter 里的最小完整样例：树形 + 数据权限 + 操作日志；
+狗粮里的新业务域在 `gentry-start` 下按同样形状建包）。
+
+### 新项目接入（引依赖，不 fork）
+
+平台是**唯一迭代源**：平台修 bug、发版，消费项目升版本即可；**不要 fork 本仓库加业务**。
+接入步骤：
+
+**① 引 BOM + starter**（消费项目 `pom.xml`）：
+
+```xml
+<dependencyManagement>
+  <dependency>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-bom</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <type>pom</type>
+    <scope>import</scope>
+  </dependency>
+</dependencyManagement>
+
+<dependencies>
+  <dependency>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-core-spring-boot-starter</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-rbac-spring-boot-starter</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>com.gentry</groupId>
+    <artifactId>gentry-monitor-spring-boot-starter</artifactId>
+  </dependency>
+</dependencies>
+```
+
+当前阶段先 `mvn install` 平台到本地仓库；第二个消费项目出现时再搭私服。
+flyway-core / flyway-mysql 已随 rbac-starter 传递，不用自己声明。
+
+**② 主类放自己的包**（如 `com.xxx.Application`），**零注解**：
+不需要 `@ComponentScan("com.gentry")`、不需要 `@MapperScan`、不需要
+`@EnableScheduling` —— 全部由 starter 的 `AutoConfiguration.imports` 装配。
+
+**③ 最小 application.yml**（完整模板抄 `gentry-start` 的 `application-mysql.yml`）：
+
+```yaml
+spring:
+  datasource:            # 数据库连接（必须）
+  data.redis: ...        # Redis（Sa-Token JWT 模式依赖，必须）
+  messages:
+    basename: i18n/messages,i18n/error,i18n/validation,i18n/export   # 平台 i18n 资源在 jar 内
+  flyway:
+    locations: classpath:db/migration/gentry-rbac/common,classpath:db/migration/gentry-rbac/{厂商},classpath:db/migration/common,classpath:db/migration/{厂商}   # 双流
+mybatis-flex:
+  mapper-locations: classpath*:mapper/**/*.xml    # 平台 Mapper XML 在 jar 内
+sa-token:
+  jwt-secret-key: ${SA_TOKEN_JWT_SECRET_KEY}      # 外置，别提交
+```
+
+**④ 版本段规则**：项目自己的迁移**从 V1000 起**（平台流占用 V1–V999），
+放自己工程的 `db/migration/{common,厂商}/`。**禁止把平台段迁移复制进项目、
+禁止修改平台段文件** —— 平台段由 starter jar 提供，升级 jar 即升级平台结构。
+
+**⑤ 开关**（可选）：
+
+| 键 | 默认 | 说明 |
+|----|------|------|
+| `gentry.rbac.enabled` | true | false 时不装配 RBAC 域（只引 core 做纯横切的项目用） |
+| `gentry.monitor.enabled` | true | false 时不装配 Redis 监控 |
 
 ---
 
-## 四、横切基础设施（gentry-core）
+## 四、横切基础设施（gentry-core-spring-boot-starter）
 
 > 架构文档：`doc/design/architecture/全局基础设施架构设计.md`
 > 详细设计：`doc/design/modules/core/P0-*.md` ~ `P2-*.md`
@@ -186,7 +262,7 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 ### 多租户规则
 
 - 默认单租户形态：所有用户 `tenant_id=1`
-- `DEFAULT_TENANT_ID = 1L` 是平台基座，由 `common/V2__init_data.sql` 创建（三种数据库通用），**不可删除**
+- `DEFAULT_TENANT_ID = 1L` 是平台基座，由平台流 `common/V2__init_data.sql` 创建（三种数据库通用），**不可删除**
 - 业务租户 id 用雪花算法
 - `SUPER_ADMIN(role_id=-1)` 平台级（可见租户管理）；`ADMIN(role_id=1)` 租户级
 - **不硬编码 `tenant_id=1`**，一律 `UserContext.getTenantId()`
@@ -291,9 +367,19 @@ bash scripts/dev_up.sh --db=postgresql
 bash scripts/dev_up.sh --db=sqlite     # 文件型库，不需要起容器
 ```
 
-连接配置在 `application-{mysql,postgresql,sqlite}.yml`；Flyway 迁移目录分
-`common/`（三库通用，绝大多数迁移放这里）+ `mysql/` `postgresql/` `sqlite/`（各自方言，
-目前只有 V1 建表）。详细的兼容写法表、何时需要分方言，见
+连接配置在 `application-{mysql,postgresql,sqlite}.yml`；Flyway 迁移分**双流**，
+每流内部再按 `common/`（三库通用，绝大多数迁移放这里）+ `mysql/` `postgresql/`
+`sqlite/`（各自方言，目前只有 V1 建表）分目录：
+
+| 流 | classpath 位置 | 版本段 | 归属 |
+|----|---------------|--------|------|
+| 平台流 | `db/migration/gentry-rbac/{common,厂商}` | **V1–V999（平台保留段）** | rbac-starter jar 携带，本仓库在 `backend/gentry-rbac-spring-boot-starter/src/main/resources/db/migration/gentry-rbac/` |
+| 项目流 | `db/migration/{common,厂商}` | **V1000 起** | 消费项目自己；狗粮对应 `backend/gentry-start/src/main/resources/db/migration/` |
+
+`spring.flyway.locations` 同时列两组（保持 `classpath:` 前缀，不要写成 `classpath*:`，
+Flyway 的 ClassPathScanner 走 `ClassLoader.getResources()` 天然跨 jar 枚举），
+模板抄 `gentry-start` 的 `application-mysql.yml`。**项目侧禁止复制、修改平台段迁移**
+—— 版本段保留是防撞的唯一手段。详细的兼容写法表、何时需要分方言，见
 `.kiro/steering/database-migration.md`。
 
 - 表命名：`{module}_{entity}`（业务）｜ `sys_{entity}`（系统）｜ `{e1}_{e2}_rel`（关联）｜ `{entity}_log`（日志）
@@ -305,8 +391,9 @@ bash scripts/dev_up.sh --db=sqlite     # 文件型库，不需要起容器
 - JSON 类型的列：Java 侧是裸 `String` 就用 `TEXT`，不要用 `JSONB`/`JSON` 原生类型
   （三库语法和函数都不一样，没有跨库收益就不引入方言依赖）
 
-只想固定用一种数据库？删掉不用的两个厂商目录，`application.yml` 的
-`spring.profiles.active` 写死，`gentry-start/pom.xml` 删掉不需要的驱动依赖。
+只想固定用一种数据库？删掉不用的两个厂商目录（**项目流和平台流两侧都指你选定的厂商**，
+`spring.flyway.locations` 只列该厂商的两条），`application.yml` 的
+`spring.profiles.active` 写死，消费项目删掉不需要的驱动依赖。
 
 ---
 
@@ -343,8 +430,8 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 | AOP 切面 | 每个分支至少 1 个用例 |
 | 前端组件 | Pro 组件与布局组件必须有 Vitest 用例 |
 | 前端文案 | **不写中文字面量**，`src/locales/noHardcodedText.test.ts` 会拦（例外要进该文件的 ALLOW 并写明理由） |
-| 改动 core | 先跑 `mvn -pl gentry-core test`（基线 130 个测试全绿） |
-| 改动 RBAC | 先跑 `mvn -pl gentry-business test`（基线 70 个测试全绿） |
+| 改动 core | 先跑 `mvn -pl gentry-core-spring-boot-starter test`（基线 133 个测试全绿） |
+| 改动 RBAC | 先跑 `mvn -pl gentry-rbac-spring-boot-starter test`（基线 72 个测试全绿） |
 
 TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → 重构。
 测试命名 `方法_场景_预期`。
@@ -352,7 +439,7 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 355 个测试
+cd backend  && mvn test          # 后端 364 个测试
 cd frontend && npm test          # 前端 111 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```
@@ -363,9 +450,10 @@ cd frontend && npx tsc -b        # 类型检查
 cd frontend && npm run test:e2e  # 90 个 Playwright 用例
 ```
 
-**`mvn -pl <module> test` 不可信**：单模块构建会从 `~/.m2` 解析 `gentry-core`，
-拿到的是上次 `install` 的旧产物。改了 core 的类或 `resources/i18n/*.properties` 之后
-必须跑全 reactor 的 `mvn test`，否则会看到「明明加了资源却读不到」这类假象。
+**`mvn -pl <module> test` 不可信**：单模块构建会从 `~/.m2` 解析
+`gentry-core-spring-boot-starter`，拿到的是上次 `install` 的旧产物。改了 core 的类或
+`resources/i18n/*.properties` 之后必须跑全 reactor 的 `mvn test`，否则会看到
+「明明加了资源却读不到」这类假象。
 
 E2E 的登录 Token 由 `e2e/global-setup.ts` 一次性预登录后落盘复用 —— 登录接口有
 IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**，否则整套用例会被限流打挂。
@@ -393,7 +481,7 @@ IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**
 | 40001-40099 | 安全控制 |
 | 50001+ | 业务自行分配 |
 
-### 内置账号（common/V2__init_data.sql）
+### 内置账号（平台流 common/V2__init_data.sql）
 
 | 账号 | 密码 | 角色 |
 |------|------|------|

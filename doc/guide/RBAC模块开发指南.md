@@ -12,11 +12,11 @@
 
 | 模块 | 完成内容 | 代码位置 |
 |------|---------|---------|
-| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/gentry-core/` |
-| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/user/` |
-| **RBAC 后端 - 租户管理** | Controller/Entity/Mapper/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/tenant/` |
-| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/gentry-business/src/main/java/com/gentry/rbac/role/` + `menu/` |
-| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/gentry-business/src/main/java/com/gentry/rbac/security/` |
+| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/gentry-core-spring-boot-starter/` |
+| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/user/` |
+| **RBAC 后端 - 租户管理** | Controller/Entity/Mapper/VO | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/tenant/` |
+| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/role/` + `menu/` |
+| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/security/` |
 | **前端 - 登录页面** | LoginPage | `frontend/src/pages/login/` |
 | **前端 - 用户管理页面** | UserPage + 弹窗组件 | `frontend/src/pages/user/` |
 
@@ -196,7 +196,8 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 3. **错误处理**：Service 层抛 `BizException(ErrorCode.XXX)`，GlobalExceptionHandler 自动处理，Controller 不需要 try-catch
 4. **租户隔离**：所有 SQL 自动追加 `tenant_id` 条件，全局表通过 `ignoreTables()` 配置，跨租户查询用 `@IgnoreTenant`
 5. **权限缓存**：`StpInterfaceImpl` 已实现，角色/权限变更时需调用 `clearUserCache()` 清除缓存
-6. **SQL 脚本**：位于 `sql/rbac/` 目录，使用 Flyway 管理，新表需创建新版本迁移脚本
+6. **SQL 脚本**：数据库结构权威在 Flyway 双流迁移（平台流在 rbac-starter 的 `db/migration/gentry-rbac/`，V1–V999；项目流在 `gentry-start` 的 `db/migration/`，自 V1000 起；`sql/reference/` 只是历史快照），新表需创建新版本迁移脚本
+7. **业务域开发位置**（starter 化后）：狗粮演示业务放 `gentry-start` 的 `com.gentry.start` 下；真实项目业务放消费项目自己仓库；**不要往 starter 里加业务域** —— starter 只装平台能力，`com.gentry.rbac.dept` 等既有样例留在 rbac-starter 内仅供照抄
 
 ---
 
@@ -206,3 +207,4 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 |------|------|--------|---------|
 | v1.0.0 | 2026-04-12 | Claude | 初始版本 |
 | v1.1.0 | 2026-04-25 | Claude | 补充遗漏子模块（公共基础设施、默认租户与登录模式、登录菜单动态渲染）；补充 Phase 1 开发顺序注意事项 |
+| v1.2.0 | 2026-08-30 | Claude | 平台化改造文档收口：模块路径更新为 starter 名，补充 Flyway 双流与业务域开发位置 |

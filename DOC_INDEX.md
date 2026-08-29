@@ -19,7 +19,8 @@
 
 | 文档 | 说明 |
 |------|------|
-| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | gentry-core 整体设计 |
+| [doc/design/architecture/平台化改造概要设计.md](./doc/design/architecture/平台化改造概要设计.md) | starter 化总体设计：模块划分、自动装配、Flyway 双流、BOM、前端共享包 |
+| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | core-starter 整体设计（历史设计文档，内文沿用旧模块名） |
 | `doc/design/architecture/全局基础设施架构图.drawio` | 架构图（drawio 打开） |
 | `doc/design/modules/core/P0-*.md` | 全局异常、多租户拦截、自动填充、StpInterface 权限接口 |
 | `doc/design/modules/core/P1-*.md` | Jackson 全局配置、请求日志过滤器、数据权限拦截器 |

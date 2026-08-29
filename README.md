@@ -1,10 +1,19 @@
-# RBAC 权限脚手架
+# RBAC 权限平台（gentry）
 
-多租户 RBAC 权限脚手架，后期新项目直接基于它开发。
+多租户 RBAC 权限平台。平台能力（横切基础设施 + RBAC + 监控）以 Spring Boot starter
+jar 分发，新项目**引依赖接入，不 fork**；本仓库是平台的唯一迭代源，内置 `gentry-start`
+狗粮工程验证 starter 好不好用。
 后端 Spring Boot 3.2 + MyBatis-Flex + Sa-Token(JWT)，支持 MySQL（默认）/ PostgreSQL / SQLite 三种数据库，
 前端 React 18 + TypeScript + Vite + Ant Design 5。
 
-开箱即用的意思是：clone 下来跑两条命令，就有一个能登录、有菜单、有权限、有租户隔离、
+两种消费方式：
+
+| 你是… | 怎么用 |
+|-------|--------|
+| 新项目（推荐） | 引 `gentry-bom` + starter 依赖，主类放自己包，零 `@ComponentScan`/`@MapperScan`，从写业务开始。接入步骤见 `AGENTS.md` 第三章「新项目接入」 |
+| 平台开发 / 狗粮 | clone 本仓库改平台代码或演示业务（`gentry-start` 的 `com.gentry.start` 下） |
+
+开箱即用的意思是：跑两条命令，就有一个能登录、有菜单、有权限、有租户隔离、
 有操作日志的后台系统，你从加业务模块开始，而不是从搭架子开始。
 
 ---
@@ -79,16 +88,18 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 ├── CLAUDE.md                 # AI 协作入口，指向 AGENTS.md
 ├── DOC_INDEX.md              # 文档索引
 ├── backend/
-│   ├── pom.xml               # 父 POM，聚合下面 4 个模块
-│   ├── gentry-core/       # 横切基础设施（无业务依赖）
-│   ├── gentry-business/   # 业务模块，现有 rbac 包，新业务平级新增
-│   ├── gentry-monitor/    # 运维监控（Redis 监控）
-│   └── gentry-start/      # 启动入口 + application-{mysql,postgresql,sqlite}.yml
+│   ├── pom.xml               # 父 POM（gentry-parent），聚合下面 5 个模块
+│   ├── gentry-core-spring-boot-starter/      # 横切基础设施（jar 分发，自动装配）
+│   ├── gentry-rbac-spring-boot-starter/      # RBAC + 通知 + Flyway 平台流迁移（V1–V999）
+│   │   └── src/main/resources/db/migration/gentry-rbac/
+│   │       ├── common/       # 平台流三库通用迁移
+│   │       └── mysql/ …      # 平台流各方言迁移
+│   ├── gentry-monitor-spring-boot-starter/   # 运维监控（Redis 监控）
+│   ├── gentry-bom/           # 三个 starter 的版本收口，消费项目引它
+│   └── gentry-start/         # 狗粮：启动入口 + 全栈 IT + 演示业务包
 │       └── src/main/resources/db/migration/
-│           ├── common/       # 三库通用迁移（99% 的新迁移放这里）
-│           ├── mysql/        # MySQL 方言迁移（目前只有 V1 建表）
-│           ├── postgresql/   # PostgreSQL 方言迁移
-│           └── sqlite/       # SQLite 方言迁移
+│           ├── common/       # 项目流三库通用迁移（V1000 起，狗粮自用）
+│           └── mysql/ …      # 项目流各方言迁移
 ├── frontend/
 │   ├── src/components/       # common（通用）/ layout（双 Layout）/ pro（表格表单）
 │   ├── src/config/app.ts     # 应用名 / Logo 缩写（改品牌只动这里 + index.html）
@@ -108,15 +119,18 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 
 ## 4. 加一个业务模块
 
-以「订单管理」为例，五个动作：
+先分清业务代码放哪（见 AGENTS.md 第三章）：**狗粮演示业务放 `gentry-start` 的
+`com.gentry.start` 下；真实项目业务放消费项目自己仓库；不要往 starter 里加业务域**。
+下面以「订单管理」为例，五个动作（示例路径按狗粮写，消费项目同理放自己工程）：
 
-**① 后端代码** —— 照抄 `backend/gentry-business/src/main/java/com/gentry/rbac/dept`
-（最小完整样例：树形 + 数据权限 + 操作日志），在 `com/gentry/order` 下建
+**① 后端代码** —— 照抄 `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/dept`
+（最小完整样例：树形 + 数据权限 + 操作日志），在 `com/gentry/start/order` 下建
 `controller / service / service/impl / mapper / entity / dto / vo`。
 实体继承 `TenantEntity`，Controller 加 `@SaCheckPermission("biz:order:add")`。
 
-**② 数据库** —— 新增 `backend/gentry-start/src/main/resources/db/migration/common/V6__create_order.sql`
-（放 `common/` 不是三个厂商目录，建表 + 插菜单是纯 DML/标准 DDL，三库通用）：
+**② 数据库** —— 狗粮新增 `backend/gentry-start/src/main/resources/db/migration/common/V1000__create_order.sql`
+（项目流**自 V1000 起**，V1–V999 是平台保留段；放 `common/` 不是三个厂商目录，
+建表 + 插菜单是纯 DML/标准 DDL，三库通用）：
 
 ```sql
 CREATE TABLE IF NOT EXISTS biz_order (
@@ -155,23 +169,28 @@ Service 单测覆盖 ≥ 90%。
 
 ---
 
-## 5. 把脚手架改成你的项目
+## 5. 新项目怎么接入（不 fork）
 
-脚手架保留 `com.gentry` / `precision-*` 命名，全套文档也按这个命名写的。
-要改成自己的名字，按这个顺序动：
+平台是活的、持续迭代的，fork 出去的副本三个月后就合不回平台的 bug 修复。
+新项目一律**引依赖**（完整步骤见 `AGENTS.md` 第三章「新项目接入」）：
 
-1. `backend/**/pom.xml` 的 `groupId` / `artifactId` / `name`
-2. Java 包名 `com.gentry` → `com.yourcompany`（IDE 的 Rename Package 一次到位）
-3. `application.yml` 里 `logging.level.com.gentry`、`mybatis-flex` 扫描路径
-   （`application-{mysql,postgresql,sqlite}.yml` 三个数据库连接配置不含包名，不用动）
-4. `GentryApplication` 类名与 `@MapperScan("com.gentry.**.mapper")`
-5. 前端 `package.json` 的 `name`，`localStorage` 的 token key（`userStore.ts` 里 `gentry_token`）
-6. `doc/` 里的示例包路径
+1. 消费项目 `pom.xml` 引 `gentry-bom`（dependencyManagement）+
+   `gentry-core-spring-boot-starter` / `gentry-rbac-spring-boot-starter` /
+   `gentry-monitor-spring-boot-starter` 三个依赖（版本由 BOM 收口）
+2. 主类放自己的包（如 `com.xxx.Application`），**零注解**：不需要
+   `@ComponentScan` / `@MapperScan` / `@EnableScheduling`，starter 自动装配
+3. `application.yml` 最小清单：datasource + redis + sa-token（`jwt-secret-key` 外置）+
+   `spring.messages.basename: i18n/messages,i18n/error,i18n/validation,i18n/export` +
+   `mybatis-flex.mapper-locations: classpath*:mapper/**/*.xml` + Flyway 双流 locations
+   （模板直接抄 `backend/gentry-start/src/main/resources/application-mysql.yml`）
+4. 项目迁移**自 V1000 起**（V1–V999 是平台保留段，禁止复制/修改平台段迁移）
+5. 只想要横切能力、不要 RBAC？`gentry.rbac.enabled=false`；不要 Redis 监控？
+   `gentry.monitor.enabled=false`
 
-改**显示名称**不用动这些，只改两处：`frontend/src/config/app.ts` 的 `APP_NAME` / `APP_INITIAL`，
+前端（共享包抽取见 `doc/design/architecture/平台化改造概要设计.md` 第 5 章）。
+
+改**显示名称**只改两处：`frontend/src/config/app.ts` 的 `APP_NAME` / `APP_INITIAL`，
 以及 `frontend/index.html` 的 `<title>`。
-
-不改也能用。改之前先跑一遍测试拿到绿色基线，改完再跑一遍对比。
 
 ---
 
@@ -196,7 +215,7 @@ Service 单测覆盖 ≥ 90%。
 不需要任何外部依赖，随时可跑：
 
 ```bash
-cd backend  && mvn test          # 355 个测试
+cd backend  && mvn test          # 364 个测试
 cd frontend && npm test          # 111 个测试（Vitest）
 cd frontend && npx tsc -b        # 类型检查
 ```
@@ -226,9 +245,10 @@ bash scripts/jwt_force_logout_test.sh    # 强制下线
 
 ## 8. 从哪开始读
 
-1. `AGENTS.md` —— 强制约定，唯一权威
+1. `AGENTS.md` —— 强制约定，唯一权威（含「新项目接入」）
 2. `doc/guide/RBAC模块开发指南.md` —— 业务模块怎么写
 3. `doc/guide/Core组件开发指南.md` —— 横切组件怎么用
-4. `doc/design/modules/rbac/概要设计.md` —— RBAC 整体设计
-5. `doc/design/modules/rbac/modules/公共基础设施/双Layout布局-前端详细设计.md` —— 前端布局体系
-6. `DOC_INDEX.md` —— 其余文档的地图
+4. `doc/design/architecture/平台化改造概要设计.md` —— starter 化总体设计
+5. `doc/design/modules/rbac/概要设计.md` —— RBAC 整体设计
+6. `doc/design/modules/rbac/modules/公共基础设施/双Layout布局-前端详细设计.md` —— 前端布局体系
+7. `DOC_INDEX.md` —— 其余文档的地图
