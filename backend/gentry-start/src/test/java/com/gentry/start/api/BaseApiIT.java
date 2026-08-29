@@ -38,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * <p>隔离：{@code @Transactional} 回滚每个用例的 DB 写，种子数据不被污染，读靠 Flyway 种子；
  * 测试 Redis 用 db 15（见 application-test.yml），不污染运行中后端 db 0 会话。
  *
- * <p>权限矩阵复用种子用户（见 db/migration/common/V2__init_data.sql）：</p>
+ * <p>权限矩阵复用种子用户（见 rbac-starter jar 内 db/migration/gentry-rbac/common/V2__init_data.sql）：</p>
  * <ul>
  *   <li>{@code admin} = ADMIN(role_id=1)，<b>租户级</b>管理员，跑绝大多数 happy-path。
  *       按设计<b>不持有</b>平台级权限：system:tenant:*、monitor:redis:key:delete、

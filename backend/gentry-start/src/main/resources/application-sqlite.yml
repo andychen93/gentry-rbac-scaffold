@@ -14,4 +14,8 @@ spring:
       maximum-pool-size: 1
 
   flyway:
-    locations: classpath:db/migration/common,classpath:db/migration/sqlite
+    # 双流合并：平台流（rbac-starter jar 内，V1–V999 平台保留段）
+    #          + 项目流（本模块 classpath，消费项目自 V1000 起）
+    # 注意保持 classpath: 前缀 —— Flyway 的 ClassPathScanner 走 ClassLoader.getResources()
+    # 枚举所有 classpath 根（含依赖 jar），天然跨 jar，不要写成 Spring 方言 classpath*:
+    locations: classpath:db/migration/gentry-rbac/common,classpath:db/migration/gentry-rbac/sqlite,classpath:db/migration/common,classpath:db/migration/sqlite

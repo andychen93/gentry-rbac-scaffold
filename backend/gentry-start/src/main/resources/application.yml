@@ -23,9 +23,12 @@ spring:
     enabled: true
     baseline-on-migrate: true
     baseline-version: 0
-    # locations 由各 application-{profile}.yml 覆盖，格式固定为：
-    #   classpath:db/migration/common,classpath:db/migration/{profile}
-    # common/ 是三库通用迁移，{profile}/ 是该厂商的方言迁移（目前只有 V1 建表）
+    # locations 由各 application-{profile}.yml 覆盖，双流合并（均保持 classpath: 前缀）：
+    #   平台流：classpath:db/migration/gentry-rbac/common,classpath:db/migration/gentry-rbac/{profile}
+    #           （rbac-starter jar 内，V1–V999 平台保留段）
+    #   项目流：classpath:db/migration/common,classpath:db/migration/{profile}
+    #           （本模块 classpath，消费项目自 V1000 起）
+    # 平台流 common/ 是三库通用迁移，{profile}/ 是该厂商的方言迁移（目前只有 V1 建表）
 
   # Redis（Sa-Token JWT 模式依赖 Redis 存储 Session 与 Token 黑名单，与选哪个数据库无关）
   data:
