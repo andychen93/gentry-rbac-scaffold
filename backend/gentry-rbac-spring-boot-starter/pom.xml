@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>gentry-business</artifactId>
-    <name>Gentry Business</name>
-    <description>业务模块：RBAC（租户/用户/角色/菜单/部门/字典/日志），新业务在此模块下按包拆分</description>
+    <artifactId>gentry-rbac-spring-boot-starter</artifactId>
+    <name>Gentry RBAC Spring Boot Starter</name>
+    <description>RBAC 业务 starter（租户/用户/角色/菜单/部门/字典/日志/通知），平台迁移（V1–V999）随 jar 分发，消费方引依赖即得整套 RBAC 域</description>
 
     <dependencies>
         <dependency>
@@ -52,6 +52,18 @@
             <version>${easyexcel.version}</version>
         </dependency>
 
+        <!-- Flyway：平台迁移（V1–V999）随本 starter jar 分发，消费方免声明 -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-mysql</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+
         <!-- Lombok -->
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -59,6 +71,11 @@
             <optional>true</optional>
         </dependency>
         <!-- Test -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
@@ -88,7 +105,7 @@
         <!--
           UserManagementIntegrationTest 用裸 JDBC 直连库验证业务规则，通过
           -Dgentry.test.db.url 切换厂商（见该测试类头部注释与 doc 多数据库支持指南）。
-          三个驱动都只在 test scope，不进 gentry-business 的运行时 classpath；
+          三个驱动都只在 test scope，不进 gentry-rbac-spring-boot-starter 的运行时 classpath；
           运行时驱动由 gentry-start 按 profile 提供。
         -->
         <dependency>

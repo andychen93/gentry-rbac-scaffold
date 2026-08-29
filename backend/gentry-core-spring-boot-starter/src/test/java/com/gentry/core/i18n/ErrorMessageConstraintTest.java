@@ -289,16 +289,16 @@ class ErrorMessageConstraintTest {
     private Path locateBackendRoot() {
         Path p = Paths.get("").toAbsolutePath();
         for (int i = 0; i < 6 && p != null; i++, p = p.getParent()) {
-            if (Files.isDirectory(p.resolve("gentry-core-spring-boot-starter")) && Files.isDirectory(p.resolve("gentry-business"))) {
+            if (Files.isDirectory(p.resolve("gentry-core-spring-boot-starter")) && Files.isDirectory(p.resolve("gentry-rbac-spring-boot-starter"))) {
                 return p;
             }
         }
-        throw new IllegalStateException("找不到 backend 根目录（应含 gentry-core-spring-boot-starter 与 gentry-business）");
+        throw new IllegalStateException("找不到 backend 根目录（应含 gentry-core-spring-boot-starter 与 gentry-rbac-spring-boot-starter）");
     }
 
     private List<Path> sourceFiles(Path backendRoot) throws IOException {
         List<Path> all = new ArrayList<>();
-        for (String mod : List.of("gentry-core-spring-boot-starter", "gentry-business", "gentry-monitor")) {
+        for (String mod : List.of("gentry-core-spring-boot-starter", "gentry-rbac-spring-boot-starter", "gentry-monitor")) {
             Path base = backendRoot.resolve(mod).resolve("src/main/java");
             if (!Files.isDirectory(base)) continue;
             try (Stream<Path> s = Files.walk(base)) {

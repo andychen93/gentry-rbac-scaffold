@@ -92,6 +92,6 @@ class UserMapperXmlTest {
         if (Files.exists(modulePath)) {
             return modulePath;
         }
-        return rootPath.resolve("backend/gentry-business/src/main/resources/mapper/UserMapper.xml");
+        return rootPath.resolve("backend/gentry-rbac-spring-boot-starter/src/main/resources/mapper/UserMapper.xml");
     }
 }

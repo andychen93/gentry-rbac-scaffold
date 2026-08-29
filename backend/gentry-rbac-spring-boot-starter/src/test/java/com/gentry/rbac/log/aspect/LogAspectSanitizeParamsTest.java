@@ -43,7 +43,8 @@ class LogAspectSanitizeParamsTest {
     /**
      * sanitizeParams 是私有方法，用原生反射调用 —— 它的行为就是本测试的主题。
      *
-     * <p>不用 Spring 的 ReflectionTestUtils：gentry-business 的测试作用域里没有 spring-test。</p>
+     * <p>不用 Spring 的 ReflectionTestUtils：历史模块（gentry-business）的测试作用域里没有 spring-test，
+     * 本模块沿用了原生反射的写法。</p>
      */
     private Object[] sanitize(Object... args) {
         try {

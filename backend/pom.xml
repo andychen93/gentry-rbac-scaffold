@@ -20,7 +20,7 @@
 
     <modules>
         <module>gentry-core-spring-boot-starter</module>
-        <module>gentry-business</module>
+        <module>gentry-rbac-spring-boot-starter</module>
         <module>gentry-monitor</module>
         <module>gentry-start</module>
     </modules>
@@ -49,7 +49,7 @@
             </dependency>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-business</artifactId>
+                <artifactId>gentry-rbac-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
