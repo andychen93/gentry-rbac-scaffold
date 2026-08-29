@@ -22,6 +22,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+        <!-- JDBC + HikariCP：MyBatis-Flex 的自动配置 @ConditionalOnSingleCandidate(DataSource)，
+             mybatis-flex-spring-boot3-starter 只把 HikariCP 声明成 optional，不随传递。
+             starter 化前由 gentry-start 的 starter-jdbc 兜着；jar 分发后消费方不该再操心
+             「引了 rbac-starter 还要自己补 starter-jdbc」，收进 core 传递 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-spring-boot3-starter</artifactId>
