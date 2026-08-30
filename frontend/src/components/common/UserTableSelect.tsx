@@ -1,5 +1,5 @@
 import React from 'react';
-import { PageSelect } from '../pro/PageSelect';
+import { PageSelect } from '@gentry/kit';
 import { userApi } from '../../services/userApi';
 import type { UserListVO } from '../../services/userApi';
 import type { ApiResult, PageQuery, PageResult } from '@gentry/kit';

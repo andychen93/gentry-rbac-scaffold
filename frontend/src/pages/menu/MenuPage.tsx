@@ -8,7 +8,7 @@ import { useTranslation } from 'react-i18next';
 import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO, MenuQueryDTO } from '../../services/menuApi';
 import { useUserStore } from '../../stores/userStore';
-import { RowActions } from '../../components/pro';
+import { RowActions } from '@gentry/kit';
 import MenuFormModal from './MenuFormModal';
 import type { ColumnsType } from 'antd/es/table';
 import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';

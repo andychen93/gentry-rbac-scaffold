@@ -3,7 +3,7 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import { PageSelect } from './PageSelect';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import type { ApiResult, PageResult, PageQuery } from '@gentry/kit';
+import type { ApiResult, PageResult, PageQuery } from '../../types/api';
 
 type Row = { id: number; name: string };
 

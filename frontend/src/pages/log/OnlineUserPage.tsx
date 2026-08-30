@@ -3,7 +3,7 @@ import { LogoutOutlined } from '@ant-design/icons';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
-import { ProTable, RowActions } from '../../components/pro';
+import { ProTable, RowActions } from '@gentry/kit';
 import { logApi, OnlineUserVO } from '../../services/logApi';
 import type { ApiResult, PageQuery, PageResult } from '@gentry/kit';
 

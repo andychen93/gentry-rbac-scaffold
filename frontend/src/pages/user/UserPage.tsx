@@ -3,7 +3,7 @@ import { Button, Card, Tree, Tag, message, Space, Upload } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, UserSwitchOutlined, KeyOutlined, DownloadOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
-import { ProTable, StatusSwitch, RowActions } from '../../components/pro';
+import { ProTable, StatusSwitch, RowActions } from '@gentry/kit';
 import { userApi } from '../../services/userApi';
 import { useUserStore } from '../../stores/userStore';
 import type { UserListVO } from '../../services/userApi';

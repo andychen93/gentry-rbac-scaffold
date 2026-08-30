@@ -7,7 +7,7 @@ import {
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
-import { ProTable, RowActions } from '../../components/pro';
+import { ProTable, RowActions } from '@gentry/kit';
 import { dictApi, DictTypeListVO, DictDataVO } from '../../services/dictApi';
 import TypeFormModal from './TypeFormModal';
 import DataFormModal from './DataFormModal';

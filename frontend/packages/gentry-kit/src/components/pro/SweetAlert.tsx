@@ -6,7 +6,7 @@ import {
   WarningOutlined,
   InfoCircleOutlined,
 } from '@ant-design/icons';
-import { argonGradients } from '@gentry/kit';
+import { argonGradients } from '../../theme/argonColors';
 import { useTranslation } from 'react-i18next';
 
 export type SweetAlertType = 'success' | 'error' | 'warning' | 'info';

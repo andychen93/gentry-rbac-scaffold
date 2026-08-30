@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { ProTable } from './ProTable';
-import type { ApiResult, PageResult } from '@gentry/kit';
+import type { ApiResult, PageResult } from '../../types/api';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 

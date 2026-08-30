@@ -5,7 +5,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, SafetyOutlined, UserSwitchO
 import { useNavigate } from 'react-router-dom';
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
-import { ProTable, StatusSwitch, RowActions } from '../../components/pro';
+import { ProTable, StatusSwitch, RowActions } from '@gentry/kit';
 import { roleApi } from '../../services/roleApi';
 import type { RoleListVO } from '../../services/roleApi';
 import { useUserStore } from '../../stores/userStore';

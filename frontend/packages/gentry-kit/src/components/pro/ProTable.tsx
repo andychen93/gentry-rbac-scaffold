@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Table, Card } from 'antd';
-import { usePagedList } from '@gentry/kit';
+import { usePagedList } from '../../hooks/usePagedList';
 import { QueryForm, type QueryField } from './QueryForm';
-import type { ApiResult, PageResult, PageQuery } from '@gentry/kit';
+import type { ApiResult, PageResult, PageQuery } from '../../types/api';
 import type { TableProps } from 'antd';
 import { useTranslation } from 'react-i18next';
 

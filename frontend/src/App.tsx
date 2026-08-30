@@ -10,7 +10,7 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import LazyPage from './components/common/LazyPage';
 import StylePreviewPage from './pages/dev/StylePreviewPage';
 import { useUserStore } from './stores/userStore';
-import { PermissionProvider } from './components/pro/permission';
+import { PermissionProvider } from '@gentry/kit';
 import { toRouteConfigs, getComponentLoader } from './utils/menuMapper';
 
 /**
