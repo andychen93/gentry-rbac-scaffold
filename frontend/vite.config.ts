@@ -8,6 +8,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@gentry/kit': path.resolve(__dirname, './packages/gentry-kit/src'),
     },
   },
   css: {
