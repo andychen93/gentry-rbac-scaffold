@@ -1,5 +1,5 @@
 import request from './request';
-import type { PageResult } from '../types/api';
+import type { PageResult } from '@gentry/kit';
 
 export interface NotificationVO {
   // 雪花 ID：后端序列化成字符串防 JS 精度丢失，别 Number() 它

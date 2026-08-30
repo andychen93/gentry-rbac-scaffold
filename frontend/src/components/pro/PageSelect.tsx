@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Input, Popover, Table, theme } from 'antd';
 import { SearchOutlined, CloseCircleFilled } from '@ant-design/icons';
-import { usePagedList } from '../../hooks/usePagedList';
-import type { ApiResult, PageResult, PageQuery } from '../../types/api';
+import { usePagedList } from '@gentry/kit';
+import type { ApiResult, PageResult, PageQuery } from '@gentry/kit';
 import type { TableProps } from 'antd';
 import { useTranslation } from 'react-i18next';
 

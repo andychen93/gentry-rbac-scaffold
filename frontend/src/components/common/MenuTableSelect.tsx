@@ -2,7 +2,7 @@ import React from 'react';
 import { PageSelect } from '../pro/PageSelect';
 import { menuApi } from '../../services/menuApi';
 import type { MenuTreeVO } from '../../services/menuApi';
-import type { ApiResult, PageQuery, PageResult } from '../../types/api';
+import type { ApiResult, PageQuery, PageResult } from '@gentry/kit';
 import { useTranslation } from 'react-i18next';
 import { DICT_TYPES, dictLabel } from '../../locales/dictEnum';
 

@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
 import { ProTable, RowActions } from '../../components/pro';
 import { logApi, OnlineUserVO } from '../../services/logApi';
-import type { ApiResult, PageQuery, PageResult } from '../../types/api';
+import type { ApiResult, PageQuery, PageResult } from '@gentry/kit';
 
 /**
  * 在线用户 service 适配器：
