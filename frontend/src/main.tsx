@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App as AntdApp, ConfigProvider } from 'antd';
 import { useTranslation } from 'react-i18next';
-import { argonTheme } from './theme/argonTheme';
+import { argonTheme } from '@gentry/kit';
 import { getAntdLocale } from './locales/antd';
 import { setupI18n } from './locales';
 import './styles/argon.less';

@@ -2,7 +2,7 @@
  * Argon 色板 —— 取自 argon-dashboard-pro-react scss/custom/_variables.scss
  *
  * 这里是**全站配色的唯一源头**，两条下游都从这里取值：
- *   1. antd 组件 → theme/argonTheme.ts 把它灌进 ConfigProvider token
+ *   1. antd 组件 → 本包 theme/argonTheme.ts 把它灌进 ConfigProvider token
  *   2. styles/argon.less → vite.config.ts 用 argonLessVars.ts 把它编译成
  *      `@ps-*` Less 变量注入（见该文件注释）
  * 所以改配色只动本文件，不要在 .tsx / .less 里写死 hex。

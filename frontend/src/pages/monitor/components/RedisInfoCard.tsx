@@ -116,7 +116,7 @@ export default function RedisInfoCard({ info, dbSize }: Props) {
  * 指标强调色档位。
  *
  * 只表达「语义」不表达「颜色」—— 具体色值由 Metric 从 antd token 取，
- * token 在 theme/argonTheme.ts 里指向 argonColors，所以改配色仍然只动一处。
+ * token 在 @gentry/kit 的 theme/argonTheme.ts 里指向 argonColors，所以改配色仍然只动一处。
  */
 type Accent = 'primary' | 'success' | 'warning' | 'danger';
 

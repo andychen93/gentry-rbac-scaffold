@@ -2,3 +2,7 @@
 export type { ApiResult, PageResult, PageQuery } from './types/api';
 export type { UsePagedListOptions } from './hooks/usePagedList';
 export { usePagedList } from './hooks/usePagedList';
+export type { ArgonVariant } from './theme/argonColors';
+export { argonColors, argonGradients } from './theme/argonColors';
+export { argonTheme } from './theme/argonTheme';
+export { buildArgonLessVars } from './theme/argonLessVars';

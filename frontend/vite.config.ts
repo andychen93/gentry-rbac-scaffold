@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { buildArgonLessVars } from './src/theme/argonLessVars';
+import { buildArgonLessVars } from './packages/gentry-kit/src/theme/argonLessVars';
 
 export default defineConfig({
   plugins: [react()],
@@ -15,7 +15,7 @@ export default defineConfig({
     preprocessorOptions: {
       less: {
         // 把 argonColors.ts 的色板作为 @ps-* Less 变量注入每个 .less 文件头部，
-        // 这样 argon.less 不必再抄一份 hex。改配色只动 theme/argonColors.ts。
+        // 这样 argon.less 不必再抄一份 hex。改配色只动 @gentry/kit 的 theme/argonColors.ts。
         additionalData: buildArgonLessVars(),
       },
     },

@@ -18,8 +18,8 @@ import { argonColors, argonGradients, argonShadow, argonShadowLg } from './argon
  */
 export function buildArgonLessVars(): string {
   const lines = [
-    '// ⚠️ 由 src/theme/argonLessVars.ts 自动注入，不要在 .less 里改这些值',
-    '// 改配色请动 src/theme/argonColors.ts',
+    '// ⚠️ 由 @gentry/kit 的 theme/argonLessVars.ts 自动注入，不要在 .less 里改这些值',
+    '// 改配色请动 @gentry/kit 的 theme/argonColors.ts',
   ];
 
   // 基础色：@ps-primary / @ps-gray700 / @ps-white …（键名直接用 argonColors 的键）

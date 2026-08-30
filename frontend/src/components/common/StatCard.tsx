@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { ArgonVariant } from '../../theme/argonColors';
+import type { ArgonVariant } from '@gentry/kit';
 
 export interface StatCardProps {
   variant: ArgonVariant;
