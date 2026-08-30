@@ -411,14 +411,19 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 - **状态**：`userStore`（token/userInfo/menus/permissions）、`layoutStore`（侧栏/主题）。
   业务状态优先用 TanStack Query，别什么都塞 Zustand。
 - **权限渲染**：`useUserStore().hasPermission('system:user:add')`；页面级用 `AccessDenied`。
-- **主题**：**改配色只动 `theme/argonColors.ts`**，它是全站配色的唯一源头，两条下游自动跟随：
-  - antd 组件 ← `theme/argonTheme.ts` 把色板灌进 ConfigProvider token
-  - `styles/argon.less` ← `vite.config.ts` 用 `theme/argonLessVars.ts` 把色板编译成
+- **主题**：**改配色只动 `@gentry/kit` 的 `theme/argonColors.ts`**
+  （`frontend/packages/gentry-kit/src/theme/`），它是全站配色的唯一源头，两条下游自动跟随：
+  - antd 组件 ← kit 的 `theme/argonTheme.ts` 把色板灌进 ConfigProvider token
+  - `styles/argon.less` ← `vite.config.ts` 用 kit 的 `theme/argonLessVars.ts` 把色板编译成
     `@ps-*` Less 变量注入（写错变量名编译期报错）
   组件里要色值用 `theme.useToken()` 取语义 token，纯文字灰阶直接用
   `<Typography.Text type="secondary">`；**禁止在 .tsx / .less 里写死 hex 或 rgba 调色板色值**
-  （`theme/argonLessVars.test.ts` 会拦住 .less 的违规）。
+  （应用侧 `src/theme/argonLessVars.test.ts` 会拦住 .less 的违规）。
   `/dev/style` 是组件样式对照页，为便于跟 Argon 原版比对，该页允许写死。
+- **共享层 `@gentry/kit`**：Pro 组件（ProTable/QueryForm/RowActions/StatusSwitch/
+  CrudFormModal/PageSelect/SweetAlert）、theme、`usePagedList`、`types/api` 都在
+  `frontend/packages/gentry-kit/`，应用侧统一 `import … from '@gentry/kit'`
+  （workspace 包，tsconfig/vite 源码直引）。页面与 `menuMapper` 注册留在应用层。
 
 ---
 
