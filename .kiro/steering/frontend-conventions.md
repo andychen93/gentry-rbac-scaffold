@@ -34,7 +34,7 @@ fileMatchPattern: 'frontend/**/*.{ts,tsx}'
   其余属「业务系统」。新业务页面用非系统前缀
 - 权限渲染用 `useUserStore().hasPermission('xxx:yyy:zzz')`；整页无权限用 `AccessDenied`
 - 服务端数据用 TanStack Query，别塞进 Zustand。Zustand 只放 `userStore` / `layoutStore` 这类全局状态
-- 字典值展示用 `DictTag`，字典下拉用 `DictSelect`，部门树选择用 `DeptTreeSelect`
+- 字典值展示用 `DictTag`，部门树选择用 `DeptTreeSelect`；字典下拉 `DictSelect` 已删（Pro 表单/查询组件的 dict 分支是死代码一并移除，需要字典选项时在页面层用 dictApi 拉取塞给 select）
 - **改配色只动 `theme/argonColors.ts`**（唯一源头）。antd 侧由 `theme/argonTheme.ts`
   灌进 token；`styles/argon.less` 侧由 `vite.config.ts` + `theme/argonLessVars.ts`
   注入成 `@ps-*` Less 变量。token 覆盖不到的样式才写 `argon.less`，且颜色一律用
