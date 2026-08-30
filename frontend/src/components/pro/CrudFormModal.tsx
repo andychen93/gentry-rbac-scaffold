@@ -1,13 +1,11 @@
 import React, { useEffect } from 'react';
 import { Modal, Form, Input, Select, Switch, DatePicker, Row, Col, message } from 'antd';
-import DictSelect from '../common/DictSelect';
 import { useTranslation } from 'react-i18next';
 
 export type FormFieldType =
   | 'input'
   | 'textarea'
   | 'select'
-  | 'dict'
   | 'switch'
   | 'dateRange'
   | 'date'
@@ -20,7 +18,6 @@ export interface FormField {
   type?: FormFieldType;
   rules?: any[];
   options?: { label: string; value: any }[];
-  dictType?: string;
   required?: boolean;
   /** type=render 逃逸口，用于 icon picker / 树选择等复杂态 */
   render?: (form: any) => React.ReactNode;
@@ -129,8 +126,6 @@ const CrudFormModal: React.FC<CrudFormModalProps> = ({
                   f.render?.(form) ?? null
                 ) : f.type === 'select' ? (
                   <Select options={f.options} style={{ width: '100%' }} />
-                ) : f.type === 'dict' ? (
-                  <DictSelect dictType={f.dictType!} />
                 ) : f.type === 'switch' ? (
                   <Switch />
                 ) : f.type === 'date' ? (

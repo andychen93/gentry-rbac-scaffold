@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, type ReactNode } from 'react';
 import { Spin, Typography } from 'antd';
 import { useTranslation } from 'react-i18next';
 import LoginPage from './pages/login/LoginPage';
@@ -10,7 +10,17 @@ import ProtectedRoute from './components/common/ProtectedRoute';
 import LazyPage from './components/common/LazyPage';
 import StylePreviewPage from './pages/dev/StylePreviewPage';
 import { useUserStore } from './stores/userStore';
+import { PermissionProvider } from './components/pro/permission';
 import { toRouteConfigs, getComponentLoader } from './utils/menuMapper';
+
+/**
+ * 把 userStore 的权限判断接进 pro 组件的 PermissionContext。
+ * 必须是独立组件：useUserStore 是 hook，不能在 App 的 return 里直接调。
+ */
+function PermissionGate({ children }: { children: ReactNode }) {
+  const hasPermission = useUserStore((s) => s.hasPermission);
+  return <PermissionProvider can={hasPermission}>{children}</PermissionProvider>;
+}
 
 export default function App() {
   const { t } = useTranslation();
@@ -51,43 +61,45 @@ export default function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/dev/style" element={<StylePreviewPage />} />
-      <Route
-        path="/*"
-        element={
-          <ProtectedRoute>
-            <AppLayout>
-              <Routes>
-                {dynamicRoutes.map((route) => {
-                  const loader = getComponentLoader(route.component);
-                  if (!loader) return null;
-                  return (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={
-                        <LazyPage
-                          loader={loader}
-                          componentKey={route.component}
-                        />
-                      }
-                    />
-                  );
-                })}
-                {/* 子页面（非菜单页面） */}
-                <Route
-                  path="system/roles/:id/permissions"
-                  element={<PermissionPage />}
-                />
-                <Route path="profile" element={<ProfilePage />} />
-                <Route path="*" element={<Navigate to={`/${firstRoute}`} replace />} />
-              </Routes>
-            </AppLayout>
-          </ProtectedRoute>
-        }
-      />
-    </Routes>
+    <PermissionGate>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/dev/style" element={<StylePreviewPage />} />
+        <Route
+          path="/*"
+          element={
+            <ProtectedRoute>
+              <AppLayout>
+                <Routes>
+                  {dynamicRoutes.map((route) => {
+                    const loader = getComponentLoader(route.component);
+                    if (!loader) return null;
+                    return (
+                      <Route
+                        key={route.path}
+                        path={route.path}
+                        element={
+                          <LazyPage
+                            loader={loader}
+                            componentKey={route.component}
+                          />
+                        }
+                      />
+                    );
+                  })}
+                  {/* 子页面（非菜单页面） */}
+                  <Route
+                    path="system/roles/:id/permissions"
+                    element={<PermissionPage />}
+                  />
+                  <Route path="profile" element={<ProfilePage />} />
+                  <Route path="*" element={<Navigate to={`/${firstRoute}`} replace />} />
+                </Routes>
+              </AppLayout>
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </PermissionGate>
   );
 }

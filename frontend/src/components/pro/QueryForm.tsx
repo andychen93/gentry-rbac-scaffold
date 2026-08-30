@@ -1,15 +1,13 @@
 import React from 'react';
 import { Card, Form, Input, Select, Button, Space, DatePicker, Row, Col } from 'antd';
 import { SearchOutlined, ReloadOutlined } from '@ant-design/icons';
-import DictSelect from '../common/DictSelect';
 import { useTranslation } from 'react-i18next';
 
 export type QueryField = {
   name: string;
   label: string;
-  type?: 'input' | 'select' | 'dict' | 'dateRange' | 'node';
+  type?: 'input' | 'select' | 'dateRange' | 'node';
   options?: { label: string; value: string | number }[];
-  dictType?: string;
   placeholder?: string;
   /**
    * type='node' 时渲染的自定义控件，用于「下拉 table」这类内置类型覆盖不到的筛选。
@@ -50,8 +48,6 @@ const QueryForm: React.FC<QueryFormProps> = ({ fields, onSearch }) => {
                   f.node
                 ) : f.type === 'select' ? (
                   <Select placeholder={f.placeholder ?? t('common:all')} allowClear options={f.options} style={{ width: '100%' }} />
-                ) : f.type === 'dict' ? (
-                  <DictSelect dictType={f.dictType!} placeholder={f.placeholder ?? t('common:all')} />
                 ) : f.type === 'dateRange' ? (
                   <DatePicker.RangePicker style={{ width: '100%' }} />
                 ) : (

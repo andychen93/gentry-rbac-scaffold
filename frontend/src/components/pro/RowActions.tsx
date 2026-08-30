@@ -1,6 +1,6 @@
 import React from 'react';
 import { Space, Popconfirm, Tooltip } from 'antd';
-import { useUserStore } from '../../stores/userStore';
+import { usePermission } from './permission';
 
 export interface RowActionItem {
   key: string;
@@ -29,8 +29,8 @@ export interface RowActionItem {
  * 就是「纯图标 + UncontrolledTooltip」），样式见 argon.less 的 .ps-row-action。
  */
 const RowActions: React.FC<{ items: RowActionItem[] }> = ({ items }) => {
-  const hasPermission = useUserStore((s) => s.hasPermission);
-  const visible = items.filter((i) => !i.perm || hasPermission(i.perm));
+  const can = usePermission();
+  const visible = items.filter((i) => !i.perm || can(i.perm));
 
   return (
     <Space size={4}>
