@@ -20,6 +20,7 @@ import com.gentry.rbac.user.dto.LoginDTO;
 import com.gentry.rbac.user.entity.User;
 import com.gentry.rbac.user.mapper.UserMapper;
 import com.gentry.rbac.user.mapper.UserRoleMapper;
+import com.gentry.rbac.user.service.AuthEmailService;
 import com.gentry.rbac.user.service.AuthService;
 import com.gentry.rbac.user.service.CaptchaService;
 import com.gentry.rbac.user.service.LoginFailCounterService;
@@ -63,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordProperties passwordProperties;
     /** 运行时参数（sys_config 优先，yml 兜底） */
     private final SysConfigResolver sysConfigResolver;
+    private final AuthEmailService authEmailService;
 
     public AuthServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, RoleMenuMapper roleMenuMapper,
@@ -75,7 +77,8 @@ public class AuthServiceImpl implements AuthService {
                            CaptchaProperties captchaProperties,
                            LoginSecurityProperties loginSecurityProperties,
                            PasswordProperties passwordProperties,
-                           SysConfigResolver sysConfigResolver) {
+                           SysConfigResolver sysConfigResolver,
+                           AuthEmailService authEmailService) {
         this.userMapper = userMapper;
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
@@ -88,6 +91,7 @@ public class AuthServiceImpl implements AuthService {
         this.captchaService = captchaService;
         this.loginFailCounterService = loginFailCounterService;
         this.captchaProperties = captchaProperties;
+        this.authEmailService = authEmailService;
         this.loginSecurityProperties = loginSecurityProperties;
         this.passwordProperties = passwordProperties;
         this.sysConfigResolver = sysConfigResolver;
@@ -197,9 +201,23 @@ public class AuthServiceImpl implements AuthService {
     // ========== Extract Method: 用户校验 ==========
 
     private User findAndValidateUser(Long tenantId, String username, String password) {
-        User user = userMapper.selectByUsername(tenantId, username);
-        if (user == null) {
-            throw new BizException(ErrorCode.LOGIN_FAILED);
+        // 邮箱登录：username 含 @ 时按邮箱查（注册用户 username 是平台生成的 u+id，用户不感知）
+        User user;
+        if (username != null && username.contains("@")) {
+            String email = username.trim().toLowerCase();
+            user = userMapper.selectByEmail(tenantId, email);
+            if (user == null) {
+                throw new BizException(ErrorCode.LOGIN_FAILED);
+            }
+            // 自助注册用户必须完成邮箱验证才能登录
+            if (!authEmailService.isEmailVerified(tenantId, email)) {
+                throw new BizException(ErrorCode.EMAIL_NOT_VERIFIED);
+            }
+        } else {
+            user = userMapper.selectByUsername(tenantId, username);
+            if (user == null) {
+                throw new BizException(ErrorCode.LOGIN_FAILED);
+            }
         }
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BizException(ErrorCode.LOGIN_FAILED);

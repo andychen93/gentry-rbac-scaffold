@@ -45,6 +45,12 @@
             <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
 
+        <!-- 邮件（邮箱验证 / 密码找回；SMTP 参数走 spring.mail.* 标准配置） -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- EasyExcel（用户导入导出） -->
         <dependency>
             <groupId>com.alibaba</groupId>

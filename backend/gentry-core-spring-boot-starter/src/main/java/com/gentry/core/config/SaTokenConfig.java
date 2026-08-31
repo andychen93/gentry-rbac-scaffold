@@ -48,6 +48,13 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 .excludePathPatterns(
                         "/api/v1/auth/login",
                         "/api/v1/auth/captcha",
+                        // 邮箱自助认证流（注册→验证→登录 / 找回→重置）：匿名语义，
+                        // 防刷靠端点上的 @RateLimit(IP) + @RepeatSubmit，不靠登录态
+                        "/api/v1/auth/register",
+                        "/api/v1/auth/verify-email",
+                        "/api/v1/auth/resend-verification",
+                        "/api/v1/auth/password/forgot",
+                        "/api/v1/auth/password/reset",
                         "/api/v1/tenants/options",
                         // 语言列表：登录页就要渲染语言选择器，必须放行。
                         // 只加 @RestController 不放行是不够的 —— 本拦截器覆盖 /api/**，

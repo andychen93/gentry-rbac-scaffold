@@ -7,9 +7,14 @@ import com.gentry.core.web.RateLimit;
 import com.gentry.core.web.RateLimitKeyType;
 import com.gentry.core.web.RepeatSubmit;
 import com.gentry.rbac.log.annotation.Log;
+import com.gentry.rbac.user.dto.EmailDTO;
 import com.gentry.rbac.user.dto.LoginDTO;
+import com.gentry.rbac.user.dto.PasswordResetDTO;
+import com.gentry.rbac.user.dto.RegisterDTO;
+import com.gentry.rbac.user.dto.TokenDTO;
 import com.gentry.rbac.user.dto.UserPasswordUpdateDTO;
 import com.gentry.rbac.user.dto.UserProfileUpdateDTO;
+import com.gentry.rbac.user.service.AuthEmailService;
 import com.gentry.rbac.user.service.AuthService;
 import com.gentry.rbac.user.service.UserService;
 import com.gentry.rbac.user.vo.LoginVO;
@@ -25,10 +30,12 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final AuthEmailService authEmailService;
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserService userService, AuthEmailService authEmailService) {
         this.authService = authService;
         this.userService = userService;
+        this.authEmailService = authEmailService;
     }
 
     /** AUTH-001 用户登录（按 IP 限流：每分钟 10 次，防暴力破解） */
@@ -74,5 +81,47 @@ public class AuthController {
     @GetMapping("/profile")
     public R<UserDetailVO> getProfile() {
         return R.ok(userService.getDetail(UserContext.getUserId()));
+    }
+
+    /** AUTH-007 邮箱注册：发验证邮件，验证通过才建用户（公开端点，消费方在放行清单登记） */
+    @PostMapping("/register")
+    @RateLimit(keyType = RateLimitKeyType.IP, count = 5, period = 60, message = "注册请求过于频繁，请稍后再试")
+    @RepeatSubmit(interval = 3, message = "注册请求过快")
+    public R<Void> register(@Valid @RequestBody RegisterDTO dto) {
+        authEmailService.register(dto);
+        return R.ok();
+    }
+
+    /** AUTH-008 验证邮箱：令牌有效即创建用户（公开端点） */
+    @PostMapping("/verify-email")
+    @RateLimit(keyType = RateLimitKeyType.IP, count = 10, period = 60, message = "请求过于频繁，请稍后再试")
+    public R<Void> verifyEmail(@Valid @RequestBody TokenDTO dto) {
+        authEmailService.verifyEmail(dto);
+        return R.ok();
+    }
+
+    /** AUTH-009 重发验证邮件（公开端点，冷却期内 409） */
+    @PostMapping("/resend-verification")
+    @RateLimit(keyType = RateLimitKeyType.IP, count = 3, period = 60, message = "发送过于频繁，请稍后再试")
+    public R<Void> resendVerification(@Valid @RequestBody EmailDTO dto) {
+        authEmailService.resendVerification(dto);
+        return R.ok();
+    }
+
+    /** AUTH-010 忘记密码：发重置邮件；邮箱不存在也返回成功（防枚举，公开端点） */
+    @PostMapping("/password/forgot")
+    @RateLimit(keyType = RateLimitKeyType.IP, count = 3, period = 60, message = "发送过于频繁，请稍后再试")
+    public R<Void> forgotPassword(@Valid @RequestBody EmailDTO dto) {
+        authEmailService.forgotPassword(dto);
+        return R.ok();
+    }
+
+    /** AUTH-011 通过邮件令牌重置密码：成功后踢下线（公开端点） */
+    @PostMapping("/password/reset")
+    @RateLimit(keyType = RateLimitKeyType.IP, count = 5, period = 60, message = "请求过于频繁，请稍后再试")
+    @RepeatSubmit(interval = 3, message = "重置请求过快")
+    public R<Void> resetPassword(@Valid @RequestBody PasswordResetDTO dto) {
+        authEmailService.resetPassword(dto);
+        return R.ok();
     }
 }

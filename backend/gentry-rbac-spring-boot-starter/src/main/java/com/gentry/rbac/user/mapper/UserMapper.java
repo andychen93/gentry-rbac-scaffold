@@ -15,6 +15,13 @@ public interface UserMapper extends BaseMapper<User> {
     @Select("SELECT * FROM sys_user WHERE tenant_id = #{tenantId} AND username = #{username} AND deleted = 0")
     User selectByUsername(@Param("tenantId") Long tenantId, @Param("username") String username);
 
+    /** 邮箱登录 / 邮箱占用校验：email 无唯一键，靠查询判断，调用方须先做小写规范化 */
+    @Select("SELECT * FROM sys_user WHERE tenant_id = #{tenantId} AND email = #{email} AND deleted = 0 LIMIT 1")
+    User selectByEmail(@Param("tenantId") Long tenantId, @Param("email") String email);
+
+    @Select("SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND email = #{email} AND deleted = 0")
+    int countByEmail(@Param("tenantId") Long tenantId, @Param("email") String email);
+
     @Select("SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND username = #{username} AND deleted = 0")
     int countByUsername(@Param("tenantId") Long tenantId, @Param("username") String username);
 

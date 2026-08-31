@@ -88,6 +88,25 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--
+              Lombok 注解处理器显式声明：JDK 21 起 javac 对「无显式 -proc 参数」的隐式
+              注解处理持续收紧（部分 JDK 小版本直接跳过），一旦跳过所有 @Data getter
+              消失、全量编译报「找不到符号」。spring-boot-parent 不传
+              annotationProcessorPaths，这里显式钉住，行为不再随 JDK 小版本漂移。
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
