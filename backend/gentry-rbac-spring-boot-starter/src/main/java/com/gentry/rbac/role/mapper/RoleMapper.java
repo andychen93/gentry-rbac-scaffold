@@ -17,8 +17,7 @@ public interface RoleMapper extends BaseMapper<Role> {
     /**
      * 分页列表查询（含 userCount 统计）
      */
-    List<Map<String, Object>> selectPageList(@Param("tenantId") Long tenantId,
-                                              @Param("roleName") String roleName,
+    List<Map<String, Object>> selectPageList(@Param("roleName") String roleName,
                                               @Param("roleCode") String roleCode,
                                               @Param("status") Integer status,
                                               @Param("offset") int offset,
@@ -27,16 +26,15 @@ public interface RoleMapper extends BaseMapper<Role> {
     /**
      * 统计总数
      */
-    long selectCount(@Param("tenantId") Long tenantId,
-                     @Param("roleName") String roleName,
+    long selectCount(@Param("roleName") String roleName,
                      @Param("roleCode") String roleCode,
                      @Param("status") Integer status);
 
     /**
      * 检查角色编码是否存在
      */
-    @Select("SELECT COUNT(*) FROM sys_role WHERE tenant_id = #{tenantId} AND role_code = #{roleCode} AND deleted = 0")
-    int countByCode(@Param("tenantId") Long tenantId, @Param("roleCode") String roleCode);
+    @Select("SELECT COUNT(*) FROM sys_role WHERE role_code = #{roleCode} AND deleted = 0")
+    int countByCode(@Param("roleCode") String roleCode);
 
     /**
      * 逻辑删除角色
@@ -72,9 +70,9 @@ public interface RoleMapper extends BaseMapper<Role> {
     Role selectRoleById(@Param("id") Long id);
 
     /**
-     * 查询租户内启用角色的下拉选项
+     * 查询启用角色的下拉选项
      */
-    @Select("SELECT id, role_code, role_name FROM sys_role WHERE tenant_id = #{tenantId} AND status = 1 AND deleted = 0 ORDER BY sort ASC, id ASC")
-    List<RoleOptionVO> selectOptions(@Param("tenantId") Long tenantId);
+    @Select("SELECT id, role_code, role_name FROM sys_role WHERE status = 1 AND deleted = 0 ORDER BY sort ASC, id ASC")
+    List<RoleOptionVO> selectOptions();
 
 }

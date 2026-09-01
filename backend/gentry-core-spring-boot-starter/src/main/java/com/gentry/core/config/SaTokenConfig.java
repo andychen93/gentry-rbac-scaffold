@@ -55,7 +55,6 @@ public class SaTokenConfig implements WebMvcConfigurer {
                         "/api/v1/auth/resend-verification",
                         "/api/v1/auth/password/forgot",
                         "/api/v1/auth/password/reset",
-                        "/api/v1/tenants/options",
                         // 语言列表：登录页就要渲染语言选择器，必须放行。
                         // 只加 @RestController 不放行是不够的 —— 本拦截器覆盖 /api/**，
                         // 未登录访问会拿到 401（实测踩过）。
@@ -76,14 +75,10 @@ public class SaTokenConfig implements WebMvcConfigurer {
                 if (StpUtil.isLogin()) {
                     SaSession session = StpUtil.getSession();
                     Object userId = session.get("userId");
-                    Object tenantId = session.get("tenantId");
                     Object deptId = session.get("deptId");
-                    Object platformAdmin = session.get("platformAdmin");
                     Object language = session.get("language");
                     if (userId instanceof Number) UserContext.setUserId(((Number) userId).longValue());
-                    if (tenantId instanceof Number) UserContext.setTenantId(((Number) tenantId).longValue());
                     if (deptId instanceof Number) UserContext.setDeptId(((Number) deptId).longValue());
-                    UserContext.setPlatformAdmin(Boolean.TRUE.equals(platformAdmin));
                     // language 为 null 表示用户从未选过 → 下面会退到 Accept-Language
                     if (language instanceof String s) UserContext.setLanguage(s);
                 }

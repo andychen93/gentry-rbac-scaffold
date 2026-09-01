@@ -1,10 +1,8 @@
 package com.gentry.rbac.user.service.impl;
 
 import com.gentry.core.common.ErrorCode;
-import com.gentry.core.constant.TenantConstants;
 import com.gentry.core.exception.BizException;
 import com.gentry.core.security.TokenBlacklistService;
-import com.gentry.core.security.UserContext;
 import com.gentry.rbac.mail.GentryMailProperties;
 import com.gentry.rbac.mail.MailGateway;
 import com.gentry.rbac.config.GentryRegisterProperties;
@@ -77,17 +75,16 @@ public class AuthEmailServiceImpl implements AuthEmailService {
 
     @Override
     public void register(RegisterDTO dto) {
-        Long tenantId = currentTenantId();
         String email = normalize(dto.getEmail());
 
         // 邮箱已被已验证用户占用
-        if (userMapper.countByEmail(tenantId, email) > 0) {
+        if (userMapper.countByEmail(email) > 0) {
             throw new BizException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
         // 重发冷却：同邮箱同用途存在未使用且在冷却窗口内的令牌
         EmailToken latest = emailTokenMapper.selectLatestByEmailAndPurpose(
-                tenantId, email, EmailToken.PURPOSE_REGISTER);
+                email, EmailToken.PURPOSE_REGISTER);
         if (latest != null && latest.getUsedAt() == null && latest.getExpiresAt() != null
                 && latest.getExpiresAt().isAfter(LocalDateTime.now())
                 && latest.getCreateTime() != null
@@ -99,7 +96,6 @@ public class AuthEmailServiceImpl implements AuthEmailService {
         // 生成令牌：32 字节随机数 Base64URL，只落 SHA-256
         String token = generateToken();
         EmailToken emailToken = new EmailToken();
-        emailToken.setTenantId(tenantId);
         emailToken.setEmail(email);
         emailToken.setPurpose(EmailToken.PURPOSE_REGISTER);
         emailToken.setTokenHash(sha256(token));
@@ -113,12 +109,11 @@ public class AuthEmailServiceImpl implements AuthEmailService {
     @Override
     @Transactional
     public void verifyEmail(TokenDTO dto) {
-        Long tenantId = currentTenantId();
         EmailToken emailToken = consumeToken(dto.getToken(), EmailToken.PURPOSE_REGISTER);
 
         // 并发兜底：两封信同邮箱场景，第二封验证时邮箱可能已被占用
         String email = emailToken.getEmail();
-        if (userMapper.countByEmail(tenantId, email) > 0) {
+        if (userMapper.countByEmail(email) > 0) {
             throw new BizException(ErrorCode.EMAIL_ALREADY_EXISTS);
         }
 
@@ -145,21 +140,20 @@ public class AuthEmailServiceImpl implements AuthEmailService {
 
         // 按消费方配置绑定默认角色（如 budget 的 BUDGET_USER）；
         // 角色未配置或不存在时静默跳过，不阻断注册
-        bindDefaultRole(tenantId, user.getId());
+        bindDefaultRole(user.getId());
     }
 
     @Override
     public void resendVerification(EmailDTO dto) {
-        Long tenantId = currentTenantId();
         String email = normalize(dto.getEmail());
 
-        if (userMapper.countByEmail(tenantId, email) > 0) {
+        if (userMapper.countByEmail(email) > 0) {
             // 已验证过，无需再发；静默成功避免探测注册状态
             return;
         }
 
         EmailToken latest = emailTokenMapper.selectLatestByEmailAndPurpose(
-                tenantId, email, EmailToken.PURPOSE_REGISTER);
+                email, EmailToken.PURPOSE_REGISTER);
         if (latest != null && latest.getUsedAt() == null && latest.getExpiresAt() != null
                 && latest.getExpiresAt().isAfter(LocalDateTime.now())
                 && latest.getCreateTime() != null
@@ -176,7 +170,6 @@ public class AuthEmailServiceImpl implements AuthEmailService {
         // 复用最近一次令牌的凭据重发新令牌（旧令牌作废：置 deleted）
         String token = generateToken();
         EmailToken fresh = new EmailToken();
-        fresh.setTenantId(tenantId);
         fresh.setEmail(email);
         fresh.setPurpose(EmailToken.PURPOSE_REGISTER);
         fresh.setTokenHash(sha256(token));
@@ -191,10 +184,9 @@ public class AuthEmailServiceImpl implements AuthEmailService {
 
     @Override
     public void forgotPassword(EmailDTO dto) {
-        Long tenantId = currentTenantId();
         String email = normalize(dto.getEmail());
 
-        User user = userMapper.selectByEmail(tenantId, email);
+        User user = userMapper.selectByEmail(email);
         if (user == null) {
             // 防枚举：邮箱不存在也静默成功
             return;
@@ -202,7 +194,6 @@ public class AuthEmailServiceImpl implements AuthEmailService {
 
         String token = generateToken();
         EmailToken emailToken = new EmailToken();
-        emailToken.setTenantId(tenantId);
         emailToken.setEmail(email);
         emailToken.setPurpose(EmailToken.PURPOSE_RESET_PASSWORD);
         emailToken.setTokenHash(sha256(token));
@@ -216,9 +207,8 @@ public class AuthEmailServiceImpl implements AuthEmailService {
     @Transactional
     public void resetPassword(PasswordResetDTO dto) {
         EmailToken emailToken = consumeToken(dto.getToken(), EmailToken.PURPOSE_RESET_PASSWORD);
-        Long tenantId = currentTenantId();
 
-        User user = userMapper.selectByEmail(tenantId, emailToken.getEmail());
+        User user = userMapper.selectByEmail(emailToken.getEmail());
         if (user == null) {
             throw new BizException(ErrorCode.EMAIL_TOKEN_INVALID);
         }
@@ -240,43 +230,30 @@ public class AuthEmailServiceImpl implements AuthEmailService {
     }
 
     @Override
-    public boolean isEmailVerified(Long tenantId, String email) {
+    public boolean isEmailVerified(String email) {
         EmailToken latest = emailTokenMapper.selectLatestByEmailAndPurpose(
-                tenantId, normalize(email), EmailToken.PURPOSE_REGISTER);
+                normalize(email), EmailToken.PURPOSE_REGISTER);
         return latest != null && latest.getUsedAt() != null;
     }
 
     // ========== 私有方法 ==========
 
-    /**
-     * 匿名端点（注册/验证/找回）没有登录态，UserContext.getTenantId() 为 null。
-     * 首版单默认租户：匿名上下文一律落到 DEFAULT_TENANT_ID；将来多租户时在
-     * RegisterDTO/EmailDTO 增加 tenantCode 并走与登录一致的 resolveTenantId。
-     */
-    private static Long currentTenantId() {
-        Long tenantId = UserContext.getTenantId();
-        return tenantId != null ? tenantId : TenantConstants.DEFAULT_TENANT_ID;
-    }
-
     /** 消费方配置了默认角色编码且角色存在时，为新用户绑定；失败只记日志不抛错 */
-    private void bindDefaultRole(Long tenantId, Long userId) {
+    private void bindDefaultRole(Long userId) {
         String roleCode = registerProperties.getDefaultRoleCode();
         if (roleCode == null || roleCode.isBlank()) {
             return;
         }
         try {
             Role role = roleMapper.selectOneByQuery(QueryWrapper.create()
-                    .eq(Role::getTenantId, tenantId)
                     .eq(Role::getRoleCode, roleCode)
                     .eq(Role::getDeleted, 0)
                     .limit(1));
             if (role == null) {
-                log.warn("Default role [{}] not found in tenant {}, skip binding for user {}",
-                        roleCode, tenantId, userId);
+                log.warn("Default role [{}] not found, skip binding for user {}", roleCode, userId);
                 return;
             }
             UserRole userRole = new UserRole(userId, role.getId());
-            userRole.setTenantId(tenantId);
             userRoleMapper.insert(userRole);
         } catch (Exception e) {
             log.warn("Failed to bind default role [{}] for user {}: {}", roleCode, userId, e.getMessage());

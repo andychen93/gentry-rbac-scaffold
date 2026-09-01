@@ -19,5 +19,5 @@ public interface UserDataScopeResolver {
     /**
      * 返回用户的数据权限范围。未绑定角色或未登录时返回 null（表示跳过过滤）。
      */
-    Integer resolveDataScope(Long userId, Long tenantId);
+    Integer resolveDataScope(Long userId);
 }

@@ -3,7 +3,6 @@ package com.gentry.rbac.role.service.impl;
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
-import com.gentry.core.security.UserContext;
 import com.gentry.core.util.IdGenerator;
 import com.gentry.rbac.role.dto.*;
 import com.gentry.rbac.role.entity.Role;
@@ -61,35 +60,19 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
-    public Long createAdminRole(Long tenantId, String roleCode, String roleName) {
-        Role role = new Role();
-        role.setTenantId(tenantId);
-        role.setRoleCode(roleCode);
-        role.setRoleName(roleName);
-        role.setDataScope(DataScope.ALL.getCode());
-        role.setSort(0);
-        role.setStatus(1);
-        roleMapper.insert(role);
-        log.info("Created admin role: id={}, tenantId={}, code={}", role.getId(), tenantId, roleCode);
-        return role.getId();
-    }
-
-    @Override
     public List<RoleOptionVO> listOptions() {
-        Long tenantId = UserContext.getTenantId();
-        return roleMapper.selectOptions(tenantId);
+        return roleMapper.selectOptions();
     }
 
     @Override
     public PageResult<RoleListVO> list(RoleQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
         int offset = (query.getPageNum() - 1) * query.getPageSize();
 
         List<Map<String, Object>> rows = roleMapper.selectPageList(
-                tenantId, query.getRoleName(), query.getRoleCode(), query.getStatus(),
+                query.getRoleName(), query.getRoleCode(), query.getStatus(),
                 offset, query.getPageSize());
         long total = roleMapper.selectCount(
-                tenantId, query.getRoleName(), query.getRoleCode(), query.getStatus());
+                query.getRoleName(), query.getRoleCode(), query.getStatus());
 
         List<RoleListVO> list = rows.stream().map(this::mapToListVO).collect(Collectors.toList());
         return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
@@ -119,15 +102,13 @@ public class RoleServiceImpl implements RoleService {
     @Override
     @Transactional
     public RoleVO create(RoleCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
-
         // 禁止使用内置编码
         if (BUILTIN_CODES.contains(dto.getRoleCode().toUpperCase())) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.role.builtin.code.reserved");
         }
 
         // 校验编码唯一
-        if (roleMapper.countByCode(tenantId, dto.getRoleCode()) > 0) {
+        if (roleMapper.countByCode(dto.getRoleCode()) > 0) {
             throw new BizException(ErrorCode.ROLE_CODE_EXISTS);
         }
 
@@ -199,35 +180,6 @@ public class RoleServiceImpl implements RoleService {
                     .collect(Collectors.toList());
             if (!invalidIds.isEmpty()) {
                 throw new BizException(ErrorCode.PARAM_ERROR, "error.menu.id.not.found", invalidIds);
-            }
-
-            /*
-             * **平台级权限点只能由平台超管分配。**
-             *
-             * 原来这里只校验「menuId 存不存在」，不校验「调用者有没有权分配它」。
-             * 而租户管理员握有 system:role:assignMenu —— 它能在「角色管理 → 权限」里
-             * 把 system:tenant:* 勾给自己的角色，从而管理所有租户。
-             * 所以「新建租户时不给平台级权限」只是必要不充分，这条守卫才是承重的。
-             *
-             * 为什么不用 @SaCheckPermission：注解只能表达「调用者有没有 X 权限」，
-             * 表达不了「调用者**提交的数据**里有没有越权内容」。这属于业务规则。
-             *
-             * 判据 UserContext.isPlatformAdmin() 是既有机制：登录时由 AuthServiceImpl
-             * 按 roleCodes.contains("SUPER_ADMIN") 算好写进 Session。
-             */
-            if (!UserContext.isPlatformAdmin()) {
-                List<Long> platformIds = roleMenuMapper.selectPlatformMenuIdsIn(menuIds);
-                if (!platformIds.isEmpty()) {
-                    /*
-                     * 越权的菜单 ID 只进服务端日志，不进给用户的报错文案：
-                     * 前端已按 isPlatform 隐藏这些节点，能走到这里的要么是过期页面、
-                     * 要么是手工构造请求 —— 后者不该被告知「哪几个是平台级」。
-                     * 而日志里要留下审计痕迹（谁、哪个角色、试了哪些权限点）。
-                     */
-                    log.warn("Rejected platform-menu assignment: userId={}, tenantId={}, roleId={}, menuIds={}",
-                            UserContext.getUserId(), UserContext.getTenantId(), roleId, platformIds);
-                    throw new BizException(ErrorCode.PLATFORM_MENU_FORBIDDEN);
-                }
             }
         }
 
@@ -303,26 +255,22 @@ public class RoleServiceImpl implements RoleService {
         // 重复会整批插入失败，在这里挡掉比让用户看数据库报错友好
         List<Long> distinctIds = userIds.stream().distinct().collect(Collectors.toList());
 
-        // 校验用户存在且属于本租户 —— 与 UserServiceImpl.validateRoleIds 同理：
+        // 校验用户存在 —— 与 UserServiceImpl.validateRoleIds 同理：
         // 不校验就会把不存在的 userId 写进 sys_user_role 变成脏关联，
         // 之后每次打开绑定弹窗都带着一个界面上看不见、又提交必失败的 id
         if (!distinctIds.isEmpty()) {
-            Long tenantId = UserContext.getTenantId();
-            int existing = userMapper.countExistingByIds(tenantId, distinctIds);
+            int existing = userMapper.countExistingByIds(distinctIds);
             if (existing != distinctIds.size()) {
-                throw new BizException(ErrorCode.USER_NOT_FOUND,
-                        "存在无效用户，或用户不属于当前租户");
+                throw new BizException(ErrorCode.USER_NOT_FOUND);
             }
         }
 
         // 全量覆盖：先解除该角色的所有关联，再按本次列表重建
         userRoleMapper.deleteByRoleId(roleId);
         if (!distinctIds.isEmpty()) {
-            Long tenantId = UserContext.getTenantId();
             List<UserRole> rows = distinctIds.stream().map(uid -> {
                 UserRole ur = new UserRole(uid, roleId);
                 ur.setId(IdGenerator.nextId());
-                ur.setTenantId(tenantId);
                 return ur;
             }).collect(Collectors.toList());
             userRoleMapper.batchInsert(rows);

@@ -6,15 +6,14 @@ import com.gentry.notification.entity.Notification;
 public interface NotificationService {
 
     /**
-     * 落库一条站内通知。可被异步线程调用：按 {@code notification.tenantId} 写入正确租户，
-     * 不依赖调用线程的租户上下文。
+     * 落库一条站内通知。
      *
      * <p>业务代码一般不直接调这个，用 {@code NotificationSender.send(...)}
      * 才会同时触发 SSE 推送与高级别短信。</p>
      */
     Notification create(Notification notification);
 
-    /** 当前用户可见的通知分页（租户内，user_id 为空的广播 + 本人定向）。 */
+    /** 当前用户可见的通知分页（user_id 为空的广播 + 本人定向）。 */
     PageResult<Notification> listMine(Integer readStatus, String type, int pageNum, int pageSize);
 
     /** 当前用户未读数量。 */

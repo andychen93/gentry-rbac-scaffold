@@ -8,7 +8,7 @@
 
 ## 零、这个仓库是什么
 
-一个**多租户 RBAC 权限平台**。横切基础设施、RBAC、监控收敛为 Spring Boot starter
+一个**单组织 RBAC 权限平台**。横切基础设施、RBAC、监控收敛为 Spring Boot starter
 jar 分发；本仓库是平台的**唯一迭代源**，同时用 `gentry-start` 当第一个消费者（狗粮）
 验证 starter 好不好用。权限体系、布局体系、横切基础设施已经跑通并有测试覆盖，
 消费项目从写自己的业务模块开始，而不是从搭架子开始。
@@ -18,12 +18,10 @@ jar 分发；本仓库是平台的**唯一迭代源**，同时用 `gentry-start`
 | 域 | 能力 |
 |----|------|
 | 数据库 | MySQL（默认）/ PostgreSQL / SQLite 三选一，Spring Profile 切换，同一套业务代码 |
-| 多租户 | `tenant_id` 全局自动隔离，三层跳过机制 |
 | 认证 | Sa-Token JWT + Redis Session + Token 黑名单（单点登出/强制下线） |
 | 授权 | 菜单/按钮权限点 + `@SaCheckPermission`，前端按 permissions 渲染 |
 | 数据权限 | 五档范围（全部/本部门及子部门/本部门/仅本人/自定义），`@DataScope` 切面注入 |
-| 平台级权限隔离 | `sys_menu.is_platform` 标记平台级权限点，租户管理员既拿不到也分配不了 |
-| 系统管理 | 租户、用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户 |
+| 系统管理 | 用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户 |
 | 横切基础设施 | 全局异常、自动填充、Jackson 统一序列化、请求日志、限流、防重提交、TraceId |
 | 运维 | Redis 监控（INFO/Key CRUD/慢日志）、Actuator + Prometheus 指标（以上能力随 starter jar 分发，自动装配） |
 | 国际化 | 中/英双语开箱可用。后端 `Accept-Language` + `sys_user.language` 三级链、错误码与校验消息本地化；前端 react-i18next，菜单与字典由后端下发派生 key、前端翻译（切语言零 API 往返） |
@@ -77,7 +75,7 @@ TanStack Query 5 / Less
 
 | 模块 | 职责 | 依赖 |
 |------|------|------|
-| `gentry-core-spring-boot-starter` | 横切基础设施（异常/多租户/自动填充/追踪/限流/数据权限/JWT 黑名单），jar 分发，自动装配 | 无 |
+| `gentry-core-spring-boot-starter` | 横切基础设施（异常/自动填充/追踪/限流/数据权限/JWT 黑名单），jar 分发，自动装配 | 无 |
 | `gentry-rbac-spring-boot-starter` | RBAC + 通知业务域 + Flyway 平台流迁移（jar 内 `db/migration/gentry-rbac/`，V1–V999 平台保留段），jar 分发，自动装配 | core-starter |
 | `gentry-monitor-spring-boot-starter` | 运维监控（Redis 监控），jar 分发，自动装配 | core-starter |
 | `gentry-bom` | 三个 starter 的版本收口（dependencyManagement），消费项目引它对齐版本 | 无 |
@@ -190,9 +188,8 @@ sa-token:
 | 优先级 | 组件 | 核心类 |
 |--------|------|--------|
 | P0 | 全局异常处理 | `GlobalExceptionHandler` |
-| P0 | 实体基类 | `BaseEntity`, `TenantEntity` |
+| P0 | 实体基类 | `BaseEntity` |
 | P0 | 自动填充 | `AutoFillHandler` |
-| P0 | 多租户拦截 | `GentryTenantManager`, `@IgnoreTenant` |
 | P0 | 权限接口 | `StpInterfaceImpl`（在 rbac-starter 的 `rbac/security`） |
 | P1 | Jackson 配置 | `JacksonConfig`（Long→String、日期格式、NON_NULL、Asia/Shanghai） |
 | P1 | 请求日志 | `RequestLogFilter`（慢请求告警、敏感字段脱敏） |
@@ -207,8 +204,7 @@ sa-token:
 ```
 TraceIdFilter → RequestLogFilter → RateLimitAspect → RepeatSubmitAspect
 → Sa-Token 认证/鉴权 → Controller → Service → MyBatis-Flex
-  → TenantManager(追加 tenant_id) → AutoFillHandler(填充公共字段)
-  → DataScope(追加部门过滤)
+  → AutoFillHandler(填充公共字段) → DataScope(追加部门过滤)
 → GlobalExceptionHandler → Jackson 序列化 → 响应日志
 ```
 
@@ -218,18 +214,16 @@ TraceIdFilter → RequestLogFilter → RateLimitAspect → RepeatSubmitAspect
 
 | 场景 | 继承类 | 得到的字段 |
 |------|--------|-----------|
-| 租户业务表（`biz_*`、大部分 `sys_*`） | `TenantEntity` | tenant_id + create_by/time + update_by/time + deleted |
-| 全局表（`sys_menu`、`sys_tenant`、关联表） | `BaseEntity` | create_by/time + update_by/time + deleted |
-| 纯追加日志表（`sys_oper_log`、`sys_login_log`） | 不继承 | 手动维护 tenant_id / create_time，无 deleted |
+| 业务表（`biz_*`、大部分 `sys_*`） | `BaseEntity` | create_by/time + update_by/time + deleted |
+| 纯追加日志表（`sys_oper_log`、`sys_login_log`） | 不继承 | 手动维护 create_time，无 deleted |
 
-`AutoFillHandler` 自动填 create_by/create_time/tenantId，**不要手动 set**。
+`AutoFillHandler` 自动填 create_by/create_time，**不要手动 set**。
 
-**Step 2 — 查询用 Context + 数据权限**
+**Step 2 — 查询用数据权限**
 
 ```java
 @DataScope(deptIdField = "dept_id")
 public List<Order> list(OrderQueryDTO query) {
-    Long tenantId = UserContext.getTenantId();      // 不写死 tenantId
     DataScopeContext.Condition c = DataScopeContext.get();
     return orderMapper.selectList(query, c);
 }
@@ -260,62 +254,14 @@ executor.submit(TraceUtils.wrap(() -> doWork()));  // ✅ MDC 传递
 executor.submit(() -> doWork());                    // ❌ traceId 丢失
 ```
 
-### 多租户规则
-
-- 默认单租户形态：所有用户 `tenant_id=1`
-- `DEFAULT_TENANT_ID = 1L` 是平台基座，由平台流 `common/V2__init_data.sql` 创建（三种数据库通用），**不可删除**
-- 业务租户 id 用雪花算法
-- `SUPER_ADMIN(role_id=-1)` 平台级（可见租户管理）；`ADMIN(role_id=1)` 租户级
-- **不硬编码 `tenant_id=1`**，一律 `UserContext.getTenantId()`
-- 新增业务表必须含 `tenant_id`（全局表除外）
-- 三层跳过：`ignoreTables()` 全局表 ｜ `@TenantIgnore` 单 Entity ｜ `@IgnoreTenant` 单方法
-
-### 平台级权限隔离
-
-> 详细设计：`doc/design/modules/rbac/modules/平台级权限隔离/详细设计.md`
-
-**每个租户的 `admin` 都是该租户下的最高权限**，但「租户下的最高权限」不等于「平台权限」。
-判据是 `sys_menu.is_platform`（`1`=平台级）。当前三类属平台级：
-
-| 类别 | 权限点 | 为什么 |
-|------|--------|--------|
-| 租户管理 | `system:tenant{,:list,:add,:edit,:remove,:detail,:config}` | 管理租户本身，天然跨租户 |
-| 菜单管理 | `system:menu{,:add,:edit,:remove}` | `sys_menu` 是全局表，一份菜单树所有租户共用 |
-| Redis 破坏性操作 | `monitor:redis:key:delete`、`monitor:redis:slowlog:reset` | Redis 是所有租户共用一个实例 |
-
-**只挡写，读留着**：`monitor:redis:info` 与 `system:menu:list` 都是租户级。
-后者尤其不能动 —— 「角色 → 权限」页靠 `GET /api/v1/menus` 拉菜单树画勾选框，
-收走 list 等于让租户管理员再也分配不了任何权限。
-
-两道守卫：
-
-| 守卫 | 位置 | 作用 |
-|------|------|------|
-| 建租户基线 | `TenantServiceImpl.assignTenantScopedMenusToRole` | 新租户 ADMIN 只拿 `is_platform=0` 的菜单 |
-| 分配时校验 | `RoleServiceImpl.assignMenus` | 非平台超管提交含平台级 menuId → `PLATFORM_MENU_FORBIDDEN(40004)` + `log.warn` 审计 |
-
-两道都必须在：租户 ADMIN 握有 `system:role:assignMenu`，只修基线的话它能自己勾回来。
-
-- 新增平台级权限点：写 Flyway 迁移把 `sys_menu.is_platform` 置 1，**顺带
-  `DELETE sys_role_menu` 清掉已发出的授权**（参照 `V14__add_menu_is_platform.sql`）
-- **`is_platform` 不可由接口设置**：`MenuServiceImpl.create` 固定写 0 且不从 DTO 取，
-  `update` 不碰它。租户管理员有 `system:menu:edit`，能改标记就等于能自提权
-- 前端 `PermissionPage` 按后端下发的 `isPlatform` 隐藏节点，依据是
-  `UserInfoVO.platformAdmin`（**后端算，前端不从 roles 自行推导**）。
-  隐藏是体验层，不是安全边界
-
 ### 常见踩坑
 
 | 坑 | 正解 |
 |---|---|
 | `throw new RuntimeException` | `BizException(ErrorCode.XXX)` |
-| 手填 `tenant_id = 1` | `UserContext.getTenantId()` |
 | Controller 里手写参数校验 | `@Valid` + DTO 约束注解 |
-| Mapper 漏 tenant_id | Entity 继承 `TenantEntity`，自动追加 |
-| 定时任务里 UserContext 为空 | `@IgnoreTenant` 或手动 set |
 | 登录接口无限流 | 必须 `@RateLimit(IP)` |
 | 加了权限注解但没插菜单数据 | 写 Flyway 迁移插 `sys_menu` + `sys_role_menu` |
-| 新增跨租户/共享资源的权限点，忘了它不该给租户管理员 | 迁移里置 `is_platform=1`，并 `DELETE sys_role_menu` 清已发出的授权 |
 
 ### Redis / 缓存
 
@@ -328,7 +274,6 @@ executor.submit(() -> doWork());                    // ❌ traceId 丢失
 ## 五、数据模型（RBAC）
 
 ```
-Tenant → User / Role / Dept        （租户隔离）
 User  ↔ Role                        （多对多，sys_user_role）
 Role  ↔ Menu                        （多对多，sys_role_menu，Menu 为全局表）
 Role  ↔ Dept                        （自定义数据权限，sys_role_dept）
@@ -384,7 +329,7 @@ Flyway 的 ClassPathScanner 走 `ClassLoader.getResources()` 天然跨 jar 枚�
 `.kiro/steering/database-migration.md`。
 
 - 表命名：`{module}_{entity}`（业务）｜ `sys_{entity}`（系统）｜ `{e1}_{e2}_rel`（关联）｜ `{entity}_log`（日志）
-- 必填字段：`id`(BIGINT 雪花) ｜ `tenant_id`(非全局表) ｜ `create_time` ｜ `update_time` ｜ `deleted`(SMALLINT)
+- 必填字段：`id`(BIGINT 雪花) ｜ `create_time` ｜ `update_time` ｜ `deleted`(SMALLINT)
 - 当前时间用 `CURRENT_TIMESTAMP`，**不要用 `NOW()`**（SQLite 不认这个函数名）
 - 逻辑删除：`deleted=0/1`；唯一索引在 PostgreSQL/SQLite 用 `WHERE deleted = 0` 局部索引，
   MySQL 不支持局部索引，把 `deleted` 纳入组合唯一键
@@ -436,8 +381,8 @@ App → Layout(双 Layout) → Pages → Components(通用) / Pro(表格表单) 
 | AOP 切面 | 每个分支至少 1 个用例 |
 | 前端组件 | Pro 组件与布局组件必须有 Vitest 用例 |
 | 前端文案 | **不写中文字面量**，`src/locales/noHardcodedText.test.ts` 会拦（例外要进该文件的 ALLOW 并写明理由） |
-| 改动 core | 先跑 `mvn -pl gentry-core-spring-boot-starter test`（基线 133 个测试全绿） |
-| 改动 RBAC | 先跑 `mvn -pl gentry-rbac-spring-boot-starter test`（基线 72 个测试全绿） |
+| 改动 core | 先跑 `mvn -pl gentry-core-spring-boot-starter test`（基线 127 个测试全绿） |
+| 改动 RBAC | 先跑 `mvn -pl gentry-rbac-spring-boot-starter test`（基线 75 个测试全绿） |
 
 TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → 重构。
 测试命名 `方法_场景_预期`。
@@ -445,15 +390,15 @@ TDD：测试先行 → 红灯 → 最小实现 → 绿灯 → 补覆盖率 → �
 提交前必须全绿：
 
 ```bash
-cd backend  && mvn test          # 后端 364 个测试
-cd frontend && npm test          # 前端 111 个测试
+cd backend  && mvn test          # 后端 345 个测试
+cd frontend && npm test          # 前端 112 个测试
 cd frontend && npx tsc -b        # 类型检查
 ```
 
 动了页面或权限，还要跑 UI E2E（需前后端都起着）：
 
 ```bash
-cd frontend && npm run test:e2e  # 90 个 Playwright 用例
+cd frontend && npm run test:e2e  # 77 个 Playwright 用例
 ```
 
 **`mvn -pl <module> test` 不可信**：单模块构建会从 `~/.m2` 解析
@@ -491,8 +436,8 @@ IP 限流（10 次/60 秒），**不要在 spec 里逐个 test 走真实登录**
 
 | 账号 | 密码 | 角色 |
 |------|------|------|
-| chenli | Chenli@2026 | SUPER_ADMIN（平台超管） |
-| admin | Abc@123456 | ADMIN（租户管理员） |
+| chenli | Chenli@2026 | ADMIN（管理员，拥有全部权限） |
+| admin | Abc@123456 | ADMIN（管理员，拥有全部权限） |
 | zhangsan | Abc@123456 | ADMIN |
 
 **上生产前必须改掉这三个账号的密码，并外置 `SA_TOKEN_JWT_SECRET_KEY`。**

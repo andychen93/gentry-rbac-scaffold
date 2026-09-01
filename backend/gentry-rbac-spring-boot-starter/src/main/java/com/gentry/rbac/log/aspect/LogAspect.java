@@ -48,7 +48,6 @@ public class LogAspect {
 
         try {
             operLog.setOperatorId(UserContext.getUserId());
-            operLog.setTenantId(UserContext.getTenantId());
         } catch (Exception ignored) {}
 
         try {

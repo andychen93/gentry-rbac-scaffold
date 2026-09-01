@@ -12,41 +12,40 @@ import java.util.List;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
-    @Select("SELECT * FROM sys_user WHERE tenant_id = #{tenantId} AND username = #{username} AND deleted = 0")
-    User selectByUsername(@Param("tenantId") Long tenantId, @Param("username") String username);
+    @Select("SELECT * FROM sys_user WHERE username = #{username} AND deleted = 0")
+    User selectByUsername(@Param("username") String username);
 
     /** 邮箱登录 / 邮箱占用校验：email 无唯一键，靠查询判断，调用方须先做小写规范化 */
-    @Select("SELECT * FROM sys_user WHERE tenant_id = #{tenantId} AND email = #{email} AND deleted = 0 LIMIT 1")
-    User selectByEmail(@Param("tenantId") Long tenantId, @Param("email") String email);
+    @Select("SELECT * FROM sys_user WHERE email = #{email} AND deleted = 0 LIMIT 1")
+    User selectByEmail(@Param("email") String email);
 
-    @Select("SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND email = #{email} AND deleted = 0")
-    int countByEmail(@Param("tenantId") Long tenantId, @Param("email") String email);
+    @Select("SELECT COUNT(*) FROM sys_user WHERE email = #{email} AND deleted = 0")
+    int countByEmail(@Param("email") String email);
 
-    @Select("SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND username = #{username} AND deleted = 0")
-    int countByUsername(@Param("tenantId") Long tenantId, @Param("username") String username);
+    @Select("SELECT COUNT(*) FROM sys_user WHERE username = #{username} AND deleted = 0")
+    int countByUsername(@Param("username") String username);
 
-    /** 租户内启用用户的下拉选项（供角色绑定用户的穿梭框） */
+    /** 启用用户的下拉选项（供角色绑定用户的穿梭框） */
     @Select("SELECT u.id, u.username, u.nickname, d.name AS deptName "
             + "FROM sys_user u LEFT JOIN sys_dept d ON d.id = u.dept_id AND d.deleted = 0 "
-            + "WHERE u.tenant_id = #{tenantId} AND u.status = 1 AND u.deleted = 0 "
+            + "WHERE u.status = 1 AND u.deleted = 0 "
             + "ORDER BY u.id ASC")
-    List<UserOptionVO> selectOptions(@Param("tenantId") Long tenantId);
+    List<UserOptionVO> selectOptions();
 
     /**
-     * 统计给定 id 中属于本租户且未删除的用户数，用于绑定前校验。
-     * 带 tenant_id 是防越权：不能把别的租户的用户绑到本租户角色上。
+     * 统计给定 id 中未删除的用户数，用于绑定前校验。
      */
     @Select({"<script>",
-            "SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND deleted = 0 AND id IN",
+            "SELECT COUNT(*) FROM sys_user WHERE deleted = 0 AND id IN",
             "<foreach collection='userIds' item='uid' open='(' separator=',' close=')'>#{uid}</foreach>",
             "</script>"})
-    int countExistingByIds(@Param("tenantId") Long tenantId, @Param("userIds") List<Long> userIds);
+    int countExistingByIds(@Param("userIds") List<Long> userIds);
 
     @Select({"<script>",
-        "SELECT COUNT(*) FROM sys_user WHERE tenant_id = #{tenantId} AND phone = #{phone} AND deleted = 0",
+        "SELECT COUNT(*) FROM sys_user WHERE phone = #{phone} AND deleted = 0",
         "<if test='excludeId != null'> AND id != #{excludeId}</if>",
         "</script>"})
-    int countByPhone(@Param("tenantId") Long tenantId, @Param("phone") String phone, @Param("excludeId") Long excludeId);
+    int countByPhone(@Param("phone") String phone, @Param("excludeId") Long excludeId);
 
     @Update("UPDATE sys_user SET deleted = 1, update_time = CURRENT_TIMESTAMP WHERE id = #{id}")
     int logicDeleteById(@Param("id") Long id);
@@ -66,7 +65,7 @@ public interface UserMapper extends BaseMapper<User> {
     /**
      * 分页查询用户列表（XML 实现）
      */
-    List<User> selectList(@Param("query") UserQueryDTO query, @Param("tenantId") Long tenantId, @Param("deptIds") List<Long> deptIds);
+    List<User> selectList(@Param("query") UserQueryDTO query, @Param("deptIds") List<Long> deptIds);
 
-    long selectCount(@Param("query") UserQueryDTO query, @Param("tenantId") Long tenantId, @Param("deptIds") List<Long> deptIds);
+    long selectCount(@Param("query") UserQueryDTO query, @Param("deptIds") List<Long> deptIds);
 }

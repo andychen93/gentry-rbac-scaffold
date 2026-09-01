@@ -38,17 +38,13 @@ class UserContextTest {
     @DisplayName("clear_调用后_全部字段被清空含language")
     void clear_调用后_全部字段被清空含language() {
         UserContext.setUserId(1L);
-        UserContext.setTenantId(2L);
         UserContext.setDeptId(3L);
-        UserContext.setPlatformAdmin(true);
         UserContext.setLanguage("en_US");
 
         UserContext.clear();
 
         assertThat(UserContext.getUserId()).isNull();
-        assertThat(UserContext.getTenantId()).isNull();
         assertThat(UserContext.getDeptId()).isNull();
-        assertThat(UserContext.isPlatformAdmin()).isFalse();
         assertThat(UserContext.getLanguage())
                 .as("clear() 漏清 LANGUAGE 会导致线程复用后语言串台")
                 .isNull();

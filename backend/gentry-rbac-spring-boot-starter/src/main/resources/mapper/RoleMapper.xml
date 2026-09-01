@@ -4,7 +4,6 @@
 
     <resultMap id="RoleResultMap" type="com.gentry.rbac.role.entity.Role">
         <id property="id" column="id"/>
-        <result property="tenantId" column="tenant_id"/>
         <result property="roleCode" column="role_code"/>
         <result property="roleName" column="role_name"/>
         <result property="dataScope" column="data_scope"/>
@@ -19,7 +18,7 @@
     </resultMap>
 
     <sql id="listCondition">
-        WHERE r.tenant_id = #{tenantId} AND r.deleted = 0
+        WHERE r.deleted = 0
         <if test="roleName != null and roleName != ''">
             AND r.role_name LIKE CONCAT('%', #{roleName}, '%')
         </if>

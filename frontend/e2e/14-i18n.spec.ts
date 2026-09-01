@@ -32,10 +32,8 @@ test.describe('国际化 (I18N)', () => {
     await expect(page.getByText(commonEn['app.name'])).toBeVisible();
     await expect(page.getByText(loginEn['subtitle'])).toBeVisible();
     await expect(page.getByRole('button', { name: loginEn['submit'] })).toBeVisible();
-    await page.getByRole('tab', { name: loginEn['tab.tenant'] }).click();
-    await expect(page.getByText(loginEn['defaultTenant'])).toBeVisible();
 
-    // 登录页整页没有 C 类数据（租户名除外，默认部署下只有内置租户），可以全页扫中文
+    // 登录页整页没有 C 类数据，可以全页扫中文
     const body = await page.locator('body').innerText();
     expect(/[\u4e00-\u9fff]/.test(body), `登录页有中文残留：\n${body}`).toBe(false);
     expect(rawKeysIn(body), '登录页有裸 key').toEqual([]);
@@ -139,17 +137,14 @@ test.describe('国际化 (I18N)', () => {
     { path: '/system/roles', expect: ['role:table.code', 'role:action.create', 'common:status'] },
     // 树默认展开，所以按钮显示的是「折叠全部」而不是「展开全部」
     { path: '/system/dept', expect: ['dept:table.name', 'dept:action.create', 'common:collapseAll'] },
-    // 菜单管理自 V15 起是 SUPER_ADMIN 专属（sys_menu 是全局表，改它影响所有租户）
-    { path: '/system/menu', account: 'chenli', expect: ['menuMgmt:table.permission', 'menuMgmt:action.create'] },
+    { path: '/system/menu', expect: ['menuMgmt:table.permission', 'menuMgmt:action.create'] },
     { path: '/system/dict', expect: ['dictMgmt:table.dictType', 'dictMgmt:action.createType'] },
     { path: '/system/config', expect: ['config:table.key', 'config:action.refreshCache'] },
     { path: '/monitor/operlog', expect: ['log:oper.table.id', 'log:oper.action.clean'] },
     { path: '/monitor/loginlog', expect: ['log:login.table.loginType', 'log:login.action.clean'] },
     { path: '/monitor/online', expect: ['common:loginIp', 'common:browser'] },
-    { path: '/system/tenants', account: 'chenli', expect: ['tenant:table.code', 'tenant:action.create'] },
     {
       path: '/monitor-center/redis',
-      account: 'chenli',
       expect: ['monitor:tab.keys', 'monitor:info.title', 'monitor:autoRefresh'],
     },
     { path: '/profile', expect: ['profile:action.changePwd', 'profile:action.edit'] },
@@ -183,7 +178,7 @@ test.describe('国际化 (I18N)', () => {
    * `nav.json`，这里会以「孤儿 key」的形式暴露出来。
    */
   test('I18N-007 nav.json 无孤儿 key（与库里菜单派生的 key 对账）', async ({ page }) => {
-    await login(page, 'chenli'); // SUPER_ADMIN 才能看到全部菜单（含租户管理）
+    await login(page, 'chenli'); // ADMIN 唯一角色，持有全部菜单
 
     const tree = await page.evaluate(async () => {
       const res = await fetch('/api/v1/menus', {

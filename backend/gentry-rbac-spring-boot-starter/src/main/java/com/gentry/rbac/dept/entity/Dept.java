@@ -4,7 +4,7 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
-import com.gentry.core.entity.TenantEntity;
+import com.gentry.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +14,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_dept")
-public class Dept extends TenantEntity {
+public class Dept extends BaseEntity {
 
     @Id(keyType = KeyType.Generator, value = KeyGenerators.flexId)
     private Long id;
@@ -27,5 +27,5 @@ public class Dept extends TenantEntity {
     private String email;
     private Integer sort;
     private Integer status;
-    // tenantId, createBy, createTime, updateBy, updateTime, deleted 由 TenantEntity 基类提供
+    // createBy, createTime, updateBy, updateTime, deleted 由 BaseEntity 基类提供
 }

@@ -4,7 +4,6 @@
 
     <resultMap id="UserResultMap" type="com.gentry.rbac.user.entity.User">
         <id property="id" column="id"/>
-        <result property="tenantId" column="tenant_id"/>
         <result property="username" column="username"/>
         <result property="password" column="password"/>
         <result property="nickname" column="nickname"/>
@@ -29,7 +28,7 @@
 
 
     <sql id="queryCondition">
-        WHERE u.tenant_id = #{tenantId} AND u.deleted = 0
+        WHERE u.deleted = 0
         <if test="query.username != null and query.username != ''">
             AND u.username LIKE CONCAT('%', #{query.username}, '%')
         </if>

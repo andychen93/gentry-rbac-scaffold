@@ -4,7 +4,6 @@
 
     <resultMap id="DeptResultMap" type="com.gentry.rbac.dept.entity.Dept">
         <id property="id" column="id"/>
-        <result property="tenantId" column="tenant_id"/>
         <result property="parentId" column="parent_id"/>
         <result property="ancestors" column="ancestors"/>
         <result property="name" column="name"/>
@@ -22,7 +21,7 @@
     </resultMap>
 
     <sql id="queryCondition">
-        WHERE d.tenant_id = #{tenantId} AND d.deleted = 0
+        WHERE d.deleted = 0
         <if test="query.name != null and query.name != ''">
             AND d.name LIKE CONCAT('%', #{query.name}, '%')
         </if>
@@ -37,12 +36,10 @@
         ORDER BY d.sort ASC, d.create_time ASC
     </select>
 
-
-
-    <select id="countUsersByTenantGroupByDept" resultType="map">
+    <select id="countUsersGroupByDept" resultType="map">
         SELECT dept_id AS deptId, COUNT(*) AS cnt
         FROM sys_user
-        WHERE tenant_id = #{tenantId} AND deleted = 0
+        WHERE deleted = 0
         GROUP BY dept_id
     </select>
 

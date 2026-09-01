@@ -4,7 +4,6 @@ import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
 import com.gentry.core.i18n.DictI18nKeyResolver;
-import com.gentry.core.security.UserContext;
 import com.gentry.rbac.dict.dto.*;
 import com.gentry.rbac.dict.cache.DictCacheManager;
 import com.gentry.rbac.dict.entity.DictData;
@@ -40,9 +39,8 @@ public class DictServiceImpl implements DictService {
 
     @Override
     public PageResult<DictTypeListVO> listTypes(DictTypeQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        long total = dictTypeMapper.selectCount(query, tenantId);
-        List<DictTypeListVO> list = total > 0 ? dictTypeMapper.selectList(query, tenantId) : List.of();
+        long total = dictTypeMapper.selectCount(query);
+        List<DictTypeListVO> list = total > 0 ? dictTypeMapper.selectList(query) : List.of();
         // DictTypeListVO 由 XML 的 resultType 直接映射，不经组装方法，i18nKey 只能在这里补
         list.forEach(vo -> vo.setI18nKey(DictI18nKeyResolver.resolveType(vo.getDictType())));
         return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
@@ -51,8 +49,7 @@ public class DictServiceImpl implements DictService {
     @Override
     @Transactional
     public DictTypeVO createType(DictTypeCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
-        if (dictTypeMapper.countByDictType(tenantId, dto.getDictType()) > 0) {
+        if (dictTypeMapper.countByDictType(dto.getDictType()) > 0) {
             throw new BizException(ErrorCode.DICT_TYPE_EXISTS);
         }
         DictType entity = new DictType();
@@ -82,37 +79,34 @@ public class DictServiceImpl implements DictService {
     public void removeType(Long id) {
         DictType existing = dictTypeMapper.selectOneById(id);
         if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.not.found");
-        Long tenantId = UserContext.getTenantId();
         dictTypeMapper.logicDeleteById(id);
-        dictDataMapper.logicDeleteByDictType(tenantId, existing.getDictType());
-        invalidateCache(tenantId, existing.getDictType());
+        dictDataMapper.logicDeleteByDictType(existing.getDictType());
+        invalidateCache(existing.getDictType());
     }
 
     @Override
     public List<DictDataVO> listDataByType(String dictType) {
-        Long tenantId = UserContext.getTenantId();
-        List<DictDataVO> cached = cache.get(tenantId, dictType);
+        List<DictDataVO> cached = cache.get(dictType);
         if (cached != null) return cached;
 
-        List<DictData> dataList = dictDataMapper.selectByDictType(tenantId, dictType);
+        List<DictData> dataList = dictDataMapper.selectByDictType(dictType);
         List<DictDataVO> voList = dataList.stream().map(this::toDataVO).collect(Collectors.toList());
-        cache.put(tenantId, dictType, voList);
+        cache.put(dictType, voList);
         return voList;
     }
 
     @Override
     @Transactional
     public DictDataVO createData(String dictType, DictDataCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
         // 校验字典类型存在且启用
-        DictType typeEntity = dictTypeMapper.selectByDictType(tenantId, dictType);
+        DictType typeEntity = dictTypeMapper.selectByDictType(dictType);
         if (typeEntity == null) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.not.found");
         }
         if (typeEntity.getStatus() != null && typeEntity.getStatus() != 1) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.type.disabled");
         }
-        if (dictDataMapper.countByDictValue(tenantId, dictType, dto.getDictValue()) > 0) {
+        if (dictDataMapper.countByDictValue(dictType, dto.getDictValue()) > 0) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.value.exists");
         }
         DictData entity = new DictData();
@@ -126,7 +120,7 @@ public class DictServiceImpl implements DictService {
         entity.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
         entity.setRemark(dto.getRemark());
         dictDataMapper.insert(entity);
-        invalidateCache(tenantId, dictType);
+        invalidateCache(dictType);
         return toDataVO(entity);
     }
 
@@ -145,7 +139,7 @@ public class DictServiceImpl implements DictService {
         entity.setStatus(dto.getStatus());
         entity.setRemark(dto.getRemark());
         dictDataMapper.update(entity);
-        invalidateCache(UserContext.getTenantId(), existing.getDictType());
+        invalidateCache(existing.getDictType());
     }
 
     @Override
@@ -154,7 +148,7 @@ public class DictServiceImpl implements DictService {
         DictData existing = dictDataMapper.selectOneById(id);
         if (existing == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.dict.data.not.found");
         dictDataMapper.logicDeleteById(id);
-        invalidateCache(UserContext.getTenantId(), existing.getDictType());
+        invalidateCache(existing.getDictType());
     }
 
     @Override
@@ -163,8 +157,8 @@ public class DictServiceImpl implements DictService {
         cache.invalidateAll();
     }
 
-    private void invalidateCache(Long tenantId, String dictType) {
-        cache.invalidate(tenantId, dictType);
+    private void invalidateCache(String dictType) {
+        cache.invalidate(dictType);
     }
 
     private DictTypeVO toTypeVO(DictType entity) {

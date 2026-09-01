@@ -90,7 +90,7 @@ class I18nKeyResolverTest {
                     {null, "/monitor", "menu.monitor"},
                     {null, "/monitor-center", "menu.monitor-center"},
                     {"system:user", "/system/user", "menu.system.user"},
-                    {"system:tenant:list", null, "menu.system.tenant.list"},
+                    {"system:menu:list", null, "menu.system.menu.list"},
                     {"monitor:redis:info", "/monitor/redis", "menu.monitor.redis.info"},
             };
             java.util.Set<String> keys = new java.util.LinkedHashSet<>();

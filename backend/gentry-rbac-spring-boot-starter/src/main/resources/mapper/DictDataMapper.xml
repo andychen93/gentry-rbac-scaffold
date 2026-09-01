@@ -4,7 +4,6 @@
 
     <resultMap id="DictDataResultMap" type="com.gentry.rbac.dict.entity.DictData">
         <id property="id" column="id"/>
-        <result property="tenantId" column="tenant_id"/>
         <result property="dictType" column="dict_type"/>
         <result property="dictLabel" column="dict_label"/>
         <result property="dictValue" column="dict_value"/>
@@ -23,7 +22,7 @@
 
     <select id="selectByDictType" resultMap="DictDataResultMap">
         SELECT * FROM sys_dict_data
-        WHERE tenant_id = #{tenantId} AND dict_type = #{dictType} AND status = 1 AND deleted = 0
+        WHERE dict_type = #{dictType} AND status = 1 AND deleted = 0
         ORDER BY sort ASC, id ASC
     </select>
 

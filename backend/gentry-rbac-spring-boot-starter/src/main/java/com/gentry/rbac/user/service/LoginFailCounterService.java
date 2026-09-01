@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 登录失败计数器（基于 Redis，多节点一致）。
  *
- * <p>key: {@code login_fail:{tenantId}:{username}}。首次失败时设置 TTL = lockMinutes，
+ * <p>key: {@code login_fail:{username}}。首次失败时设置 TTL = lockMinutes，
  * 计数达到 {@code maxFailCount} 即视为锁定；TTL 到期后 Redis 自动清零、账号自动解锁。</p>
  *
  * <p>不走 Caffeine 本地缓存——限流/防重用本地即可，但账号锁定需要跨节点一致，必须用 Redis。</p>
@@ -46,8 +46,8 @@ public class LoginFailCounterService {
     }
 
     /** 记录一次登录失败；首次失败时设置锁定窗口 TTL */
-    public void recordFail(Long tenantId, String username) {
-        String key = key(tenantId, username);
+    public void recordFail(String username) {
+        String key = key(username);
         Long count = redis.opsForValue().increment(key);
         if (count != null && count == 1L) {
             redis.expire(key, lockMinutes(), TimeUnit.MINUTES);
@@ -55,13 +55,13 @@ public class LoginFailCounterService {
     }
 
     /** 是否已被锁定（失败次数已达上限） */
-    public boolean isLocked(Long tenantId, String username) {
-        return getFailCount(tenantId, username) >= maxFailCount();
+    public boolean isLocked(String username) {
+        return getFailCount(username) >= maxFailCount();
     }
 
     /** 当前失败次数 */
-    public long getFailCount(Long tenantId, String username) {
-        String v = redis.opsForValue().get(key(tenantId, username));
+    public long getFailCount(String username) {
+        String v = redis.opsForValue().get(key(username));
         if (v == null) return 0;
         try {
             return Long.parseLong(v);
@@ -71,11 +71,11 @@ public class LoginFailCounterService {
     }
 
     /** 登录成功后清除计数 */
-    public void clear(Long tenantId, String username) {
-        redis.delete(key(tenantId, username));
+    public void clear(String username) {
+        redis.delete(key(username));
     }
 
-    private String key(Long tenantId, String username) {
-        return KEY_PREFIX + tenantId + ":" + username;
+    private String key(String username) {
+        return KEY_PREFIX + username;
     }
 }

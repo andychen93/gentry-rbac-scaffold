@@ -35,7 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
@@ -63,7 +62,6 @@ class AuthEmailServiceImplTest {
 
     @BeforeEach
     void setup() {
-        // 模拟匿名端点：不设置 UserContext，currentTenantId() 应回落 DEFAULT_TENANT_ID=1
         UserContext.clear();
         lenient().when(passwordEncoder.encode(anyString())).thenReturn("$2a$10$encoded");
         registerProperties = new GentryRegisterProperties();
@@ -88,7 +86,7 @@ class AuthEmailServiceImplTest {
 
     @Test
     void register_emailAlreadyExists_throws() {
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(1);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(1);
         assertThatThrownBy(() -> service.register(registerDto("a@b.com")))
                 .isInstanceOf(BizException.class)
                 .satisfies(e -> assertThat(((BizException) e).getCode())
@@ -98,13 +96,13 @@ class AuthEmailServiceImplTest {
 
     @Test
     void register_cooldownActive_throws() {
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(0);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(0);
         EmailToken latest = new EmailToken();
         latest.setPurpose(EmailToken.PURPOSE_REGISTER);
         latest.setUsedAt(null);
         latest.setExpiresAt(LocalDateTime.now().plusHours(47));
         latest.setCreateTime(LocalDateTime.now().minusSeconds(30)); // 冷却 1 分钟内
-        when(emailTokenMapper.selectLatestByEmailAndPurpose(1L, "a@b.com", "REGISTER"))
+        when(emailTokenMapper.selectLatestByEmailAndPurpose("a@b.com", "REGISTER"))
                 .thenReturn(latest);
         assertThatThrownBy(() -> service.register(registerDto("a@b.com")))
                 .isInstanceOf(BizException.class)
@@ -114,8 +112,8 @@ class AuthEmailServiceImplTest {
 
     @Test
     void register_normal_storesHashNotPlaintindromeAndSendsMail() {
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(0);
-        when(emailTokenMapper.selectLatestByEmailAndPurpose(anyLong(), anyString(), anyString())).thenReturn(null);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(0);
+        when(emailTokenMapper.selectLatestByEmailAndPurpose(anyString(), anyString())).thenReturn(null);
         when(emailTokenMapper.insert(any(EmailToken.class))).thenAnswer(inv -> {
             EmailToken t = inv.getArgument(0);
             tokenStore.put(t.getTokenHash(), t);
@@ -167,7 +165,7 @@ class AuthEmailServiceImplTest {
         EmailToken token = validRegisterToken();
         // 服务对明文 token 做 SHA-256 后查库；替身需按「明文→hash」桥接
         when(emailTokenMapper.selectByTokenHash(anyString())).thenReturn(token);
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(0);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(0);
         when(userMapper.insert(any(User.class))).thenReturn(1);
 
         TokenDTO dto = new TokenDTO();
@@ -191,7 +189,7 @@ class AuthEmailServiceImplTest {
     void verifyEmail_defaultRoleConfigured_bindsRole() {
         EmailToken token = validRegisterToken();
         when(emailTokenMapper.selectByTokenHash(anyString())).thenReturn(token);
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(0);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(0);
         when(userMapper.insert(any(User.class))).thenReturn(1);
         registerProperties.setDefaultRoleCode("BUDGET_USER");
         Role budgetRole = new Role();
@@ -213,7 +211,7 @@ class AuthEmailServiceImplTest {
     void verifyEmail_defaultRoleMissing_skipsBindingSilently() {
         EmailToken token = validRegisterToken();
         when(emailTokenMapper.selectByTokenHash(anyString())).thenReturn(token);
-        when(userMapper.countByEmail(1L, "a@b.com")).thenReturn(0);
+        when(userMapper.countByEmail("a@b.com")).thenReturn(0);
         when(userMapper.insert(any(User.class))).thenReturn(1);
         registerProperties.setDefaultRoleCode("NOT_EXIST");
         when(roleMapper.selectOneByQuery(any())).thenReturn(null);
@@ -228,7 +226,7 @@ class AuthEmailServiceImplTest {
 
     @Test
     void forgotPassword_unknownEmail_silentOkNoMail() {
-        when(userMapper.selectByEmail(1L, "nobody@b.com")).thenReturn(null);
+        when(userMapper.selectByEmail("nobody@b.com")).thenReturn(null);
         EmailDTO dto = new EmailDTO();
         dto.setEmail("nobody@b.com");
         assertThatCode(() -> service.forgotPassword(dto)).doesNotThrowAnyException();
@@ -240,7 +238,7 @@ class AuthEmailServiceImplTest {
         User user = new User();
         user.setId(9L);
         user.setEmail("a@b.com");
-        when(userMapper.selectByEmail(1L, "a@b.com")).thenReturn(user);
+        when(userMapper.selectByEmail("a@b.com")).thenReturn(user);
         when(emailTokenMapper.insert(any(EmailToken.class))).thenReturn(1);
 
         EmailDTO dto = new EmailDTO();
@@ -262,7 +260,7 @@ class AuthEmailServiceImplTest {
         when(emailTokenMapper.selectByTokenHash(anyString())).thenReturn(token);
         User user = new User();
         user.setId(9L);
-        when(userMapper.selectByEmail(1L, "a@b.com")).thenReturn(user);
+        when(userMapper.selectByEmail("a@b.com")).thenReturn(user);
 
         PasswordResetDTO dto = new PasswordResetDTO();
         dto.setToken("raw-token");
@@ -295,14 +293,14 @@ class AuthEmailServiceImplTest {
     void isEmailVerified_usedToken_true_unusedToken_false() {
         EmailToken used = validRegisterToken();
         used.setUsedAt(LocalDateTime.now());
-        when(emailTokenMapper.selectLatestByEmailAndPurpose(1L, "a@b.com", "REGISTER"))
+        when(emailTokenMapper.selectLatestByEmailAndPurpose("a@b.com", "REGISTER"))
                 .thenReturn(used);
-        assertThat(service.isEmailVerified(1L, "a@b.com")).isTrue();
+        assertThat(service.isEmailVerified("a@b.com")).isTrue();
 
         EmailToken unused = validRegisterToken();
-        when(emailTokenMapper.selectLatestByEmailAndPurpose(1L, "c@d.com", "REGISTER"))
+        when(emailTokenMapper.selectLatestByEmailAndPurpose("c@d.com", "REGISTER"))
                 .thenReturn(unused);
-        assertThat(service.isEmailVerified(1L, "c@d.com")).isFalse();
+        assertThat(service.isEmailVerified("c@d.com")).isFalse();
     }
 
     // ========== helpers ==========
@@ -314,7 +312,6 @@ class AuthEmailServiceImplTest {
 
     private EmailToken validToken(String purpose, String email) {
         EmailToken token = new EmailToken();
-        token.setTenantId(1L);
         token.setEmail(email);
         token.setPurpose(purpose);
         token.setTokenHash("hash-" + purpose + "-" + email);

@@ -14,11 +14,6 @@ import java.util.List;
 public interface DeptService {
 
     /**
-     * 创建默认部门（租户编排时调用）
-     */
-    Long createDefaultDept(Long tenantId, String name);
-
-    /**
      * 查询部门树
      */
     List<DeptTreeVO> tree(DeptQueryDTO query);

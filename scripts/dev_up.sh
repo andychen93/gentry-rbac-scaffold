@@ -160,7 +160,7 @@ start_backend() {
 
   info "等待后端就绪……"
   for i in $(seq 1 60); do
-    if curl -sS -o /dev/null -w '%{http_code}' http://localhost:9090/api/v1/tenants/options 2>/dev/null | grep -qE '^(200|401|403)$'; then
+    if curl -sS -o /dev/null -w '%{http_code}' http://localhost:9090/api/v1/auth/captcha 2>/dev/null | grep -qE '^(200|401|403)$'; then
       ok "后端就绪 http://localhost:9090"
       return 0
     fi
@@ -236,5 +236,5 @@ echo "  后端日志:      tail -f $BACKEND_LOG"
 echo "  前端日志:      tail -f $FRONTEND_LOG"
 echo "  停止所有:      bash scripts/dev_down.sh"
 echo ""
-echo "  默认账号：     admin / Abc@123456  （租户管理员）"
-echo "                 chenli / Chenli@2026（平台超管，可见租户管理）"
+echo "  默认账号：     admin / Abc@123456  （管理员，拥有全部权限）"
+echo "                 chenli / Chenli@2026（管理员，拥有全部权限）"

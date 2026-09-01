@@ -24,7 +24,7 @@ public class RbacUserDataScopeResolver implements UserDataScopeResolver {
     }
 
     @Override
-    public Integer resolveDataScope(Long userId, Long tenantId) {
+    public Integer resolveDataScope(Long userId) {
         if (userId == null) return null;
         List<Long> roleIds = userRoleMapper.selectRoleIdsByUserId(userId);
         if (roleIds == null || roleIds.isEmpty()) return null;

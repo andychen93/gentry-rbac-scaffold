@@ -23,7 +23,7 @@ public final class RedisKeyDefines {
             new RedisKeyDefineVO(
                     "user_session",
                     "Authorization:login:session:*",
-                    "用户 Session（Sa-Token，含 tenantId/roles 等）",
+                    "用户 Session（Sa-Token，含 userId/roles 等）",
                     1800L),
             new RedisKeyDefineVO(
                     "jwt_blacklist",

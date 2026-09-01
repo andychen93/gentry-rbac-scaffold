@@ -8,14 +8,11 @@ import org.springframework.util.StringUtils;
  * <p>译文归<b>前端</b>语言包（{@code locales/{lang}/dict.json}）。实测种子数据 21 条
  * 字典项 100% 可派生（全部有 {@code dict_type} + {@code dict_value}）。</p>
  *
- * <p><b>前提与重新评估条件：</b>{@code sys_dict_data} / {@code sys_dict_type} 是<b>租户级</b>表
- * （继承 {@code TenantEntity}）。派生全局 key 成立的前提是当前系统<b>未启用多租户</b>
- * （默认单租户，所有数据 {@code tenant_id = 1}）。派生项目一旦真正启用多租户，
- * 租户 B 若建出相同的 {@code (dict_type, dict_value)}，派生 key 会撞上平台语言包、
- * 租户填的 label 被平台译文覆盖 —— 届时须改为「字典整体降为不翻」或「加 is_system 标记
- * 只对内置项派生」。见概要设计 §4.3。</p>
+ * <p>本仓库已拿掉多租户机制（见 {@code doc/design/modules/core/去多租户化-概要设计.md}），
+ * {@code sys_dict_data} / {@code sys_dict_type} 全局唯一，不再有「不同组织建出相同
+ * {@code (dict_type, dict_value)} 导致派生 key 撞车」的顾虑。</p>
  *
- * <p>另有一条<b>与租户数量无关</b>的已知行为：管理员在字典管理页改了内置字典项的 label 后，
+ * <p>另有一条已知行为：管理员在字典管理页改了内置字典项的 label 后，
  * 因译文优先，界面不会变。前端的字典管理页对「语言包中存在该 key」的项禁用 label 输入并给
  * 提示，把约束摆在动作发生处。见前端详细设计 §6.3.1。</p>
  */

@@ -12,16 +12,12 @@ import java.util.List;
 @Mapper
 public interface LoginLogMapper extends BaseMapper<LoginLog> {
 
-    List<LoginLogListVO> selectList(@Param("query") LoginLogQueryDTO query, @Param("tenantId") Long tenantId);
+    List<LoginLogListVO> selectList(@Param("query") LoginLogQueryDTO query);
 
-    List<LoginLogListVO> selectExportList(@Param("query") LoginLogQueryDTO query, @Param("tenantId") Long tenantId);
+    List<LoginLogListVO> selectExportList(@Param("query") LoginLogQueryDTO query);
 
-    long selectCount(@Param("query") LoginLogQueryDTO query, @Param("tenantId") Long tenantId);
+    long selectCount(@Param("query") LoginLogQueryDTO query);
 
-    @Delete("DELETE FROM sys_login_log WHERE tenant_id = #{tenantId} AND login_time < #{cutoffTime}")
-    int deleteBeforeTime(@Param("tenantId") Long tenantId, @Param("cutoffTime") LocalDateTime cutoffTime);
-
-    /** 跨租户清理过期日志（定时任务用，需配合 TenantManager.ignoreTenantCondition） */
     @Delete("DELETE FROM sys_login_log WHERE login_time < #{cutoffTime}")
-    int cleanExpiredBefore(@Param("cutoffTime") LocalDateTime cutoffTime);
+    int deleteBeforeTime(@Param("cutoffTime") LocalDateTime cutoffTime);
 }

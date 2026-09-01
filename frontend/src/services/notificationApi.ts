@@ -4,7 +4,6 @@ import type { PageResult } from '@gentry/kit';
 export interface NotificationVO {
   // 雪花 ID：后端序列化成字符串防 JS 精度丢失，别 Number() 它
   id: number | string;
-  tenantId: number | string;
   userId?: number | string | null;
   type: string;
   /** 1紧急 2严重 3一般 4提示 */
@@ -21,7 +20,7 @@ export interface NotificationVO {
 }
 
 export interface NotificationPublishDTO {
-  /** 不传 = 当前租户内广播 */
+  /** 不传 = 全局广播 */
   userId?: number | string;
   type?: string;
   /** 1紧急 2严重 3一般 4提示；≤2 会额外触发短信 */

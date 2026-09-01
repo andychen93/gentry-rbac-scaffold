@@ -3,10 +3,10 @@
 <mapper namespace="com.gentry.rbac.user.mapper.UserRoleMapper">
 
     <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO sys_user_role (id, tenant_id, user_id, role_id, create_time)
+        INSERT INTO sys_user_role (id, user_id, role_id, create_time)
         VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.id}, #{item.tenantId}, #{item.userId}, #{item.roleId}, CURRENT_TIMESTAMP)
+            (#{item.id}, #{item.userId}, #{item.roleId}, CURRENT_TIMESTAMP)
         </foreach>
     </insert>
 

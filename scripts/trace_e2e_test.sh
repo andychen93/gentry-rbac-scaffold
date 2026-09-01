@@ -12,7 +12,7 @@ EXIT_CODE=0
 echo "========== 全链路追踪 + 请求日志 E2E =========="
 
 echo "【场景 1】响应携带 X-Trace-Id 头，R.traceId 与之一致"
-curl -sS -D /tmp/h.txt -o /tmp/b.json $BASE/tenants/options > /dev/null
+curl -sS -D /tmp/h.txt -o /tmp/b.json $BASE/auth/captcha > /dev/null
 HDR=$(grep -i "^x-trace-id:" /tmp/h.txt | awk '{print $2}' | tr -d '\r')
 BODY_ID=$(python3 -c "import json; print(json.load(open('/tmp/b.json'))['traceId'])")
 info "响应头 X-Trace-Id=$HDR"
@@ -22,7 +22,7 @@ echo ""
 
 echo "【场景 2】上游请求头 X-Trace-Id 透传"
 CUSTOM="e2e-test-$(date +%s)"
-curl -sS -D /tmp/h2.txt -H "X-Trace-Id: $CUSTOM" -o /tmp/b2.json $BASE/tenants/options > /dev/null
+curl -sS -D /tmp/h2.txt -H "X-Trace-Id: $CUSTOM" -o /tmp/b2.json $BASE/auth/captcha > /dev/null
 R_ID=$(python3 -c "import json; print(json.load(open('/tmp/b2.json'))['traceId'])")
 info "上游指定 traceId=$CUSTOM, R.traceId=$R_ID"
 [[ "$R_ID" == "$CUSTOM" ]] && pass "上游 traceId 透传成功" || fail "未透传"

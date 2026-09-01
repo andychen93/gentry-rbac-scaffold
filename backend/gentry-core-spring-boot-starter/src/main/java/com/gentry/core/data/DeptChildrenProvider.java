@@ -13,9 +13,8 @@ public interface DeptChildrenProvider {
     /**
      * 返回指定部门的自身 + 所有下级部门 ID。
      *
-     * @param tenantId 租户 ID
-     * @param deptId   部门 ID
+     * @param deptId 部门 ID
      * @return 包含自身及子部门的 ID 列表，不存在返回空列表
      */
-    List<Long> getSelfAndChildrenIds(Long tenantId, Long deptId);
+    List<Long> getSelfAndChildrenIds(Long deptId);
 }

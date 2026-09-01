@@ -58,7 +58,7 @@ else
 fi
 
 # Backend
-if curl -sS -o /dev/null -w '%{http_code}' http://localhost:9090/api/v1/tenants/options 2>/dev/null | grep -qE '^(200|401|403)$'; then
+if curl -sS -o /dev/null -w '%{http_code}' http://localhost:9090/api/v1/auth/captcha 2>/dev/null | grep -qE '^(200|401|403)$'; then
   row "Backend API" "UP" "http://localhost:9090"
 else
   row "Backend API" "DOWN" "http://localhost:9090"

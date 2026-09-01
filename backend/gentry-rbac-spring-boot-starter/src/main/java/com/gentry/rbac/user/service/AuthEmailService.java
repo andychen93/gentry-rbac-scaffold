@@ -29,5 +29,5 @@ public interface AuthEmailService {
     void resetPassword(PasswordResetDTO dto);
 
     /** 邮箱是否已完成验证（登录前置校验用）。 */
-    boolean isEmailVerified(Long tenantId, String email);
+    boolean isEmailVerified(String email);
 }

@@ -4,18 +4,17 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
-import com.gentry.core.entity.TenantEntity;
+import com.gentry.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
  * 角色实体，映射 sys_role 表
- * 租户级数据（含 tenant_id）
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_role")
-public class Role extends TenantEntity {
+public class Role extends BaseEntity {
 
     @Id(keyType = KeyType.Generator, value = KeyGenerators.flexId)
     private Long id;
@@ -25,5 +24,5 @@ public class Role extends TenantEntity {
     private Integer sort;
     private Integer status;
     private String remark;
-    // tenantId, createBy, createTime, updateBy, updateTime, deleted 由 TenantEntity 基类提供
+    // createBy, createTime, updateBy, updateTime, deleted 由 BaseEntity 基类提供
 }

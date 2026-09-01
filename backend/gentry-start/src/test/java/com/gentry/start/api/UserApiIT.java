@@ -14,7 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** 用户管理 API 集成测试（8 端点）。chenli 缺 system:user:* → 用 chenli 演示 403。 */
+/** 用户管理 API 集成测试（8 端点）。 */
 @DisplayName("用户管理 API - /api/v1/users")
 class UserApiIT extends BaseApiIT {
 
@@ -107,8 +107,8 @@ class UserApiIT extends BaseApiIT {
         long orphanRowId = 987654321L;
         try {
             jdbcTemplate.update(
-                    "INSERT INTO sys_user_role (id, tenant_id, user_id, role_id, create_time) "
-                            + "VALUES (?, 1, ?, ?, CURRENT_TIMESTAMP)",
+                    "INSERT INTO sys_user_role (id, user_id, role_id, create_time) "
+                            + "VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
                     orphanRowId, ADMIN_USER_ID, orphanRoleId);
 
             // 脏行确实在库里
@@ -153,8 +153,6 @@ class UserApiIT extends BaseApiIT {
     @DisplayName("权限不足：无角色用户 → 403")
     void list_forbidden() throws Exception {
         // 用 forbiddenAuth()（无角色用户）稳定触发 403。
-        // 不用 chenli：chenli 兼具 SUPER_ADMIN，Phase 6 后作为平台超管跨租户，
-        // getTenantIds 返回 null 跳过租户过滤，真正拥有全部权限（含 system:user:list）。
         String noPerm = forbiddenAuth();
         mockMvc.perform(bareGet("/api/v1/users?pageNum=1&pageSize=10").header("Authorization", noPerm))
                 .andExpect(status().isForbidden());

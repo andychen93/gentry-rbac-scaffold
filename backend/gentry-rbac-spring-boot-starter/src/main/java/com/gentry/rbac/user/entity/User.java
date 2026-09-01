@@ -4,7 +4,7 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
-import com.gentry.core.entity.TenantEntity;
+import com.gentry.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_user")
-public class User extends TenantEntity {
+public class User extends BaseEntity {
 
     @Id(keyType = KeyType.Generator, value = KeyGenerators.flexId)
     private Long id;
@@ -40,5 +40,5 @@ public class User extends TenantEntity {
      * {@code zh_CN} / {@code en_US} = 显式选择过，固定。
      */
     private String language;
-    // tenantId, createBy, createTime, updateBy, updateTime, deleted 由 TenantEntity 基类提供
+    // createBy, createTime, updateBy, updateTime, deleted 由 BaseEntity 基类提供
 }

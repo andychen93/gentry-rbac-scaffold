@@ -18,6 +18,6 @@ public interface LogService {
     LoginLogDetailVO getLoginLogDetail(Long id);
     byte[] exportLoginLogs(LoginLogQueryDTO query);
     int cleanLoginLogs(int beforeDays);
-    void saveLoginLog(String username, Long tenantId, String loginType, String loginIp,
+    void saveLoginLog(String username, String loginType, String loginIp,
                       String userAgent, int status, String message);
 }

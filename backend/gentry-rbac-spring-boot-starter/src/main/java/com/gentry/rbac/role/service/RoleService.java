@@ -14,8 +14,6 @@ import java.util.List;
  */
 public interface RoleService {
 
-    Long createAdminRole(Long tenantId, String roleCode, String roleName);
-
     PageResult<RoleListVO> list(RoleQueryDTO query);
 
     RoleDetailVO getDetail(Long id);
@@ -43,7 +41,7 @@ public interface RoleService {
     void assignUsers(Long roleId, RoleUserAssignDTO dto);
 
     /**
-     * 当前租户内启用角色的下拉选项
+     * 启用角色的下拉选项
      */
     List<RoleOptionVO> listOptions();
 }

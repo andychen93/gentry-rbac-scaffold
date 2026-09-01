@@ -20,7 +20,7 @@ public class RbacDeptChildrenProvider implements DeptChildrenProvider {
     }
 
     @Override
-    public List<Long> getSelfAndChildrenIds(Long tenantId, Long deptId) {
+    public List<Long> getSelfAndChildrenIds(Long deptId) {
         if (deptId == null) return List.of();
         // DeptServiceImpl.getChildDeptIds 内部已经包含 deptId 自身
         return deptService.getChildDeptIds(deptId);

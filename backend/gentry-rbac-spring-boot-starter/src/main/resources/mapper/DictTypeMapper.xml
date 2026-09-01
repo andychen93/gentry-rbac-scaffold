@@ -4,7 +4,6 @@
 
     <resultMap id="DictTypeResultMap" type="com.gentry.rbac.dict.entity.DictType">
         <id property="id" column="id"/>
-        <result property="tenantId" column="tenant_id"/>
         <result property="dictName" column="dict_name"/>
         <result property="dictType" column="dict_type"/>
         <result property="status" column="status"/>
@@ -17,7 +16,7 @@
     </resultMap>
 
     <sql id="queryCondition">
-        WHERE t.tenant_id = #{tenantId} AND t.deleted = 0
+        WHERE t.deleted = 0
         <if test="query.dictName != null and query.dictName != ''">
             AND t.dict_name LIKE CONCAT('%', #{query.dictName}, '%')
         </if>
@@ -31,7 +30,7 @@
 
     <select id="selectList" resultType="com.gentry.rbac.dict.vo.DictTypeListVO">
         SELECT t.id, t.dict_name AS dictName, t.dict_type AS dictType, t.status, t.remark, t.create_time AS createTime,
-            (SELECT COUNT(*) FROM sys_dict_data d WHERE d.dict_type = t.dict_type AND d.tenant_id = t.tenant_id AND d.deleted = 0) AS dataCount
+            (SELECT COUNT(*) FROM sys_dict_data d WHERE d.dict_type = t.dict_type AND d.deleted = 0) AS dataCount
         FROM sys_dict_type t
         <include refid="queryCondition"/>
         ORDER BY t.create_time DESC

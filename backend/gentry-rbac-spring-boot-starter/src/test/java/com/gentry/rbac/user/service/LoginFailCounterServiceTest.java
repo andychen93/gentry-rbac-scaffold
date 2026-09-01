@@ -42,43 +42,43 @@ class LoginFailCounterServiceTest {
     @Test
     void recordFail_firstCall_setsLockWindowTtl() {
         when(redis.opsForValue()).thenReturn(valueOps);
-        when(valueOps.increment("login_fail:1:u")).thenReturn(1L);
-        service.recordFail(1L, "u");
-        verify(redis).expire("login_fail:1:u", 10L, TimeUnit.MINUTES);
+        when(valueOps.increment("login_fail:u")).thenReturn(1L);
+        service.recordFail("u");
+        verify(redis).expire("login_fail:u", 10L, TimeUnit.MINUTES);
     }
 
     @Test
     void recordFail_subsequentCall_doesNotResetTtl() {
         when(redis.opsForValue()).thenReturn(valueOps);
-        when(valueOps.increment("login_fail:1:u")).thenReturn(3L);
-        service.recordFail(1L, "u");
+        when(valueOps.increment("login_fail:u")).thenReturn(3L);
+        service.recordFail("u");
         verify(redis, never()).expire(anyString(), anyLong(), any());
     }
 
     @Test
     void isLocked_belowMax_false() {
         when(redis.opsForValue()).thenReturn(valueOps);
-        when(valueOps.get("login_fail:1:u")).thenReturn("4");
-        assertThat(service.isLocked(1L, "u")).isFalse();
+        when(valueOps.get("login_fail:u")).thenReturn("4");
+        assertThat(service.isLocked("u")).isFalse();
     }
 
     @Test
     void isLocked_atMax_true() {
         when(redis.opsForValue()).thenReturn(valueOps);
-        when(valueOps.get("login_fail:1:u")).thenReturn("5");
-        assertThat(service.isLocked(1L, "u")).isTrue();
+        when(valueOps.get("login_fail:u")).thenReturn("5");
+        assertThat(service.isLocked("u")).isTrue();
     }
 
     @Test
     void isLocked_noRecord_false() {
         when(redis.opsForValue()).thenReturn(valueOps);
-        when(valueOps.get("login_fail:1:u")).thenReturn(null);
-        assertThat(service.isLocked(1L, "u")).isFalse();
+        when(valueOps.get("login_fail:u")).thenReturn(null);
+        assertThat(service.isLocked("u")).isFalse();
     }
 
     @Test
     void clear_deletesKey() {
-        service.clear(1L, "u");
-        verify(redis).delete("login_fail:1:u");
+        service.clear("u");
+        verify(redis).delete("login_fail:u");
     }
 }

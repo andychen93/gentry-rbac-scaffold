@@ -1,6 +1,5 @@
 package com.gentry.rbac.log.task;
 
-import com.mybatisflex.core.tenant.TenantManager;
 import com.gentry.core.config.LogProperties;
 import com.gentry.rbac.log.mapper.LoginLogMapper;
 import com.gentry.rbac.log.mapper.OperLogMapper;
@@ -15,10 +14,6 @@ import java.time.LocalDateTime;
  * 日志定时清理任务。
  *
  * <p>每天凌晨 2:30 清理 sys_oper_log / sys_login_log 中超出保留期的记录。</p>
- *
- * <p><b>跨租户</b>：@Scheduled 跑在调度线程，无 UserContext（ThreadLocal 为空），
- * 故用 {@link TenantManager#ignoreTenantCondition()} 临时跳过租户拦截，
- * 配合 Mapper 的 cleanExpiredBefore（SQL 不带 tenant_id）清理所有租户数据。</p>
  *
  * <p>保留天数由 {@code gentry.log.keep-days} 配置（见 LogProperties）。</p>
  */
@@ -45,13 +40,8 @@ public class LogCleanTask {
             return;
         }
         LocalDateTime cutoff = LocalDateTime.now().minusDays(keepDays);
-        try {
-            TenantManager.ignoreTenantCondition();
-            int oper = operLogMapper.cleanExpiredBefore(cutoff);
-            int login = loginLogMapper.cleanExpiredBefore(cutoff);
-            log.info("Log cleanup done: kept {} days, deleted {} oper logs and {} login logs", keepDays, oper, login);
-        } finally {
-            TenantManager.restoreTenantCondition();
-        }
+        int oper = operLogMapper.deleteBeforeTime(cutoff);
+        int login = loginLogMapper.deleteBeforeTime(cutoff);
+        log.info("Log cleanup done: kept {} days, deleted {} oper logs and {} login logs", keepDays, oper, login);
     }
 }

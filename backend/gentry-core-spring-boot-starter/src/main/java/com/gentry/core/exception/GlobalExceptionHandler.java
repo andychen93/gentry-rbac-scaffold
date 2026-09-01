@@ -44,9 +44,7 @@ public class GlobalExceptionHandler {
      */
     private static final Map<String, ErrorCode> CONSTRAINT_MAP = Map.ofEntries(
             Map.entry("uk_user_username", ErrorCode.USERNAME_EXISTS),
-            Map.entry("uk_user_tenant_username", ErrorCode.USERNAME_EXISTS),
-            Map.entry("uk_user_tenant_phone", ErrorCode.PHONE_EXISTS),
-            Map.entry("uk_tenant_code", ErrorCode.TENANT_CODE_EXISTS),
+            Map.entry("uk_user_phone", ErrorCode.PHONE_EXISTS),
             Map.entry("uk_role_code", ErrorCode.ROLE_CODE_EXISTS),
             Map.entry("uk_dept_name", ErrorCode.DEPT_NAME_EXISTS),
             Map.entry("uk_dict_type", ErrorCode.DICT_TYPE_EXISTS)

@@ -14,7 +14,7 @@ public interface DeptMapper extends BaseMapper<Dept> {
     /**
      * 查询部门列表（按 name/status 过滤，按 sort 排序）
      */
-    List<Dept> selectList(@Param("query") DeptQueryDTO query, @Param("tenantId") Long tenantId);
+    List<Dept> selectList(@Param("query") DeptQueryDTO query);
 
     /**
      * 逻辑删除部门
@@ -43,16 +43,16 @@ public interface DeptMapper extends BaseMapper<Dept> {
     /**
      * 批量统计各部门用户数
      */
-    List<Map<String, Object>> countUsersByTenantGroupByDept(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> countUsersGroupByDept();
 
     /**
-     * 检查部门名称是否存在（租户内唯一）
+     * 检查部门名称是否存在
      */
     @Select({"<script>",
-        "SELECT COUNT(*) FROM sys_dept WHERE tenant_id = #{tenantId} AND name = #{name} AND deleted = 0",
+        "SELECT COUNT(*) FROM sys_dept WHERE name = #{name} AND deleted = 0",
         "<if test='excludeId != null'> AND id != #{excludeId}</if>",
         "</script>"})
-    int countByName(@Param("tenantId") Long tenantId, @Param("name") String name, @Param("excludeId") Long excludeId);
+    int countByName(@Param("name") String name, @Param("excludeId") Long excludeId);
 
     /**
      * 更新子孙部门的 ancestors

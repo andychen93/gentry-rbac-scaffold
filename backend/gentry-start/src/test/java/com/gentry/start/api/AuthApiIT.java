@@ -17,7 +17,7 @@ class AuthApiIT extends BaseApiIT {
     private static final AtomicInteger NODPT = new AtomicInteger();
 
     private Map<String, Object> loginBody(String username, String password) {
-        return Map.of("tenantCode", DEFAULT_TENANT, "username", username, "password", password);
+        return Map.of("username", username, "password", password);
     }
 
     @Test

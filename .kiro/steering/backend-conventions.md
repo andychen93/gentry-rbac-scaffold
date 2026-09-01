@@ -18,9 +18,8 @@ fileMatchPattern: 'backend/**/*.java'
 
 ## 必须做
 
-- 实体继承 `TenantEntity`（租户表）或 `BaseEntity`（全局表）；日志表不继承
-- 公共字段交给 `AutoFillHandler`，**不要手动 set** create_by / create_time / tenantId
-- 取租户用 `UserContext.getTenantId()`，**不硬编码 `tenant_id = 1`**
+- 实体继承 `BaseEntity`；日志表不继承
+- 公共字段交给 `AutoFillHandler`，**不要手动 set** create_by / create_time
 - 抛异常用 `throw new BizException(ErrorCode.XXX)`，禁止 `RuntimeException`，
   禁止 Controller 里 `return R.fail`
 - 参数校验用 `@Valid` + DTO 上的约束注解
@@ -36,8 +35,8 @@ fileMatchPattern: 'backend/**/*.java'
 Service impl 行覆盖 ≥ 90%、分支 ≥ 80%；AOP 切面每个分支至少一个用例；
 Controller 至少一个集成测试。命名 `方法_场景_预期`。
 
-基线：`gentry-core-spring-boot-starter` 133 个测试、`gentry-rbac-spring-boot-starter` 72 个、
-全量 `mvn test` 364 个。
+基线：`gentry-core-spring-boot-starter` 127 个测试、`gentry-rbac-spring-boot-starter` 75 个、
+全量 `mvn test` 345 个。
 
 **别用 `mvn -pl <module> test` 当验证手段**：单模块构建会从 `~/.m2` 解析
 `gentry-core-spring-boot-starter`，拿到上次 `install` 的旧产物 —— 改了 core 的类或

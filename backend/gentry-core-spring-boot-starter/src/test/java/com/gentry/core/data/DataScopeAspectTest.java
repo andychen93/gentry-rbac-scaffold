@@ -32,7 +32,6 @@ class DataScopeAspectTest {
         aspect = new DataScopeAspect(scopeOp, deptOp);
 
         UserContext.setUserId(100L);
-        UserContext.setTenantId(1L);
         UserContext.setDeptId(50L);
     }
 
@@ -45,7 +44,7 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("scope=ALL 设置全部数据条件")
     void allData() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_ALL);
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_ALL);
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {
             DataScopeContext.Condition c = DataScopeContext.get();
             assertThat(c).isNotNull();
@@ -58,8 +57,8 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("scope=DEPT_AND_CHILD 下发部门+子部门 ID 列表")
     void deptAndChildren() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_DEPT_AND_CHILD);
-        when(deptProvider.getSelfAndChildrenIds(1L, 50L)).thenReturn(List.of(50L, 51L, 52L));
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_DEPT_AND_CHILD);
+        when(deptProvider.getSelfAndChildrenIds(50L)).thenReturn(List.of(50L, 51L, 52L));
 
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {
             DataScopeContext.Condition c = DataScopeContext.get();
@@ -73,7 +72,7 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("scope=DEPT 仅本部门")
     void deptOnly() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_DEPT);
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_DEPT);
 
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {
             DataScopeContext.Condition c = DataScopeContext.get();
@@ -85,7 +84,7 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("scope=SELF 仅本人（按 create_by 过滤）")
     void selfOnly() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_SELF);
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_SELF);
 
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {
             DataScopeContext.Condition c = DataScopeContext.get();
@@ -99,7 +98,7 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("tableAlias 会加到字段名前")
     void tableAliasPrepended() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_DEPT);
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_DEPT);
 
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {
             DataScopeContext.Condition c = DataScopeContext.get();
@@ -121,7 +120,7 @@ class DataScopeAspectTest {
     @Test
     @DisplayName("方法执行完自动清理上下文")
     void cleanup_afterInvocation() throws Throwable {
-        when(scopeResolver.resolveDataScope(100L, 1L)).thenReturn(DataScopeAspect.SCOPE_ALL);
+        when(scopeResolver.resolveDataScope(100L)).thenReturn(DataScopeAspect.SCOPE_ALL);
         ProceedingJoinPoint pjp = pjpReturning("ok", () -> {});
         aspect.around(pjp, dataScope(""));
         assertThat(DataScopeContext.get()).isNull();

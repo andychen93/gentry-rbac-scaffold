@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 /**
- * 系统参数配置（平台级全局表，无 tenant_id，已加入 GentryTenantManager.IGNORE_TABLES）。
+ * 系统参数配置（全局表）。
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

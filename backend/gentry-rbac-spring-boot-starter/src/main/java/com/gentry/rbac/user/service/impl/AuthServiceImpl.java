@@ -1,7 +1,6 @@
 package com.gentry.rbac.user.service.impl;
 
 import com.gentry.core.common.ErrorCode;
-import com.gentry.core.constant.TenantConstants;
 import com.gentry.core.exception.BizException;
 import com.gentry.core.security.UserContext;
 import com.gentry.core.util.IpUtil;
@@ -14,8 +13,6 @@ import com.gentry.rbac.menu.entity.Menu;
 import com.gentry.rbac.menu.mapper.MenuMapper;
 import com.gentry.core.i18n.MenuI18nKeyResolver;
 import com.gentry.rbac.menu.vo.MenuTreeVO;
-import com.gentry.rbac.tenant.entity.Tenant;
-import com.gentry.rbac.tenant.mapper.TenantMapper;
 import com.gentry.rbac.user.dto.LoginDTO;
 import com.gentry.rbac.user.entity.User;
 import com.gentry.rbac.user.mapper.UserMapper;
@@ -52,7 +49,6 @@ public class AuthServiceImpl implements AuthService {
     private final UserRoleMapper userRoleMapper;
     private final RoleMapper roleMapper;
     private final RoleMenuMapper roleMenuMapper;
-    private final TenantMapper tenantMapper;
     private final MenuMapper menuMapper;
     private final DeptMapper deptMapper;
     private final PasswordEncoder passwordEncoder;
@@ -68,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
 
     public AuthServiceImpl(UserMapper userMapper, UserRoleMapper userRoleMapper,
                            RoleMapper roleMapper, RoleMenuMapper roleMenuMapper,
-                           TenantMapper tenantMapper, MenuMapper menuMapper,
+                           MenuMapper menuMapper,
                            DeptMapper deptMapper,
                            PasswordEncoder passwordEncoder,
                            LogService logService,
@@ -83,7 +79,6 @@ public class AuthServiceImpl implements AuthService {
         this.userRoleMapper = userRoleMapper;
         this.roleMapper = roleMapper;
         this.roleMenuMapper = roleMenuMapper;
-        this.tenantMapper = tenantMapper;
         this.menuMapper = menuMapper;
         this.deptMapper = deptMapper;
         this.passwordEncoder = passwordEncoder;
@@ -104,46 +99,34 @@ public class AuthServiceImpl implements AuthService {
             captchaService.validate(dto.getUuid(), dto.getCaptcha());
         }
 
-        // 1. 解析租户
-        Long tenantId;
-        try {
-            tenantId = resolveTenantId(dto.getTenantCode());
-        } catch (BizException e) {
-            // 登录日志用 getFallbackMessage()（ErrorCode 里的中文常量）而不是 e.getMessage()：
-            // 后者现在返回 i18n key，会把 error.tenant.not.found 写进日志表给运维看。
-            // 与「@Log 推迟、操作/登录日志保持中文」的决定一致（概要设计 §4.8.1）。
-            logService.saveLoginLog(dto.getUsername(), 0L, "password", loginIp, userAgent, 0, e.getFallbackMessage());
-            throw e;
-        }
-
-        // 2. 账号锁定前置检查（连续失败达上限则拒绝，等 TTL 到期自动解锁）
-        if (loginFailCounterService.isLocked(tenantId, dto.getUsername())) {
+        // 1. 账号锁定前置检查（连续失败达上限则拒绝，等 TTL 到期自动解锁）
+        if (loginFailCounterService.isLocked(dto.getUsername())) {
             int lockMinutes = loginFailCounterService.lockMinutes();
             // 登录日志保持中文（运维视角，与「日志不参与 i18n」一致）
             String msg = "账号已被锁定，请 " + lockMinutes + " 分钟后再试";
-            logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, msg);
+            logService.saveLoginLog(dto.getUsername(), "password", loginIp, userAgent, 0, msg);
             // 给用户的消息带上具体分钟数：原来抛的是无参的「请稍后再试」，用户看不到还要等多久
             throw BizException.of(ErrorCode.ACCOUNT_LOCKED, lockMinutes);
         }
 
-        // 3. 校验用户
+        // 2. 校验用户
         User user;
         try {
-            user = findAndValidateUser(tenantId, dto.getUsername(), dto.getPassword());
+            user = findAndValidateUser(dto.getUsername(), dto.getPassword());
         } catch (BizException e) {
             // 仅对「用户名或密码错误」计数（防爆破），用户禁用不计
             if (e.getCode() == ErrorCode.LOGIN_FAILED.getCode()) {
-                loginFailCounterService.recordFail(tenantId, dto.getUsername());
+                loginFailCounterService.recordFail(dto.getUsername());
             }
-            logService.saveLoginLog(dto.getUsername(), tenantId, "password", loginIp, userAgent, 0, e.getFallbackMessage());
+            logService.saveLoginLog(dto.getUsername(), "password", loginIp, userAgent, 0, e.getFallbackMessage());
             throw e;
         }
 
-        // 4. 构建登录结果 + 清除失败计数 + 密码过期标志 + 记录成功日志
-        LoginVO result = buildLoginResult(user, tenantId, loginIp, userAgent);
-        loginFailCounterService.clear(tenantId, dto.getUsername());
+        // 3. 构建登录结果 + 清除失败计数 + 密码过期标志 + 记录成功日志
+        LoginVO result = buildLoginResult(user, loginIp, userAgent);
+        loginFailCounterService.clear(dto.getUsername());
         result.setPasswordExpired(isPasswordExpired(user.getPwdUpdateTime()));
-        logService.saveLoginLog(user.getUsername(), tenantId, "password", loginIp, userAgent, 1, "登录成功");
+        logService.saveLoginLog(user.getUsername(), "password", loginIp, userAgent, 1, "登录成功");
         return result;
     }
 
@@ -171,50 +154,23 @@ public class AuthServiceImpl implements AuthService {
         return buildUserInfo(user);
     }
 
-    // ========== Extract Method: 租户解析 ==========
-
-    // TODO [多租户演进] resolveTenantId() 是策略接口的雏形，
-    //  未来租户解析策略增多（域名解析、Header 解析等）时，升级为 TenantResolver.resolve()
-
-    /**
-     * 解析租户ID。
-     * - tenantCode 为空 → 默认租户（常量，不查库，不校验状态）
-     * - tenantCode 不为空 → 查 sys_tenant，校验状态和过期
-     */
-    private Long resolveTenantId(String tenantCode) {
-        if (tenantCode == null || tenantCode.isBlank()) {
-            return TenantConstants.DEFAULT_TENANT_ID;
-        }
-        Tenant tenant = tenantMapper.selectByCode(tenantCode);
-        if (tenant == null) {
-            throw new BizException(ErrorCode.TENANT_NOT_FOUND);
-        }
-        if (tenant.getStatus() != 1) {
-            throw new BizException(ErrorCode.TENANT_DISABLED);
-        }
-        if (tenant.getExpireTime() != null && tenant.getExpireTime().isBefore(LocalDateTime.now())) {
-            throw new BizException(ErrorCode.TENANT_EXPIRED);
-        }
-        return tenant.getId();
-    }
-
     // ========== Extract Method: 用户校验 ==========
 
-    private User findAndValidateUser(Long tenantId, String username, String password) {
+    private User findAndValidateUser(String username, String password) {
         // 邮箱登录：username 含 @ 时按邮箱查（注册用户 username 是平台生成的 u+id，用户不感知）
         User user;
         if (username != null && username.contains("@")) {
             String email = username.trim().toLowerCase();
-            user = userMapper.selectByEmail(tenantId, email);
+            user = userMapper.selectByEmail(email);
             if (user == null) {
                 throw new BizException(ErrorCode.LOGIN_FAILED);
             }
             // 自助注册用户必须完成邮箱验证才能登录
-            if (!authEmailService.isEmailVerified(tenantId, email)) {
+            if (!authEmailService.isEmailVerified(email)) {
                 throw new BizException(ErrorCode.EMAIL_NOT_VERIFIED);
             }
         } else {
-            user = userMapper.selectByUsername(tenantId, username);
+            user = userMapper.selectByUsername(username);
             if (user == null) {
                 throw new BizException(ErrorCode.LOGIN_FAILED);
             }
@@ -245,7 +201,7 @@ public class AuthServiceImpl implements AuthService {
 
     // ========== Extract Method: 构建登录结果 ==========
 
-    private LoginVO buildLoginResult(User user, Long tenantId, String loginIp, String userAgent) {
+    private LoginVO buildLoginResult(User user, String loginIp, String userAgent) {
         StpUtil.login(user.getId());
         String token = StpUtil.getTokenValue();
 
@@ -253,7 +209,6 @@ public class AuthServiceImpl implements AuthService {
         // 注意：SaSession 底层是 ConcurrentHashMap，value 不能为 null，否则抛 NPE。
         //       因此可空字段（deptId/loginIp/location/nickname/...）走 putSession 跳过 null。
         SaSession session = StpUtil.getSession();
-        session.set("tenantId", tenantId);
         session.set("userId", user.getId());
         putSession(session, "username", user.getUsername());
         putSession(session, "nickname", user.getNickname());
@@ -274,22 +229,17 @@ public class AuthServiceImpl implements AuthService {
             }
         }
 
-        // 先设置 UserContext，后续查询需要 tenantId
         UserContext.setUserId(user.getId());
-        UserContext.setTenantId(tenantId);
         UserContext.setDeptId(user.getDeptId());
 
         // B-3: 登录时预加载 roles/permissions 到 Session
         List<Long> roleIds = userRoleMapper.selectRoleIdsByUserId(user.getId());
-        boolean platformAdmin = false;
         if (!roleIds.isEmpty()) {
             List<String> roleCodes = new ArrayList<>();
             for (Long roleId : roleIds) {
                 Role r = roleMapper.selectOneById(roleId);
                 if (r != null && r.getRoleCode() != null) roleCodes.add(r.getRoleCode());
             }
-            // 平台超管识别：角色含 SUPER_ADMIN → 跨租户可见所有数据
-            platformAdmin = roleCodes.contains(TenantConstants.PLATFORM_ROLE_CODE);
             List<String> permissions = roleMenuMapper.selectPermissionsByRoleIds(roleIds);
             session.set("roleList", roleCodes);
             session.set("permissionList", permissions);
@@ -297,8 +247,6 @@ public class AuthServiceImpl implements AuthService {
             session.set("roleList", new ArrayList<>());
             session.set("permissionList", new ArrayList<>());
         }
-        session.set("platformAdmin", platformAdmin);
-        UserContext.setPlatformAdmin(platformAdmin);
         // 语言偏好：null（用户从未选过）时不写 Session —— SaSession 底层是
         // ConcurrentHashMap 不接受 null value，且「不存在」正是「跟随浏览器」的语义
         putSession(session, "language", user.getLanguage());
@@ -349,12 +297,6 @@ public class AuthServiceImpl implements AuthService {
             }
         }
         vo.setRoles(roles);
-        /*
-         * 平台超管标记：判据与登录时写 Session 的那处一致（角色含 SUPER_ADMIN）。
-         * 由后端算好下发，前端不自己从 roles 里推 —— 那会把安全判断复制一份到 TS 里。
-         */
-        vo.setPlatformAdmin(roles.stream()
-                .anyMatch(r -> TenantConstants.PLATFORM_ROLE_CODE.equals(r.getRoleCode())));
 
         // B-5: 从数据库查询权限列表
         if (!roleIds.isEmpty()) {

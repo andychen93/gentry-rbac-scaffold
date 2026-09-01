@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  *     lock-minutes: 10
  * </pre>
  *
- * <p>计数基于 Redis（{@code login_fail:{tenantId}:{username}}），多节点部署一致。</p>
+ * <p>计数基于 Redis（{@code login_fail:{username}}），多节点部署一致。</p>
  */
 @Component
 @ConfigurationProperties(prefix = "gentry.login-security")

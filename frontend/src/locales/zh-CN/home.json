@@ -1,6 +1,6 @@
 {
     "features": "脚手架自带能力",
-    "features.summary": "多租户隔离 · RBAC 权限（用户/角色/菜单/部门/字典）· 数据权限五档 · 操作与登录日志 · 在线用户强制下线 · JWT + Redis 黑名单 · 限流 / 防重提交 / 全链路 TraceId · Redis 监控",
+    "features.summary": "RBAC 权限（用户/角色/菜单/部门/字典）· 数据权限五档 · 操作与登录日志 · 在线用户强制下线 · JWT + Redis 黑名单 · 限流 / 防重提交 / 全链路 TraceId · Redis 监控",
     "identity.account": "账号",
     "identity.name": "姓名",
     "identity.perms": "权限点",

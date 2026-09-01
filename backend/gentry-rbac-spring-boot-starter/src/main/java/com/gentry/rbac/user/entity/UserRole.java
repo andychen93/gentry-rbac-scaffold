@@ -4,7 +4,7 @@ import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
 import com.mybatisflex.core.keygen.KeyGenerators;
-import com.gentry.core.entity.TenantEntity;
+import com.gentry.core.entity.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @Table("sys_user_role")
-public class UserRole extends TenantEntity {
+public class UserRole extends BaseEntity {
 
     @Id(keyType = KeyType.Generator, value = KeyGenerators.flexId)
     private Long id;
@@ -27,5 +27,5 @@ public class UserRole extends TenantEntity {
         this.userId = userId;
         this.roleId = roleId;
     }
-    // tenantId, createTime 由 TenantEntity/BaseEntity 基类提供
+    // createTime 由 BaseEntity 基类提供
 }

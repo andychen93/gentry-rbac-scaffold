@@ -20,16 +20,15 @@
 
 ## 硬约束（违反即 Review 打回）
 
-1. 不写死 `tenant_id`，一律 `UserContext.getTenantId()`
-2. 不 `throw new RuntimeException`，一律 `BizException(ErrorCode.XXX)`
-3. Controller 不直接调 Mapper
-4. 不修改已发布的 Flyway 迁移文件
-5. 无详细设计文档不编码
-6. **不在 `.tsx` / `.less` 里写死颜色**（hex、`rgb()`、`rgba()`），取色方式见下
-7. **表格行内操作一律用 `RowActions`**，纯图标 + Tooltip，不写文字
-8. **启用/停用开关必须二次确认**（`StatusSwitch` 的 `confirmText`）
-9. **查询/重置按钮一律靠右**，多个工具栏按钮必须用 `<Space>` 包
-10. 提交前 `mvn test` + `npm test` + `npx tsc -b` 全绿
+1. 不 `throw new RuntimeException`，一律 `BizException(ErrorCode.XXX)`
+2. Controller 不直接调 Mapper
+3. 不修改已发布的 Flyway 迁移文件
+4. 无详细设计文档不编码
+5. **不在 `.tsx` / `.less` 里写死颜色**（hex、`rgb()`、`rgba()`），取色方式见下
+6. **表格行内操作一律用 `RowActions`**，纯图标 + Tooltip，不写文字
+7. **启用/停用开关必须二次确认**（`StatusSwitch` 的 `confirmText`）
+8. **查询/重置按钮一律靠右**，多个工具栏按钮必须用 `<Space>` 包
+9. 提交前 `mvn test` + `npm test` + `npx tsc -b` 全绿
     （`mvn test` 需 `-Dspring.datasource.password=<真实密码>`）
 
 ---
@@ -69,7 +68,7 @@ CSS 变量写错只会让那条声明作废、颜色悄悄退回继承值，线�
 补充规则：
 
 - **不要在页面里 `import { argonColors }`**。那会绕开 antd token，往
-  `ConfigProvider` 叠覆盖（暗色/租户换肤）时这条硬连线不跟着变，配色会裂。
+  `ConfigProvider` 叠覆盖（未来做暗色模式）时这条硬连线不跟着变，配色会裂。
   渐变是唯一例外（antd 没有渐变 token）。
 - **需要新颜色**：往 `argonColors.ts` 加一个键，`@ps-{键名}` 和 antd token 自动可用。
   别就地写死，也别引第二套色板 —— 历史上这里混过 antd 默认色（`#1677ff`/`#ff4d4f`）

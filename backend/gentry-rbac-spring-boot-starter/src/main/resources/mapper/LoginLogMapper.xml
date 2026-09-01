@@ -3,7 +3,7 @@
 <mapper namespace="com.gentry.rbac.log.mapper.LoginLogMapper">
 
     <sql id="queryCondition">
-        WHERE tenant_id = #{tenantId}
+        WHERE 1 = 1
         <if test="query.username != null and query.username != ''">AND username = #{query.username}</if>
         <if test="query.status != null">AND status = #{query.status}</if>
         <if test="query.startTime != null">AND login_time &gt;= #{query.startTime}</if>

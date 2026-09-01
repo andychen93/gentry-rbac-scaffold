@@ -1,12 +1,8 @@
 package com.gentry.rbac.user.dto;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 public class LoginDTO {
-
-    @Size(max = 50, message = "{valid.login.tenantCode.size}")
-    private String tenantCode;
 
     @NotBlank(message = "{valid.common.username.notBlank}")
     private String username;
@@ -20,8 +16,6 @@ public class LoginDTO {
     /** 验证码答案 */
     private String captcha;
 
-    public String getTenantCode() { return tenantCode; }
-    public void setTenantCode(String tenantCode) { this.tenantCode = tenantCode; }
     public String getUsername() { return username; }
     public void setUsername(String username) { this.username = username; }
     public String getPassword() { return password; }

@@ -4,7 +4,6 @@ import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
 import com.gentry.core.i18n.I18nUtil;
-import com.gentry.core.security.UserContext;
 import com.gentry.core.util.IpUtil;
 import com.gentry.rbac.log.dto.*;
 import com.gentry.rbac.log.entity.LoginLog;
@@ -37,9 +36,8 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public PageResult<OperLogListVO> listOperLogs(OperLogQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        long total = operLogMapper.selectCount(query, tenantId);
-        List<OperLogListVO> list = total > 0 ? operLogMapper.selectList(query, tenantId) : List.of();
+        long total = operLogMapper.selectCount(query);
+        List<OperLogListVO> list = total > 0 ? operLogMapper.selectList(query) : List.of();
         // 应用层国际化翻译
         for (OperLogListVO vo : list) {
             vo.setTypeLabel(i18nUtil.getOperLogTypeLabel(vo.getType()));
@@ -50,7 +48,6 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public OperLogDetailVO getOperLogDetail(Long id) {
-        // selectOneById() 已通过全局 tenantColumn 配置自动追加租户条件
         OperLog entity = operLogMapper.selectOneById(id);
         if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.log.not.found");
         OperLogDetailVO vo = new OperLogDetailVO();
@@ -67,8 +64,7 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public byte[] exportOperLogs(OperLogQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        List<OperLogListVO> list = operLogMapper.selectExportList(query, tenantId);
+        List<OperLogListVO> list = operLogMapper.selectExportList(query);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append("日志编号,操作模块,动作,标题,操作用户,IP地址,地点,状态,耗时(ms),操作时间\n");
         for (OperLogListVO vo : list) {
@@ -89,9 +85,8 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public int cleanOperLogs(int beforeDays) {
-        Long tenantId = UserContext.getTenantId();
         LocalDateTime cutoff = LocalDateTime.now().minusDays(beforeDays);
-        return operLogMapper.deleteBeforeTime(tenantId, cutoff);
+        return operLogMapper.deleteBeforeTime(cutoff);
     }
 
     @Override
@@ -105,15 +100,13 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public PageResult<LoginLogListVO> listLoginLogs(LoginLogQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        long total = loginLogMapper.selectCount(query, tenantId);
-        List<LoginLogListVO> list = total > 0 ? loginLogMapper.selectList(query, tenantId) : List.of();
+        long total = loginLogMapper.selectCount(query);
+        List<LoginLogListVO> list = total > 0 ? loginLogMapper.selectList(query) : List.of();
         return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
     }
 
     @Override
     public LoginLogDetailVO getLoginLogDetail(Long id) {
-        // selectOneById() 已通过 @Column(tenantId=true) 自动追加租户条件
         LoginLog entity = loginLogMapper.selectOneById(id);
         if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.log.not.found");
         LoginLogDetailVO vo = new LoginLogDetailVO();
@@ -126,8 +119,7 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public byte[] exportLoginLogs(LoginLogQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        List<LoginLogListVO> list = loginLogMapper.selectExportList(query, tenantId);
+        List<LoginLogListVO> list = loginLogMapper.selectExportList(query);
         StringBuilder csv = new StringBuilder("\uFEFF");
         csv.append("日志编号,用户名,登录方式,登录IP,地点,浏览器,操作系统,状态,消息,登录时间\n");
         for (LoginLogListVO vo : list) {
@@ -148,17 +140,15 @@ public class LogServiceImpl implements LogService {
 
     @Override
     public int cleanLoginLogs(int beforeDays) {
-        Long tenantId = UserContext.getTenantId();
         LocalDateTime cutoff = LocalDateTime.now().minusDays(beforeDays);
-        return loginLogMapper.deleteBeforeTime(tenantId, cutoff);
+        return loginLogMapper.deleteBeforeTime(cutoff);
     }
 
     @Override
-    public void saveLoginLog(String username, Long tenantId, String loginType, String loginIp,
+    public void saveLoginLog(String username, String loginType, String loginIp,
                              String userAgent, int status, String message) {
         try {
             LoginLog entity = new LoginLog();
-            entity.setTenantId(tenantId);
             entity.setUsername(username);
             entity.setLoginType(loginType);
             entity.setLoginIp(loginIp);

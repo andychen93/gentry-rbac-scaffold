@@ -31,31 +31,6 @@ public interface RoleMenuMapper extends BaseMapper<RoleMenu> {
     List<Long> selectAllMenuIds();
 
     /**
-     * 查询所有**租户级**菜单 ID（{@code is_platform = 0}）。
-     *
-     * <p>新建租户时给它的 ADMIN 角色用 —— 「租户下的最高权限」= 除平台级之外的全部。
-     * 原来用 {@link #selectAllMenuIds()}，于是任何租户的管理员都拿到了
-     * {@code system:tenant:*}，能管理所有租户。</p>
-     */
-    @Select("SELECT id FROM sys_menu WHERE deleted = 0 AND is_platform = 0")
-    List<Long> selectTenantScopedMenuIds();
-
-    /**
-     * 从给定 ID 集合里挑出平台级的那些，用于校验「调用者有没有权分配这批菜单」。
-     *
-     * <p>返回非空即表示越权，调用方据此抛 {@code PLATFORM_MENU_FORBIDDEN}。
-     * 之所以返回具体 ID 而不是布尔值：服务端日志要留下审计痕迹（试图分配哪些权限点）。
-     * 给用户的报错文案里不带这些 ID —— 不该告知攻击者「哪几个是平台级」。</p>
-     */
-    @Select({"<script>",
-            "SELECT id FROM sys_menu WHERE deleted = 0 AND is_platform = 1 AND id IN",
-            "<foreach collection='menuIds' item='menuId' open='(' separator=',' close=')'>",
-            "#{menuId}",
-            "</foreach>",
-            "</script>"})
-    List<Long> selectPlatformMenuIdsIn(@Param("menuIds") List<Long> menuIds);
-
-    /**
      * 根据角色ID查询菜单ID列表
      */
     @Select("SELECT menu_id FROM sys_role_menu WHERE role_id = #{roleId}")

@@ -78,9 +78,8 @@ class I18nApiIT extends BaseApiIT {
      * 建一个带 ADMIN 角色的新用户、设定其 {@code language}、再登录，返回其 Authorization 头。
      *
      * <p><b>为什么不直接改种子用户（如 zhangsan）：</b>本类带 {@code @Transactional}，
-     * 改动随用例回滚；但用新建用户能顺带保证「其他用例看到的种子数据没被动过」，
-     * 也避免 {@code WHERE username = ?} 这种走不到索引（唯一键最左列是 tenant_id）
-     * 而全表加锁的写法。这里一律按主键更新。</p>
+     * 改动随用例回滚；但用新建用户能顺带保证「其他用例看到的种子数据没被动过」。
+     * 这里一律按主键更新。</p>
      *
      * @param language 传 null 表示不设置（即 sys_user.language IS NULL，三态里的「未选过」）
      */
@@ -222,7 +221,7 @@ class I18nApiIT extends BaseApiIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
-        User created = userMapper.selectByUsername(1L, username);
+        User created = userMapper.selectByUsername(username);
         assertThat(created).as("刚建的用户应存在").isNotNull();
         assertThat(created.getLanguage())
                 .as("新建用户的 language 必须是 NULL（= 从未选过，跟随浏览器）")
@@ -318,7 +317,7 @@ class I18nApiIT extends BaseApiIT {
         assertThat(codes).as("「司机 / Driver」是车辆定位平台的残留，V13 已删").doesNotContain("Driver");
 
         for (String seed : new String[]{"chenli", "admin", "zhangsan"}) {
-            User u = userMapper.selectByUsername(1L, seed);
+            User u = userMapper.selectByUsername(seed);
             assertThat(u).as("种子用户 %s 应存在", seed).isNotNull();
             assertThat(u.getPostName())
                     .as("种子用户 %s 的 post_name 应是字典码而不是中文 label", seed)
@@ -399,7 +398,7 @@ class I18nApiIT extends BaseApiIT {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0));
 
-        User got = userMapper.selectByUsername(1L, reimported);
+        User got = userMapper.selectByUsername(reimported);
         assertThat(got).as("导出的文件应能导回来").isNotNull();
         assertThat(got.getGender()).as("往返后性别应还是 1（男）").isEqualTo(1);
         assertThat(got.getPostName()).as("往返后职务应归一成字典码").isEqualTo("Manager");
@@ -578,8 +577,7 @@ class I18nApiIT extends BaseApiIT {
     @Test
     @DisplayName("登录响应带language与菜单树i18nKey")
     void 登录响应带language与菜单树i18nKey() throws Exception {
-        MvcResult result = mockMvc.perform(bareGet("/api/v1/auth/user-info")
-                        .header("Authorization", superAuth()))
+        MvcResult result = mockMvc.perform(authedGet("/api/v1/auth/user-info"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();
@@ -593,7 +591,7 @@ class I18nApiIT extends BaseApiIT {
 
         List<String[]> menus = new ArrayList<>();
         collectMenus(data.get("menus"), menus);
-        assertThat(menus).as("SUPER_ADMIN 应能看到导航菜单").isNotEmpty();
+        assertThat(menus).as("应能看到导航菜单").isNotEmpty();
 
         List<String> missing = menus.stream()
                 .filter(m -> m[1] == null || m[1].isBlank())
@@ -633,9 +631,7 @@ class I18nApiIT extends BaseApiIT {
         body.put("name", "无编码目录" + SEQ.incrementAndGet());
         body.put("type", 1);
         body.put("sort", 900);
-        // 建菜单用 SUPER_ADMIN：V15 起 system:menu:add 是平台级（sys_menu 是全局表，
-        // 改它影响所有租户），用默认的 ADMIN 会被 403 挡在前面，测不到 i18nKey 派生
-        MvcResult created = mockMvc.perform(superPost("/api/v1/menus").content(json(body)))
+        MvcResult created = mockMvc.perform(authedPost("/api/v1/menus").content(json(body)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
                 .andReturn();

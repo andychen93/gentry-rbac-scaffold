@@ -1,7 +1,5 @@
 package com.gentry.notification.push;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -15,9 +13,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
- * 通知实时推送：按租户维护 SSE 连接，新通知生成时实时下发到该租户在线客户端。
+ * 通知实时推送：维护全部在线 SSE 连接，新通知生成时广播给所有在线客户端。
  *
  * <p>前端通知铃铛订阅后无需轮询即可即时收到（轮询作为 SSE 失败时的兜底仍然保留）。</p>
+ *
+ * <p>本仓库已拿掉多租户机制（见 {@code doc/design/modules/core/去多租户化-概要设计.md}），
+ * 此前按 tenantId 分组维护多套连接列表的设计已简化为单一全局列表——不再存在
+ * 需要互相隔离的多个组织。</p>
  */
 @Service
 public class NotificationPushService {
@@ -27,8 +29,7 @@ public class NotificationPushService {
     private static final long SSE_TIMEOUT = 10 * 60 * 1000L;
     private static final long HEARTBEAT_PERIOD_SECONDS = 10L;
 
-    /** tenantId → emitters */
-    private final ConcurrentMap<Long, CopyOnWriteArrayList<SseEmitter>> emitters = new ConcurrentHashMap<>();
+    private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
     private final ScheduledExecutorService heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(r -> {
         Thread thread = new Thread(r, "notification-sse-heartbeat");
         thread.setDaemon(true);
@@ -40,38 +41,31 @@ public class NotificationPushService {
                 this::sendHeartbeats, HEARTBEAT_PERIOD_SECONDS, HEARTBEAT_PERIOD_SECONDS, TimeUnit.SECONDS);
     }
 
-    /** 订阅某租户的通知流。 */
-    public SseEmitter subscribe(Long tenantId) {
+    /** 订阅通知流。 */
+    public SseEmitter subscribe() {
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
-        emitter.onCompletion(() -> remove(tenantId, emitter));
-        emitter.onTimeout(() -> remove(tenantId, emitter));
-        emitter.onError(e -> remove(tenantId, emitter));
-        emitters.computeIfAbsent(tenantId, ignored -> new CopyOnWriteArrayList<>()).add(emitter);
+        emitter.onCompletion(() -> remove(emitter));
+        emitter.onTimeout(() -> remove(emitter));
+        emitter.onError(e -> remove(emitter));
+        emitters.add(emitter);
         try {
             emitter.send(SseEmitter.event().name("connected").data("{\"status\":\"ok\"}"));
         } catch (Exception e) {
-            remove(tenantId, emitter);
+            remove(emitter);
         }
         return emitter;
     }
 
-    /** 向某租户所有在线客户端推送通知。失败连接会被移除；无连接时为空操作。 */
-    public void push(Long tenantId, Object payload) {
-        if (tenantId == null) {
-            return;
-        }
-        CopyOnWriteArrayList<SseEmitter> list = emitters.get(tenantId);
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        for (SseEmitter emitter : list) {
+    /** 向所有在线客户端推送通知。失败连接会被移除；无连接时为空操作。 */
+    public void push(Object payload) {
+        for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("notification").data(payload, MediaType.APPLICATION_JSON));
             } catch (Exception e) {
                 if (log.isDebugEnabled()) {
                     log.debug("Notification SSE push failed, removing emitter: {}", e.getMessage());
                 }
-                remove(tenantId, emitter);
+                remove(emitter);
             }
         }
     }
@@ -81,37 +75,28 @@ public class NotificationPushService {
      * 同时通过写失败及时清理断开的 emitter。
      */
     void sendHeartbeats() {
-        emitters.forEach((tenantId, list) -> {
-            for (SseEmitter emitter : list) {
-                try {
-                    emitter.send(SseEmitter.event().comment("hb"));
-                } catch (Exception e) {
-                    remove(tenantId, emitter);
-                }
-            }
-        });
-    }
-
-    /** 某租户当前在线连接数（监控/测试用）。 */
-    public int getEmitterCount(Long tenantId) {
-        CopyOnWriteArrayList<SseEmitter> list = emitters.get(tenantId);
-        return list == null ? 0 : list.size();
-    }
-
-    private void remove(Long tenantId, SseEmitter emitter) {
-        CopyOnWriteArrayList<SseEmitter> list = emitters.get(tenantId);
-        if (list != null) {
-            list.remove(emitter);
-            if (list.isEmpty()) {
-                emitters.remove(tenantId, list);
+        for (SseEmitter emitter : emitters) {
+            try {
+                emitter.send(SseEmitter.event().comment("hb"));
+            } catch (Exception e) {
+                remove(emitter);
             }
         }
+    }
+
+    /** 当前在线连接数（监控/测试用）。 */
+    public int getEmitterCount() {
+        return emitters.size();
+    }
+
+    private void remove(SseEmitter emitter) {
+        emitters.remove(emitter);
     }
 
     @PreDestroy
     public void destroy() {
         heartbeatScheduler.shutdownNow();
-        emitters.values().forEach(list -> list.forEach(SseEmitter::complete));
+        emitters.forEach(SseEmitter::complete);
         emitters.clear();
     }
 }

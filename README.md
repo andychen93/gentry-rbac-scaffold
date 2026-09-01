@@ -1,6 +1,6 @@
 # RBAC 权限平台（gentry）
 
-多租户 RBAC 权限平台。平台能力（横切基础设施 + RBAC + 监控）以 Spring Boot starter
+单组织 RBAC 权限平台。平台能力（横切基础设施 + RBAC + 监控）以 Spring Boot starter
 jar 分发，新项目**引依赖接入，不 fork**；本仓库是平台的唯一迭代源，内置 `gentry-start`
 狗粮工程验证 starter 好不好用。
 后端 Spring Boot 3.2 + MyBatis-Flex + Sa-Token(JWT)，支持 MySQL（默认）/ PostgreSQL / SQLite 三种数据库，
@@ -13,7 +13,7 @@ jar 分发，新项目**引依赖接入，不 fork**；本仓库是平台的唯�
 | 新项目（推荐） | 引 `gentry-bom` + starter 依赖，主类放自己包，零 `@ComponentScan`/`@MapperScan`，从写业务开始。接入步骤见 `AGENTS.md` 第三章「新项目接入」 |
 | 平台开发 / 狗粮 | clone 本仓库改平台代码或演示业务（`gentry-start` 的 `com.gentry.start` 下） |
 
-开箱即用的意思是：跑两条命令，就有一个能登录、有菜单、有权限、有租户隔离、
+开箱即用的意思是：跑两条命令，就有一个能登录、有菜单、有权限、
 有操作日志的后台系统，你从加业务模块开始，而不是从搭架子开始。
 
 ---
@@ -33,8 +33,8 @@ bash scripts/dev_up.sh      # 编译后端 → 起后端(9090) → 起前端(303
 
 | 账号 | 密码 | 角色 |
 |------|------|------|
-| `admin` | `Abc@123456` | ADMIN（租户管理员） |
-| `chenli` | `Chenli@2026` | SUPER_ADMIN（平台超管，能看到租户管理） |
+| `admin` | `Abc@123456` | ADMIN（管理员，拥有全部权限） |
+| `chenli` | `Chenli@2026` | ADMIN（管理员，拥有全部权限） |
 
 其他命令：
 
@@ -67,11 +67,10 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 
 | 域 | 能力 |
 |----|------|
-| 多租户 | `tenant_id` 自动注入与隔离，三层跳过机制（全局表 / 单实体 / 单方法） |
 | 认证 | Sa-Token JWT + Redis Session + Token 黑名单（登出即失效、强制下线） |
 | 授权 | 菜单 + 按钮权限点，后端 `@SaCheckPermission`，前端按 `permissions` 渲染 |
 | 数据权限 | 五档范围（全部 / 本部门及子部门 / 本部门 / 仅本人 / 自定义），`@DataScope` 切面 |
-| 系统管理 | 租户、用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户（可强制下线） |
+| 系统管理 | 用户、角色、菜单、部门、字典、操作日志、登录日志、在线用户（可强制下线） |
 | 横切基础设施 | 全局异常、公共字段自动填充、Jackson 统一序列化、请求日志脱敏、接口限流、防重复提交、TraceId 全链路 |
 | 运维 | Redis 监控（INFO / Key CRUD / 慢日志）、Actuator + Prometheus 指标端点 |
 | 前端 | 双 Layout（业务系统 / 系统管理）、动态菜单路由、Argon 主题、Pro 组件（ProTable / QueryForm / CrudFormModal / RowActions / StatusSwitch…） |
@@ -103,7 +102,7 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 ├── frontend/
 │   ├── src/components/       # common（通用）/ layout（双 Layout）/ pro（表格表单）
 │   ├── src/config/app.ts     # 应用名 / Logo 缩写（改品牌只动这里 + index.html）
-│   ├── src/pages/            # home, login, tenant, user, role, menu, dept, dict, log, monitor, dev
+│   ├── src/pages/            # home, login, user, role, menu, dept, dict, log, monitor, dev
 │   ├── src/services/         # axios 封装 + 各模块 API
 │   ├── src/stores/           # userStore（认证/菜单/权限）、layoutStore（侧栏/主题）
 │   ├── src/theme/            # Argon 配色与 antd token
@@ -126,7 +125,7 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 **① 后端代码** —— 照抄 `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/dept`
 （最小完整样例：树形 + 数据权限 + 操作日志），在 `com/gentry/start/order` 下建
 `controller / service / service/impl / mapper / entity / dto / vo`。
-实体继承 `TenantEntity`，Controller 加 `@SaCheckPermission("biz:order:add")`。
+实体继承 `BaseEntity`，Controller 加 `@SaCheckPermission("biz:order:add")`。
 
 **② 数据库** —— 狗粮新增 `backend/gentry-start/src/main/resources/db/migration/common/V1000__create_order.sql`
 （项目流**自 V1000 起**，V1–V999 是平台保留段；放 `common/` 不是三个厂商目录，
@@ -135,7 +134,6 @@ bash scripts/dev_up.sh --db=sqlite        # 用 SQLite，不需要 deps_up.sh，
 ```sql
 CREATE TABLE IF NOT EXISTS biz_order (
     id BIGINT NOT NULL PRIMARY KEY,
-    tenant_id BIGINT NOT NULL,
     -- ...业务字段...
     create_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted SMALLINT NOT NULL DEFAULT 0
@@ -144,7 +142,7 @@ CREATE TABLE IF NOT EXISTS biz_order (
 INSERT INTO sys_menu (id, parent_id, name, type, sort, path, component, permission)
 VALUES (501, 0, '订单管理', 2, 10, '/order', 'pages/order/OrderPage', 'biz:order');
 INSERT INTO sys_role_menu (id, role_id, menu_id, create_time)
-SELECT (50000 + id), -1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id = 501;
+SELECT (50000 + id), 1, id, CURRENT_TIMESTAMP FROM sys_menu WHERE id = 501;
 ```
 
 用 `CURRENT_TIMESTAMP` 不要用 `NOW()`（SQLite 不认）。如果表结构涉及局部唯一索引这类
@@ -215,15 +213,15 @@ Service 单测覆盖 ≥ 90%。
 不需要任何外部依赖，随时可跑：
 
 ```bash
-cd backend  && mvn test          # 364 个测试
-cd frontend && npm test          # 111 个测试（Vitest）
+cd backend  && mvn test          # 345 个测试
+cd frontend && npm test          # 112 个测试（Vitest）
 cd frontend && npx tsc -b        # 类型检查
 ```
 
 需要前后端都起着（`bash scripts/dev_up.sh`）才能跑：
 
 ```bash
-cd frontend && npm run test:e2e          # 90 个 Playwright UI 用例
+cd frontend && npm run test:e2e          # 77 个 Playwright UI 用例
                                          # 首次需 npx playwright install chromium
 ```
 

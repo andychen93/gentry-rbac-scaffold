@@ -63,8 +63,8 @@ public class DictCacheManager {
     }
 
     /** 读缓存；两级都未命中返回 null（由调用方查库） */
-    public List<DictDataVO> get(Long tenantId, String dictType) {
-        String key = key(tenantId, dictType);
+    public List<DictDataVO> get(String dictType) {
+        String key = key(dictType);
         List<DictDataVO> local = l1.getIfPresent(key);
         if (local != null) {
             return local;
@@ -84,8 +84,8 @@ public class DictCacheManager {
     }
 
     /** 同时写入 L1 与 L2 */
-    public void put(Long tenantId, String dictType, List<DictDataVO> data) {
-        String key = key(tenantId, dictType);
+    public void put(String dictType, List<DictDataVO> data) {
+        String key = key(dictType);
         l1.put(key, data);
         try {
             redis.opsForValue().set(key, objectMapper.writeValueAsString(data), L2_TTL_MINUTES, TimeUnit.MINUTES);
@@ -95,8 +95,8 @@ public class DictCacheManager {
     }
 
     /** 失效单个字典类型：删 L2 + 广播，各节点据此清本地 */
-    public void invalidate(Long tenantId, String dictType) {
-        String key = key(tenantId, dictType);
+    public void invalidate(String dictType) {
+        String key = key(dictType);
         l1.invalidate(key);
         try {
             redis.delete(key);
@@ -144,7 +144,7 @@ public class DictCacheManager {
         return l1.estimatedSize();
     }
 
-    private String key(Long tenantId, String dictType) {
-        return KEY_PREFIX + tenantId + ":" + dictType;
+    private String key(String dictType) {
+        return KEY_PREFIX + dictType;
     }
 }

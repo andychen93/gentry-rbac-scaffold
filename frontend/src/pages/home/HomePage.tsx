@@ -27,12 +27,11 @@ const countDepts = async () => countTree((await deptApi.tree()).data ?? []);
 /**
  * 系统管理快捷入口。工作台属「业务系统」Layout，侧栏看不到系统菜单，这里给直达链接。
  *
- * **label 不再写死中文** —— 原来这 10 条 label 就是菜单名，是 sys_menu.name 的第三份
+ * **label 不再写死中文** —— 原来这些 label 就是菜单名，是 sys_menu.name 的第三份
  * 拷贝（前两份：sys_menu 本身、AppHeader 的 BREADCRUMB_MAP）。现在复用 nav namespace 的
  * key，key 由 permission 去掉最后一段动作派生，与后端 MenuI18nKeyResolver 同规则。
  */
 const ADMIN_LINKS: { to: string; navKey: string; permission?: string }[] = [
-  { to: '/system/tenants', navKey: 'menu.system.tenant', permission: 'system:tenant:list' },
   { to: '/system/users', navKey: 'menu.system.user', permission: 'system:user:list' },
   { to: '/system/roles', navKey: 'menu.system.role', permission: 'system:role:list' },
   { to: '/system/menu', navKey: 'menu.system.menu', permission: 'system:menu:list' },

@@ -1,3 +1,7 @@
+> **⚠️ 部分内容已过期（2026-09-01）**：本仓库已拿掉多租户机制，本文中的「Tenant
+> Management（租户管理）」页面 Prompt 已不适用，该页面已删除。其余页面 Prompt 仍可参考。
+> 原因见 `doc/design/modules/core/去多租户化-概要设计.md`。
+
 # Figma Make Prompts - 车联网平台
 
 > **文档类型**: Figma Make 提示词文档

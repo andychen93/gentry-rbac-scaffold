@@ -28,10 +28,9 @@ public enum ErrorCode {
     HTTP_MESSAGE_NOT_READABLE(10005, "HTTP消息不可读"),
 
     // ==================== RBAC 业务错误 20001-20099 ====================
-    TENANT_NOT_FOUND(20001, "租户不存在"),
-    TENANT_CODE_EXISTS(20002, "租户编码已存在"),
-    TENANT_DISABLED(20003, "租户已禁用"),
-    TENANT_EXPIRED(20004, "租户已过期"),
+    // 20001-20004 曾是租户相关错误码（不存在/编码已存在/已禁用/已过期），随多租户机制
+    // 一起拿掉（见 doc/design/modules/core/去多租户化-概要设计.md）。空出的号段不回收
+    // 复用给新错误——枚举名派生 i18n key，复用旧号段容易和历史日志/前端缓存的错误码混淆。
     ROLE_CODE_EXISTS(20005, "角色编码已存在"),
     ROLE_IN_USE(20006, "角色正在使用中"),
     USERNAME_EXISTS(20007, "用户名已存在"),
@@ -69,14 +68,9 @@ public enum ErrorCode {
     // ==================== 安全控制 40001-40099 ====================
     TOO_MANY_REQUESTS(40001, "请求过于频繁"),
     DUPLICATE_SUBMIT(40002, "重复提交"),
-    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户"),
-    /**
-     * 非平台超管试图把平台级权限点（{@code sys_menu.is_platform = 1}）分配给角色。
-     *
-     * <p>不能只靠「新建租户时不给」—— 租户管理员握有 {@code system:role:assignMenu}，
-     * 能自己在角色管理里把租户管理权限勾回来。这个码是那条自提权路径的守卫。</p>
-     */
-    PLATFORM_MENU_FORBIDDEN(40004, "无权分配平台级权限");
+    CANNOT_DELETE_SELF(40003, "不能删除当前登录用户");
+    // 40004（PLATFORM_MENU_FORBIDDEN）随多租户机制一起拿掉，空出的号段不回收复用——
+    // 理由同 20001-20004，见上面的注释。
 
     /**
      * i18n key，由枚举名机械派生：{@code ROLE_NOT_FOUND} → {@code error.role.not.found}。

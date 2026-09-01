@@ -52,7 +52,7 @@ public class NotificationSender {
     }
 
     /**
-     * 发送通知。tenantId 必填（异步线程无上下文时也要能定位租户）。
+     * 发送通知。
      *
      * <p>推送与短信的异常一律吞掉并记日志：通知是旁路能力，
      * 不能因为下发失败把调用方的业务主流程带崩。</p>
@@ -60,8 +60,8 @@ public class NotificationSender {
      * @return 已落库的通知（含生成的 id）
      */
     public Notification send(Notification notification) {
-        if (notification == null || notification.getTenantId() == null) {
-            throw new IllegalArgumentException("通知的 tenantId 不能为空");
+        if (notification == null) {
+            throw new IllegalArgumentException("通知不能为空");
         }
         int level = notification.getLevel() == null ? 3 : notification.getLevel();
         boolean withSms = level <= SMS_LEVEL_THRESHOLD;
@@ -71,17 +71,16 @@ public class NotificationSender {
         Notification saved = notificationService.create(notification);
 
         try {
-            pushService.push(saved.getTenantId(), saved);
+            pushService.push(saved);
         } catch (Exception e) {
             log.warn("Notification SSE push failed: id={}, {}", saved.getId(), e.getMessage());
         }
 
         if (withSms) {
             try {
-                List<String> phones = recipientResolver.resolve(saved.getTenantId());
+                List<String> phones = recipientResolver.resolve();
                 if (phones.isEmpty()) {
-                    log.warn("High-severity notification has no SMS recipient: tenantId={}, title={}",
-                            saved.getTenantId(), saved.getTitle());
+                    log.warn("High-severity notification has no SMS recipient: title={}", saved.getTitle());
                 } else {
                     smsGateway.send(phones, buildSmsContent(saved));
                 }

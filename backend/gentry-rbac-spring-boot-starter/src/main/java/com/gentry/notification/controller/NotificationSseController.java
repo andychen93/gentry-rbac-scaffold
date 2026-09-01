@@ -37,29 +37,6 @@ public class NotificationSseController {
             throw NotLoginException.newInstance(StpUtil.getLoginType(),
                     NotLoginException.INVALID_TOKEN, "token无效", token);
         }
-        Long tenantId = resolveTenantId(loginId);
-        if (tenantId == null) {
-            throw NotLoginException.newInstance(StpUtil.getLoginType(),
-                    NotLoginException.INVALID_TOKEN, "token缺少租户信息", token);
-        }
-        return pushService.subscribe(tenantId);
-    }
-
-    private Long resolveTenantId(Object loginId) {
-        try {
-            Object tid = StpUtil.getSessionByLoginId(loginId).get("tenantId");
-            if (tid instanceof Long l) {
-                return l;
-            }
-            if (tid instanceof Number n) {
-                return n.longValue();
-            }
-            if (tid instanceof String s && !s.isBlank()) {
-                return Long.parseLong(s);
-            }
-        } catch (Exception ignored) {
-            // 解析失败按未携带租户处理
-        }
-        return null;
+        return pushService.subscribe();
     }
 }

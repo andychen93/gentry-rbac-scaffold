@@ -1,6 +1,6 @@
 {
     "features": "Built-in capabilities",
-    "features.summary": "Tenant isolation · RBAC (users / roles / menus / departments / dictionaries) · five data-scope levels · operation and login logs · force logout of online users · JWT + Redis blacklist · rate limiting / duplicate-submit guard / end-to-end TraceId · Redis monitoring",
+    "features.summary": "RBAC (users / roles / menus / departments / dictionaries) · five data-scope levels · operation and login logs · force logout of online users · JWT + Redis blacklist · rate limiting / duplicate-submit guard / end-to-end TraceId · Redis monitoring",
     "identity.account": "Account",
     "identity.name": "Name",
     "identity.perms": "Permissions",

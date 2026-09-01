@@ -2,7 +2,6 @@ package com.gentry.rbac.dept.service.impl;
 
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.exception.BizException;
-import com.gentry.core.security.UserContext;
 import com.gentry.rbac.dept.dto.DeptCreateDTO;
 import com.gentry.rbac.dept.dto.DeptQueryDTO;
 import com.gentry.rbac.dept.dto.DeptUpdateDTO;
@@ -38,26 +37,11 @@ public class DeptServiceImpl implements DeptService {
     }
 
     @Override
-    public Long createDefaultDept(Long tenantId, String name) {
-        Dept dept = new Dept();
-        dept.setTenantId(tenantId);
-        dept.setParentId(0L);
-        dept.setAncestors("0");
-        dept.setName(name);
-        dept.setSort(0);
-        dept.setStatus(1);
-        deptMapper.insert(dept);
-        log.info("Created default dept: id={}, tenantId={}, name={}", dept.getId(), tenantId, name);
-        return dept.getId();
-    }
-
-    @Override
     public List<DeptTreeVO> tree(DeptQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
-        List<Dept> deptList = deptMapper.selectList(query, tenantId);
+        List<Dept> deptList = deptMapper.selectList(query);
 
         // 批量查询用户数
-        Map<Long, Integer> userCountMap = buildUserCountMap(tenantId);
+        Map<Long, Integer> userCountMap = buildUserCountMap();
 
         // 转换为 VO
         List<DeptTreeVO> voList = deptList.stream()
@@ -71,19 +55,17 @@ public class DeptServiceImpl implements DeptService {
     @Override
     public DeptTreeVO getDetail(Long id) {
         Dept dept = getExistingDept(id);
-        Long tenantId = UserContext.getTenantId();
-        Map<Long, Integer> userCountMap = buildUserCountMap(tenantId);
+        Map<Long, Integer> userCountMap = buildUserCountMap();
         return toTreeVO(dept, userCountMap);
     }
 
     @Override
     @Transactional
     public DeptVO create(DeptCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
         Long parentId = dto.getParentId() != null ? dto.getParentId() : 0L;
 
-        // 校验部门名称租户内唯一
-        if (deptMapper.countByName(tenantId, dto.getName(), null) > 0) {
+        // 校验部门名称唯一
+        if (deptMapper.countByName(dto.getName(), null) > 0) {
             throw new BizException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
@@ -131,11 +113,10 @@ public class DeptServiceImpl implements DeptService {
     @Transactional
     public void update(Long id, DeptUpdateDTO dto) {
         Dept existingDept = getExistingDept(id);
-        Long tenantId = UserContext.getTenantId();
         Long newParentId = dto.getParentId() != null ? dto.getParentId() : existingDept.getParentId();
 
-        // 校验部门名称租户内唯一（排除自身）
-        if (deptMapper.countByName(tenantId, dto.getName(), id) > 0) {
+        // 校验部门名称唯一（排除自身）
+        if (deptMapper.countByName(dto.getName(), id) > 0) {
             throw new BizException(ErrorCode.DEPT_NAME_EXISTS);
         }
 
@@ -242,8 +223,8 @@ public class DeptServiceImpl implements DeptService {
         return dept;
     }
 
-    private Map<Long, Integer> buildUserCountMap(Long tenantId) {
-        List<Map<String, Object>> counts = deptMapper.countUsersByTenantGroupByDept(tenantId);
+    private Map<Long, Integer> buildUserCountMap() {
+        List<Map<String, Object>> counts = deptMapper.countUsersGroupByDept();
         Map<Long, Integer> map = new HashMap<>();
         if (counts != null) {
             for (Map<String, Object> row : counts) {

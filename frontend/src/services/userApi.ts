@@ -3,7 +3,6 @@ import i18n from '../locales';
 import type { MenuNavItem } from '../types/menu';
 
 export interface LoginDTO {
-  tenantCode?: string;
   username: string;
   password: string;
   uuid?: string;      // 验证码标识
@@ -186,7 +185,7 @@ export const userApi = {
   // 导入用户（Excel），返回成功/失败统计与错误明细
   importUsers: (file: File) =>
     uploadFile<UserImportResult>('/api/v1/users/import', file),
-  /** 用户下拉选项（租户内启用用户），供「角色→绑定用户」穿梭框取候选 */
+  /** 用户下拉选项（启用用户），供「角色→绑定用户」穿梭框取候选 */
   options: () =>
     request.get<any, { code: number; data: UserOptionVO[] }>('/api/v1/users/options'),
 };
@@ -205,17 +204,6 @@ export interface UserImportResult {
   fail: number;
   errors: { row: number; username: string; msg: string }[];
 }
-
-// 租户选项接口（公开，登录页下拉框）
-export interface TenantOptionVO {
-  code: string;
-  name: string;
-}
-
-export const tenantApi = {
-  options: () =>
-    request.get<any, { code: number; data: TenantOptionVO[] }>('/api/v1/tenants/options'),
-};
 
 /** 下载二进制（Excel），绕过 axios 拦截器（拦截器会把响应解包成 JSON） */
 async function downloadExcel(url: string, params: Record<string, unknown>, filename: string) {

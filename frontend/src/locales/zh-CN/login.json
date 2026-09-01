@@ -2,14 +2,9 @@
     "captcha": "验证码",
     "captcha.placeholder": "请输入验证码",
     "captcha.refresh": "点击刷新",
-    "defaultTenant": "默认租户",
     "msg.pwdExpired": "密码已过期，建议尽快修改",
     "msg.success": "登录成功",
     "submit": "登录",
     "subtitle": "RBAC 权限管理控制台",
-    "tab.default": "默认登录",
-    "tab.tenant": "租户登录",
-    "tenant": "租户",
-    "tenant.placeholder": "请选择租户",
     "testAccount": "测试账号: admin / Abc@123456"
 }

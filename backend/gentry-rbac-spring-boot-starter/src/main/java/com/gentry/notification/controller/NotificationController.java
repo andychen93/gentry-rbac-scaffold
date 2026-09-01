@@ -3,7 +3,6 @@ package com.gentry.notification.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.common.R;
-import com.gentry.core.security.UserContext;
 import com.gentry.notification.dto.NotificationPublishDTO;
 import com.gentry.notification.entity.Notification;
 import com.gentry.notification.sender.NotificationSender;
@@ -69,7 +68,6 @@ public class NotificationController {
     @Log(module = "消息通知", type = "INSERT", title = "发布通知")
     public R<Notification> publish(@Valid @RequestBody NotificationPublishDTO dto) {
         Notification n = new Notification();
-        n.setTenantId(UserContext.getTenantId());
         n.setUserId(dto.getUserId());
         n.setType(dto.getType() == null || dto.getType().isBlank() ? "SYSTEM" : dto.getType());
         n.setLevel(dto.getLevel());

@@ -34,7 +34,7 @@ export async function gotoLoginAndGetCaptcha(page: Page): Promise<string | null>
   await page.waitForLoadState('networkidle');
 
   // 后端关掉验证码时前端不渲染这个输入框
-  if ((await page.locator('#defaultLogin_captcha').count()) === 0) return null;
+  if ((await page.locator('#login_captcha').count()) === 0) return null;
 
   // 等到至少有一次验证码响应被记录（StrictMode 下通常是两次）
   await expect.poll(() => uuids.length, { timeout: 10000 }).toBeGreaterThan(0);
@@ -61,10 +61,10 @@ export async function gotoLoginAndGetCaptcha(page: Page): Promise<string | null>
 export async function loginViaUi(page: Page, username = 'admin', password = 'Abc@123456') {
   const captcha = await gotoLoginAndGetCaptcha(page);
 
-  // Ant Design Form 的 input 通过 id 定位：#defaultLogin_username, #defaultLogin_password
-  await page.locator('#defaultLogin_username').fill(username);
-  await page.locator('#defaultLogin_password').fill(password);
-  if (captcha) await page.locator('#defaultLogin_captcha').fill(captcha);
+  // Ant Design Form 的 input 通过 id 定位：#login_username, #login_password
+  await page.locator('#login_username').fill(username);
+  await page.locator('#login_password').fill(password);
+  if (captcha) await page.locator('#login_captcha').fill(captcha);
 
   // 先挂上响应等待再点击，否则快响应会在 await 之前就到达
   const loginResp = page.waitForResponse(

@@ -14,8 +14,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
  * {@link GentryCoreAutoConfiguration} 开启，随 starter 对消费方生效）。</p>
  *
  * <p>注意：@Scheduled 任务跑在调度线程，没有 UserContext（ThreadLocal 为空），
- * 任务内如需跨租户操作须显式 {@code @IgnoreTenant} 或
- * {@code TenantManager.ignoreTenantCondition()}。</p>
+ * 任务内如需读取 create_by/update_by 等审计字段之外的用户态数据，需自行处理缺失情况。</p>
  */
 @Configuration
 public class SchedulingConfig {

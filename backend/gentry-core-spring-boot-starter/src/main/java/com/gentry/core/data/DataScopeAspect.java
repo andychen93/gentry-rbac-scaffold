@@ -57,7 +57,6 @@ public class DataScopeAspect {
 
     DataScopeContext.Condition buildCondition(DataScope annotation) {
         Long userId = UserContext.getUserId();
-        Long tenantId = UserContext.getTenantId();
         Long deptId = UserContext.getDeptId();
 
         if (userId == null) {
@@ -68,7 +67,7 @@ public class DataScopeAspect {
             log.debug("UserDataScopeResolver not configured; DataScope aspect skipped");
             return null;
         }
-        Integer scope = scopeResolver.resolveDataScope(userId, tenantId);
+        Integer scope = scopeResolver.resolveDataScope(userId);
         if (scope == null) {
             return null;
         }
@@ -83,7 +82,7 @@ public class DataScopeAspect {
         return switch (scope) {
             case SCOPE_ALL -> DataScopeContext.Condition.all();
             case SCOPE_DEPT_AND_CHILD, SCOPE_CUSTOM -> {
-                List<Long> ids = getSelfAndChildren(tenantId, deptId);
+                List<Long> ids = getSelfAndChildren(deptId);
                 yield DataScopeContext.Condition.byDepts(ids, deptField);
             }
             case SCOPE_DEPT -> {
@@ -95,10 +94,10 @@ public class DataScopeAspect {
         };
     }
 
-    private List<Long> getSelfAndChildren(Long tenantId, Long deptId) {
+    private List<Long> getSelfAndChildren(Long deptId) {
         if (deptId == null) return Collections.emptyList();
         DeptChildrenProvider provider = deptProviderProvider.getIfAvailable();
         if (provider == null) return List.of(deptId); // 无 provider 时退化为仅本部门
-        return provider.getSelfAndChildrenIds(tenantId, deptId);
+        return provider.getSelfAndChildrenIds(deptId);
     }
 }

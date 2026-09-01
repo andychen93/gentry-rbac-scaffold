@@ -1,6 +1,6 @@
 package com.gentry.rbac.user.entity;
 
-import com.gentry.core.entity.TenantEntity;
+import com.gentry.core.entity.BaseEntity;
 import com.mybatisflex.annotation.Id;
 import com.mybatisflex.annotation.KeyType;
 import com.mybatisflex.annotation.Table;
@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Table("sys_email_token")
-public class EmailToken extends TenantEntity {
+public class EmailToken extends BaseEntity {
 
     public static final String PURPOSE_REGISTER = "REGISTER";
     public static final String PURPOSE_RESET_PASSWORD = "RESET_PASSWORD";
@@ -37,5 +37,5 @@ public class EmailToken extends TenantEntity {
     private LocalDateTime expiresAt;
     /** 一次性：用后回填 */
     private LocalDateTime usedAt;
-    // tenantId, createBy, createTime, updateBy, updateTime, deleted 由 TenantEntity 基类提供
+    // createBy, createTime, updateBy, updateTime, deleted 由 BaseEntity 基类提供
 }

@@ -94,26 +94,24 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public UserDetailVO create(UserCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
-
         // 校验用户名不能是 admin
         if (ADMIN_USERNAME.equals(dto.getUsername())) {
             throw new BizException(ErrorCode.PARAM_ERROR, "error.user.username.reserved");
         }
 
-        // 校验用户名租户内唯一
-        if (userMapper.countByUsername(tenantId, dto.getUsername()) > 0) {
+        // 校验用户名唯一
+        if (userMapper.countByUsername(dto.getUsername()) > 0) {
             throw new BizException(ErrorCode.USERNAME_EXISTS);
         }
 
-        // 校验手机号租户内唯一
+        // 校验手机号唯一
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
-            if (userMapper.countByPhone(tenantId, dto.getPhone(), null) > 0) {
+            if (userMapper.countByPhone(dto.getPhone(), null) > 0) {
                 throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
 
-        // 构建 User 实体（ID 由 @Id 注解自动生成，tenantId/createBy 由 AutoFillHandler 自动填充）
+        // 构建 User 实体（ID 由 @Id 注解自动生成，createBy 由 AutoFillHandler 自动填充）
         User user = new User();
         user.setUsername(dto.getUsername());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
@@ -140,12 +138,11 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void update(Long id, UserUpdateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
         User existing = getExistingUser(id);
 
         // 校验手机号唯一（排除自身）
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
-            if (userMapper.countByPhone(tenantId, dto.getPhone(), id) > 0) {
+            if (userMapper.countByPhone(dto.getPhone(), id) > 0) {
                 throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
@@ -228,7 +225,6 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public PageResult<UserListVO> list(UserQueryDTO query) {
-        Long tenantId = UserContext.getTenantId();
         List<Long> deptIds = null;
 
         // 如果指定了部门，查询该部门及子部门
@@ -236,10 +232,10 @@ public class UserServiceImpl implements UserService {
             deptIds = deptService.getChildDeptIds(query.getDeptId());
         }
 
-        long total = userMapper.selectCount(query, tenantId, deptIds);
+        long total = userMapper.selectCount(query, deptIds);
         List<User> users = Collections.emptyList();
         if (total > 0) {
-            users = userMapper.selectList(query, tenantId, deptIds);
+            users = userMapper.selectList(query, deptIds);
         }
 
         List<UserListVO> voList = users.stream().map(this::toListVO).collect(Collectors.toList());
@@ -297,12 +293,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void updateProfile(UserProfileUpdateDTO dto) {
         Long userId = UserContext.getUserId();
-        Long tenantId = UserContext.getTenantId();
         getExistingUser(userId);
 
         // 手机号唯一校验（排除自身）
         if (dto.getPhone() != null && !dto.getPhone().isEmpty()) {
-            if (userMapper.countByPhone(tenantId, dto.getPhone(), userId) > 0) {
+            if (userMapper.countByPhone(dto.getPhone(), userId) > 0) {
                 throw new BizException(ErrorCode.PARAM_ERROR, "error.user.phone.in.use");
             }
         }
@@ -384,11 +379,9 @@ public class UserServiceImpl implements UserService {
     }
 
     private void batchInsertUserRoles(Long userId, List<Long> roleIds) {
-        Long tenantId = UserContext.getTenantId();
         List<UserRole> userRoles = roleIds.stream().map(roleId -> {
             UserRole ur = new UserRole(userId, roleId);
             ur.setId(IdGenerator.nextId());
-            ur.setTenantId(tenantId);
             return ur;
         }).collect(Collectors.toList());
         userRoleMapper.batchInsert(userRoles);
@@ -396,7 +389,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserOptionVO> listOptions() {
-        return userMapper.selectOptions(UserContext.getTenantId());
+        return userMapper.selectOptions();
     }
 
     private void validateRoleIds(List<Long> roleIds) {
@@ -478,9 +471,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void exportUsers(UserQueryDTO query, HttpServletResponse response) throws IOException {
-        Long tenantId = UserContext.getTenantId();
         List<Long> deptIds = query.getDeptId() != null ? deptService.getChildDeptIds(query.getDeptId()) : null;
-        List<User> users = userMapper.selectList(query, tenantId, deptIds);
+        List<User> users = userMapper.selectList(query, deptIds);
         // 职务码 → 展示名的映射只算一次，避免每行都查一遍字典
         Map<String, String> postKeys = postCodeToMessageKey();
         List<UserExportVO> rows = users.stream()
