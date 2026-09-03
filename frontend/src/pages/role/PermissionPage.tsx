@@ -12,7 +12,7 @@ import type { MenuTreeVO } from '../../services/menuApi';
 import type { DeptTreeVO } from '../../services/deptApi';
 import type { Key } from 'react';
 import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
-import { makeNavLabel } from '../../locales/navLabel';
+import { makeNavLabel, makeRoleLabel } from '../../locales/navLabel';
 
 const { Title, Text } = Typography;
 
@@ -242,7 +242,7 @@ export default function PermissionPage() {
               {t('common:back')}
             </Button>
             <Title level={5} style={{ margin: 0 }}>
-              {t('perm.title', { name: roleDetail?.roleName ?? '' })}
+              {t('perm.title', { name: roleDetail ? makeRoleLabel(t)(roleDetail) : '' })}
             </Title>
           </Space>
           <Button type="primary" loading={saving} onClick={handleSave}>

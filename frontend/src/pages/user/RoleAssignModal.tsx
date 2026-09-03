@@ -3,6 +3,7 @@ import { Modal, Transfer, message } from 'antd';
 import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
 import { useTranslation } from 'react-i18next';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 interface Props {
   open: boolean;
@@ -18,10 +19,11 @@ interface TransferItem {
 }
 
 export default function RoleAssignModal({ open, userId, currentRoleIds, onSuccess, onCancel }: Props) {
-  const { t } = useTranslation(['user', 'common']);
+  const { t } = useTranslation(['user', 'common', 'role']);
   const [targetKeys, setTargetKeys] = useState<string[]>([]);
   const [dataSource, setDataSource] = useState<TransferItem[]>([]);
   const [loading, setLoading] = useState(false);
+  const roleLabel = makeRoleLabel(t);
 
   useEffect(() => {
     if (open) {
@@ -30,7 +32,7 @@ export default function RoleAssignModal({ open, userId, currentRoleIds, onSucces
         .then((res) => {
           setDataSource((res.data || []).map((r) => ({
             key: String(r.id),
-            title: r.roleName,
+            title: roleLabel(r),
           })));
         })
         .catch(() => setDataSource([]));

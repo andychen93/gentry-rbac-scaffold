@@ -12,6 +12,7 @@ import { useUserStore } from '../../stores/userStore';
 import RoleFormModal from './RoleFormModal';
 import UserAssignModal from './UserAssignModal';
 import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 /*
  * 数据权限档位的文案**不在本文件**。原来这里有一张 DATA_SCOPE_MAP，
@@ -42,9 +43,16 @@ export default function RolePage() {
     }
   };
 
+  // 角色名走 i18nKey 翻译（内置角色 ADMIN/USER），闭包必须在渲染时调用，
+  // 不能预算缓存——理由同 makeNavLabel 头注释：切语言要响应式生效
+  const roleLabel = makeRoleLabel(t);
+
   const columns: ColumnsType<RoleListVO> = [
     { title: t('table.code'), dataIndex: 'roleCode', key: 'roleCode', width: 140 },
-    { title: t('table.name'), dataIndex: 'roleName', key: 'roleName', width: 140 },
+    {
+      title: t('table.name'), dataIndex: 'roleName', key: 'roleName', width: 140,
+      render: (_: string, r: RoleListVO) => roleLabel(r),
+    },
     {
       title: t('table.dataScope'), dataIndex: 'dataScope', key: 'dataScope', width: 140,
       render: (v: number) => <Tag>{dictLabel(t, DICT_TYPES.dataScope, v)}</Tag>,
@@ -85,7 +93,7 @@ export default function RolePage() {
           },
           {
             key: 'del', label: t('common:delete'), icon: <DeleteOutlined />, perm: 'system:role:remove',
-            danger: true, confirmText: t('confirm.delete', { name: r.roleName }),
+            danger: true, confirmText: t('confirm.delete', { name: roleLabel(r) }),
             onClick: async () => {
               await roleApi.remove(r.id);
               message.success(t('common:msg.deleteSuccess'));
@@ -136,7 +144,7 @@ export default function RolePage() {
         <UserAssignModal
           open={userModalOpen}
           roleId={userModalRole.id}
-          roleName={userModalRole.roleName}
+          roleName={roleLabel(userModalRole)}
           /* 绑定完要刷列表：「关联用户」列的 userCount 会变 */
           onSuccess={() => { setUserModalOpen(false); refresh(); }}
           onCancel={() => setUserModalOpen(false)}

@@ -8,6 +8,8 @@ public class RoleDetailVO {
     private Long id;
     private String roleCode;
     private String roleName;
+    /** 见 {@code RoleListVO#i18nKey} 的注释 */
+    private String i18nKey;
     private Integer dataScope;
     private Integer sort;
     private Integer status;
@@ -23,6 +25,8 @@ public class RoleDetailVO {
     public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
     public String getRoleName() { return roleName; }
     public void setRoleName(String roleName) { this.roleName = roleName; }
+    public String getI18nKey() { return i18nKey; }
+    public void setI18nKey(String i18nKey) { this.i18nKey = i18nKey; }
     public Integer getDataScope() { return dataScope; }
     public void setDataScope(Integer dataScope) { this.dataScope = dataScope; }
     public Integer getSort() { return sort; }

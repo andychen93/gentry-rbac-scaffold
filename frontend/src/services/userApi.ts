@@ -56,7 +56,7 @@ export interface UserListVO {
   deptName: string;
   status: number;
   createTime: string;
-  roles: { id: number; roleName: string; roleCode: string }[];
+  roles: { id: number; roleName: string; roleCode: string; i18nKey?: string | null }[];
 }
 
 export interface UserDetailVO {
@@ -73,7 +73,7 @@ export interface UserDetailVO {
   status: number;
   remark: string;
   roleIds: number[];
-  roles: { id: number; roleName: string; roleCode: string }[];
+  roles: { id: number; roleName: string; roleCode: string; i18nKey?: string | null }[];
   loginIp: string;
   loginDate: string;
   pwdUpdateTime: string;
@@ -91,7 +91,7 @@ export interface LoginVO {
     avatar: string;
     deptId: number;
     deptName: string;
-    roles: { id: number; roleCode: string; roleName: string; dataScope: number }[];
+    roles: { id: number; roleCode: string; roleName: string; i18nKey?: string | null; dataScope: number }[];
     permissions: string[];
     menus: MenuNavItem[];
     /**

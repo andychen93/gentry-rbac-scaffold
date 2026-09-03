@@ -7,8 +7,13 @@ public class RoleListVO {
     private Long id;
     private String roleCode;
     private String roleName;
+    /**
+     * 由 {@code roleCode} 派生的 i18n key（见 {@code RoleI18nKeyResolver}），
+     * 不落库，仅作 API 契约的一部分。前端按 {@code role.{roleCode 小写}} 查
+     * {@code locales/{lang}/role.json}，查不到（自建角色）回退显示 roleName。
+     */
+    private String i18nKey;
     private Integer dataScope;
-    private String dataScopeName;
     private Integer userCount;
     private Integer sort;
     private Integer status;
@@ -20,10 +25,10 @@ public class RoleListVO {
     public void setRoleCode(String roleCode) { this.roleCode = roleCode; }
     public String getRoleName() { return roleName; }
     public void setRoleName(String roleName) { this.roleName = roleName; }
+    public String getI18nKey() { return i18nKey; }
+    public void setI18nKey(String i18nKey) { this.i18nKey = i18nKey; }
     public Integer getDataScope() { return dataScope; }
     public void setDataScope(Integer dataScope) { this.dataScope = dataScope; }
-    public String getDataScopeName() { return dataScopeName; }
-    public void setDataScopeName(String dataScopeName) { this.dataScopeName = dataScopeName; }
     public Integer getUserCount() { return userCount; }
     public void setUserCount(Integer userCount) { this.userCount = userCount; }
     public Integer getSort() { return sort; }

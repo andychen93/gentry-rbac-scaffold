@@ -8,6 +8,7 @@ import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
 import { menuApi } from '../../services/menuApi';
 import { deptApi } from '../../services/deptApi';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 const { Paragraph, Text } = Typography;
 
@@ -51,9 +52,10 @@ const ADMIN_LINKS: { to: string; navKey: string; permission?: string }[] = [
  *      再写一条迁移改掉 sys_menu 里首页那条的 component。
  */
 const HomePage: React.FC = () => {
-  const { t } = useTranslation('home');
+  const { t } = useTranslation(['home', 'role']);
   const userInfo = useUserStore((s) => s.userInfo);
   const hasPermission = useUserStore((s) => s.hasPermission);
+  const roleLabel = makeRoleLabel(t);
 
   const links = ADMIN_LINKS.filter((l) => !l.permission || hasPermission(l.permission));
 
@@ -84,7 +86,7 @@ const HomePage: React.FC = () => {
               <Descriptions.Item label={t('role', { ns: 'common' })}>
                 {(userInfo?.roles ?? []).map((r) => (
                   <Tag color="blue" key={r.id}>
-                    {r.roleName}（{r.roleCode}）
+                    {roleLabel(r)}（{r.roleCode}）
                   </Tag>
                 ))}
               </Descriptions.Item>

@@ -3,6 +3,7 @@ import { Card, Descriptions, Button, Space, Tag } from 'antd';
 import { KeyOutlined, EditOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useUserStore } from '../../stores/userStore';
+import { makeRoleLabel } from '../../locales/navLabel';
 import ChangePasswordModal from './ChangePasswordModal';
 import EditProfileModal from './EditProfileModal';
 
@@ -15,6 +16,7 @@ export default function ProfilePage() {
   const fetchUserInfo = useUserStore((s) => s.fetchUserInfo);
   const [pwdOpen, setPwdOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const roleLabel = makeRoleLabel(t);
 
   return (
     <div style={{ padding: 24 }}>
@@ -26,7 +28,7 @@ export default function ProfilePage() {
           <Descriptions.Item label={t('common:role')}>
             <Space wrap>
               {(userInfo?.roles || []).map((r) => (
-                <Tag key={r.id} color="blue">{r.roleName}</Tag>
+                <Tag key={r.id} color="blue">{roleLabel(r)}</Tag>
               ))}
             </Space>
           </Descriptions.Item>

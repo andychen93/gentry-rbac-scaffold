@@ -14,6 +14,7 @@ import RoleAssignModal from './RoleAssignModal';
 import PasswordResetModal from './PasswordResetModal';
 import { useTranslation } from 'react-i18next';
 import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 interface TreeNode {
   title: string;
@@ -117,6 +118,9 @@ export default function UserPage() {
     setSelectedDeptId(selectedKeys.length > 0 ? Number(selectedKeys[0]) : null);
   };
 
+  // 角色标签走 i18nKey 翻译（内置角色 ADMIN/USER），闭包必须渲染时调用，理由同 makeNavLabel
+  const roleLabel = makeRoleLabel(t);
+
   const columns: ColumnsType<UserListVO> = [
     { title: t('common:username'), dataIndex: 'username', key: 'username', width: 120 },
     { title: t('common:nickname'), dataIndex: 'nickname', key: 'nickname', width: 120 },
@@ -131,7 +135,7 @@ export default function UserPage() {
       title: t('table.roles'), dataIndex: 'roles', key: 'roles', width: 160,
       render: (roles: UserListVO['roles']) =>
         roles?.map((r) => (
-          <Tag color="blue" key={r.id}>{r.roleName || t('table.roleFallback', { id: r.id })}</Tag>
+          <Tag color="blue" key={r.id}>{r.roleName ? roleLabel(r) : t('table.roleFallback', { id: r.id })}</Tag>
         )),
     },
     {

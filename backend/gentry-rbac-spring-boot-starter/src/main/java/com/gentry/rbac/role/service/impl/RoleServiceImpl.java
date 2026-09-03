@@ -3,6 +3,7 @@ package com.gentry.rbac.role.service.impl;
 import com.gentry.core.common.ErrorCode;
 import com.gentry.core.common.PageResult;
 import com.gentry.core.exception.BizException;
+import com.gentry.core.i18n.RoleI18nKeyResolver;
 import com.gentry.core.util.IdGenerator;
 import com.gentry.rbac.role.dto.*;
 import com.gentry.rbac.role.entity.Role;
@@ -88,6 +89,7 @@ public class RoleServiceImpl implements RoleService {
         vo.setId(role.getId());
         vo.setRoleCode(role.getRoleCode());
         vo.setRoleName(role.getRoleName());
+        vo.setI18nKey(RoleI18nKeyResolver.resolve(role.getRoleCode()));
         vo.setDataScope(role.getDataScope());
         vo.setSort(role.getSort());
         vo.setStatus(role.getStatus());
@@ -295,13 +297,9 @@ public class RoleServiceImpl implements RoleService {
         vo.setId(((Number) row.get("id")).longValue());
         vo.setRoleCode((String) row.get("roleCode"));
         vo.setRoleName((String) row.get("roleName"));
+        vo.setI18nKey(RoleI18nKeyResolver.resolve((String) row.get("roleCode")));
         Integer ds = row.get("dataScope") != null ? ((Number) row.get("dataScope")).intValue() : 1;
         vo.setDataScope(ds);
-        try {
-            vo.setDataScopeName(DataScope.fromCode(ds).getDescription());
-        } catch (IllegalArgumentException e) {
-            vo.setDataScopeName("未知");
-        }
         vo.setUserCount(row.get("userCount") != null ? ((Number) row.get("userCount")).intValue() : 0);
         vo.setSort(row.get("sort") != null ? ((Number) row.get("sort")).intValue() : 0);
         vo.setStatus(row.get("status") != null ? ((Number) row.get("status")).intValue() : 1);
@@ -319,6 +317,7 @@ public class RoleServiceImpl implements RoleService {
         vo.setId(role.getId());
         vo.setRoleCode(role.getRoleCode());
         vo.setRoleName(role.getRoleName());
+        vo.setI18nKey(RoleI18nKeyResolver.resolve(role.getRoleCode()));
         vo.setDataScope(role.getDataScope());
         vo.setSort(role.getSort());
         vo.setStatus(role.getStatus());

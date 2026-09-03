@@ -31,6 +31,8 @@ public class UserInfoVO {
         private Long id;
         private String roleCode;
         private String roleName;
+        /** 见 {@code com.gentry.rbac.role.vo.RoleListVO#i18nKey} 的注释 */
+        private String i18nKey;
         private Integer dataScope;
 
         public RoleInfo() {}
@@ -38,6 +40,7 @@ public class UserInfoVO {
             this.id = id;
             this.roleCode = roleCode;
             this.roleName = roleName;
+            this.i18nKey = com.gentry.core.i18n.RoleI18nKeyResolver.resolve(roleCode);
             this.dataScope = dataScope;
         }
     }

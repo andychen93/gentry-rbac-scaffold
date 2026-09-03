@@ -6,8 +6,12 @@ export interface RoleListVO {
   id: number;
   roleCode: string;
   roleName: string;
+  /**
+   * 由后端 RoleI18nKeyResolver 从 roleCode 派生（role.{roleCode 小写}），仅内置角色
+   * （ADMIN/USER）在语言包里有对应译文；自建角色查不到，前端回退显示 roleName。
+   */
+  i18nKey?: string | null;
   dataScope: number;
-  dataScopeName: string;
   userCount: number;
   sort: number;
   status: number;
@@ -18,6 +22,7 @@ export interface RoleDetailVO {
   id: number;
   roleCode: string;
   roleName: string;
+  i18nKey?: string | null;
   dataScope: number;
   sort: number;
   status: number;
@@ -34,6 +39,7 @@ export interface RoleVO {
   id: number;
   roleCode: string;
   roleName: string;
+  i18nKey?: string | null;
   dataScope: number;
   sort: number;
   status: number;
@@ -133,7 +139,7 @@ export const roleApi = {
 
   /** 角色下拉选项（启用角色，供用户分配等场景） */
   options: () =>
-    request.get<any, { code: number; data: { id: number; roleCode: string; roleName: string }[] }>('/api/v1/roles/options'),
+    request.get<any, { code: number; data: { id: number; roleCode: string; roleName: string; i18nKey?: string | null }[] }>('/api/v1/roles/options'),
 
   /** ROLE-008 查看角色已绑定的用户 ID（返回字符串形态的雪花 ID） */
   listUserIds: (id: number | string) =>

@@ -153,4 +153,38 @@ class I18nKeyResolverTest {
                     .isNotEqualTo(DictI18nKeyResolver.resolveData("sys_user_gender", "type"));
         }
     }
+
+    @Nested
+    @DisplayName("RoleI18nKeyResolver")
+    class Role {
+
+        @Test
+        @DisplayName("resolve_正常_返回role点小写编码")
+        void resolve_正常_返回role点小写编码() {
+            assertThat(RoleI18nKeyResolver.resolve("ADMIN")).isEqualTo("role.admin");
+            assertThat(RoleI18nKeyResolver.resolve("USER")).isEqualTo("role.user");
+        }
+
+        @Test
+        @DisplayName("resolve_自建角色编码_同样能派生key")
+        void resolve_自建角色编码_同样能派生key() {
+            // 自建角色语言包里必然查不到这个 key，前端回退显示 roleName——
+            // 这里只验证 resolver 本身不因为"没预料到的编码"而出错
+            assertThat(RoleI18nKeyResolver.resolve("TESTROLE205422")).isEqualTo("role.testrole205422");
+        }
+
+        @Test
+        @DisplayName("resolve_为空_返回null")
+        void resolve_为空_返回null() {
+            assertThat(RoleI18nKeyResolver.resolve(null)).isNull();
+            assertThat(RoleI18nKeyResolver.resolve("")).isNull();
+            assertThat(RoleI18nKeyResolver.resolve("  ")).isNull();
+        }
+
+        @Test
+        @DisplayName("resolve_含首尾空格_trim后派生")
+        void resolve_含首尾空格_trim后派生() {
+            assertThat(RoleI18nKeyResolver.resolve("  ADMIN  ")).isEqualTo("role.admin");
+        }
+    }
 }
