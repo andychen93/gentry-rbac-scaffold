@@ -24,7 +24,7 @@
 | `doc/design/architecture/全局基础设施架构图.drawio` | 架构图（drawio 打开） |
 | `doc/design/modules/core/P0-*.md` | 全局异常、自动填充、StpInterface 权限接口 |
 | `doc/design/modules/core/P1-*.md` | Jackson 全局配置、请求日志过滤器、数据权限拦截器 |
-| `doc/design/modules/core/P2-*.md` | 全链路追踪、接口限流、重复提交防护、国际化 i18n（概要 + 前后端详细，**待实现**） |
+| `doc/design/modules/core/P2-*.md` | 全链路追踪、接口限流、重复提交防护、国际化 i18n（概要 + 前后端详细；主链路已落地。内置角色名增量见概要 §4.3，设计已对齐、代码单独合入；操作日志「模块」列见 §4.8.1，须前后端同批，半套禁止合入） |
 
 每个组件都有「概要设计 + 详细设计」两份。
 
