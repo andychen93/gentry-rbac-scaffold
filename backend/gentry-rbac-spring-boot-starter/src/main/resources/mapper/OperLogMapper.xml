@@ -4,7 +4,7 @@
 
     <sql id="queryCondition">
         WHERE 1 = 1
-        <if test="query.module != null and query.module != ''">AND module LIKE CONCAT('%', #{query.module}, '%')</if>
+        <if test="query.module != null and query.module != ''">AND module = #{query.module}</if>
         <if test="query.type != null and query.type != ''">AND type = #{query.type}</if>
         <if test="query.operator != null and query.operator != ''">AND operator LIKE CONCAT('%', #{query.operator}, '%')</if>
         <if test="query.status != null">AND status = #{query.status}</if>

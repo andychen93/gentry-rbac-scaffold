@@ -124,6 +124,36 @@ class I18nApiIT extends BaseApiIT {
         // 既有的 messages 资源包不能被新 basename 挤掉
         assertThat(messageSource.getMessage("operlog.type.INSERT", null, "MISS", Locale.US))
                 .isEqualTo("Add");
+        // @Log module 的中文字面量本身当 key
+        assertThat(messageSource.getMessage("用户管理", null, "MISS", Locale.US))
+                .isEqualTo("User Management");
+        assertThat(messageSource.getMessage("部门管理", null, "MISS", Locale.CHINA))
+                .isEqualTo("部门管理");
+    }
+
+    @Test
+    @DisplayName("操作日志moduleLabel_中文当key随语言翻译")
+    void 操作日志moduleLabel_中文当key随语言翻译() throws Exception {
+        String enAuth = loginWithLanguage("en_US");
+        Map<String, Object> dept = new HashMap<>();
+        dept.put("parentId", 100L);
+        dept.put("name", "i18n模块部门" + SEQ.incrementAndGet());
+        dept.put("sort", 1);
+        dept.put("status", 1);
+        mockMvc.perform(barePost("/api/v1/depts").header("Authorization", enAuth).content(json(dept)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0));
+
+        MvcResult list = mockMvc.perform(bareGet("/api/v1/logs/operation?pageNum=1&pageSize=10&module=部门管理")
+                        .header("Authorization", enAuth))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        JsonNode first = parse(list).at("/data/list/0");
+        org.junit.jupiter.api.Assumptions.assumeTrue(!first.isMissingNode() && first.path("id").asLong() > 0,
+                "无部门管理操作日志可测，跳过");
+        assertThat(first.path("module").asText()).isEqualTo("部门管理");
+        assertThat(first.path("moduleLabel").asText()).isEqualTo("Department Management");
     }
 
     // ==================== ② 请求头（用户未设置偏好） ====================

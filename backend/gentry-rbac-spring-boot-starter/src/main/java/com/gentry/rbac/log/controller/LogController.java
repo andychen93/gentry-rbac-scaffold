@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 public class LogController {
 
@@ -27,6 +29,17 @@ public class LogController {
     @SaCheckPermission("system:operlog:list")
     public R<PageResult<OperLogListVO>> listOperLogs(@Valid OperLogQueryDTO query) {
         return R.ok(logService.listOperLogs(query));
+    }
+
+    /**
+     * LOG-011 操作日志「模块」筛选下拉的选项来源。
+     * 字面路径必须写在 {@code /operation/{id}} 前面，避免 {@code modules} 被当成 Long id。
+     * 挂在列表权限点下，不单独开权限点。
+     */
+    @GetMapping("/api/v1/logs/operation/modules")
+    @SaCheckPermission("system:operlog:list")
+    public R<List<String>> listOperLogModules() {
+        return R.ok(logService.listOperLogModules());
     }
 
     /** LOG-002 操作日志详情 */

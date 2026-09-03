@@ -98,25 +98,36 @@ test.describe.serial('日志筛选：下拉 table (LOG-F)', () => {
     await expect(input).toHaveValue('');
   });
 
-  test('LOG-F05 模块是下拉 table，模糊查菜单表', async () => {
-    const input = page.locator('.ant-card').first().getByPlaceholder('输入名称搜索模块');
-    await expect(input).toBeVisible();
-    await input.click();
+  test('LOG-F05 模块是精确匹配下拉，选项来自日志表 distinct module', async () => {
+    // 查询区第二个控件是 antd Select（操作用户仍是下拉 table）。
+    // 不再用 MenuTableSelect：那是菜单名模糊筛，和 @Log module 精确匹配对不上。
+    const moduleSelect = page.locator('.ant-card').first().locator('.ant-select').first();
+    await expect(moduleSelect).toBeVisible();
+    await moduleSelect.click();
 
-    const pop = page.locator('.ant-popover:visible');
-    await expect(pop).toBeVisible({ timeout: 5000 });
-    await expect(pop.getByRole('columnheader', { name: '位置' })).toBeVisible();  // 菜单层级路径列
+    const dropdown = page.locator('.ant-select-dropdown:visible');
+    await expect(dropdown).toBeVisible({ timeout: 5000 });
+    // 回归：不能再弹出菜单表（有「位置」列）
+    await expect(page.getByRole('columnheader', { name: '位置' })).toHaveCount(0);
 
-    // 弹层里没有多余搜索框，直接在输入框打字即模糊搜菜单
-    await expect(pop.getByPlaceholder('输入关键字搜索...')).toHaveCount(0);
-    await input.fill('角色');
-    await expect(pop.locator('.ant-table-row').filter({ hasText: '角色管理' }).first())
-      .toBeVisible({ timeout: 8000 });
+    const option = dropdown.locator('.ant-select-item-option').first();
+    await expect(option).toBeVisible({ timeout: 8000 });
+    const label = (await option.innerText()).trim();
+    expect(label.length).toBeGreaterThan(0);
+    await option.click();
 
-    // 选中后回填菜单名
-    await pop.locator('.ant-table-row').filter({ hasText: '角色管理' }).first().click();
-    await expect(pop).toBeHidden({ timeout: 5000 });
-    await expect(input).toHaveValue('角色管理');
+    await page.getByRole('button', { name: '查询', exact: true }).click();
+
+    const logTable = page.locator('.ant-table').filter({
+      has: page.getByRole('columnheader', { name: '日志编号' }),
+    });
+    await expect(logTable.locator('tbody .ant-table-row').first()).toBeVisible({ timeout: 10000 });
+    const modules = logTable.locator('tbody .ant-table-row td:nth-child(3)');
+    const n = await modules.count();
+    expect(n).toBeGreaterThan(0);
+    for (let i = 0; i < n; i++) {
+      await expect(modules.nth(i)).toHaveText(label);
+    }
   });
 
   test('LOG-F06 登录日志的用户名也是下拉 table', async () => {

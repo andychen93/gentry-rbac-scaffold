@@ -20,4 +20,7 @@ public interface OperLogMapper extends BaseMapper<OperLog> {
 
     @Delete("DELETE FROM sys_oper_log WHERE operate_time < #{cutoffTime}")
     int deleteBeforeTime(@Param("cutoffTime") LocalDateTime cutoffTime);
+
+    @Select("SELECT DISTINCT module FROM sys_oper_log WHERE module IS NOT NULL AND module <> '' ORDER BY module")
+    List<String> selectDistinctModules();
 }

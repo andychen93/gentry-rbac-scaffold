@@ -13,6 +13,8 @@ public interface LogService {
     byte[] exportOperLogs(OperLogQueryDTO query);
     int cleanOperLogs(int beforeDays);
     void saveOperLog(OperLog operLog);
+    /** 操作日志「模块」筛选下拉的选项来源（{@code SELECT DISTINCT module}） */
+    List<String> listOperLogModules();
 
     PageResult<LoginLogListVO> listLoginLogs(LoginLogQueryDTO query);
     LoginLogDetailVO getLoginLogDetail(Long id);

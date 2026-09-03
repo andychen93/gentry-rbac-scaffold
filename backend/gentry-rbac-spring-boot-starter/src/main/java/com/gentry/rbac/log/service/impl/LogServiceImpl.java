@@ -38,10 +38,12 @@ public class LogServiceImpl implements LogService {
     public PageResult<OperLogListVO> listOperLogs(OperLogQueryDTO query) {
         long total = operLogMapper.selectCount(query);
         List<OperLogListVO> list = total > 0 ? operLogMapper.selectList(query) : List.of();
-        // 应用层国际化翻译
+        // 应用层国际化翻译。module 存的是 @Log(module=...) 的中文字面量本身，
+        // 该字面量同时充当 i18n key（getMessage(value, value)：查不到 key 时返回自己，
+        // 零 DDL、零数据迁移，见 P2-国际化i18n-后端详细设计 §2.2.13 下版本方案）。
         for (OperLogListVO vo : list) {
             vo.setTypeLabel(i18nUtil.getOperLogTypeLabel(vo.getType()));
-            vo.setModuleLabel(vo.getModule());
+            vo.setModuleLabel(i18nUtil.getMessage(vo.getModule(), vo.getModule()));
         }
         return new PageResult<>(list, total, query.getPageNum(), query.getPageSize());
     }
@@ -51,9 +53,9 @@ public class LogServiceImpl implements LogService {
         OperLog entity = operLogMapper.selectOneById(id);
         if (entity == null) throw new BizException(ErrorCode.PARAM_ERROR, "error.log.not.found");
         OperLogDetailVO vo = new OperLogDetailVO();
-        vo.setId(entity.getId()); vo.setModule(entity.getModule()); vo.setModuleLabel(entity.getModule());
+        vo.setId(entity.getId()); vo.setModule(entity.getModule());
+        vo.setModuleLabel(i18nUtil.getMessage(entity.getModule(), entity.getModule()));
         vo.setType(entity.getType()); vo.setTypeLabel(i18nUtil.getOperLogTypeLabel(entity.getType()));
-        vo.setModuleLabel(entity.getModule());
         vo.setTitle(entity.getTitle()); vo.setOperator(entity.getOperator()); vo.setOperatorId(entity.getOperatorId());
         vo.setOperatorIp(entity.getOperatorIp()); vo.setLocation(entity.getLocation()); vo.setMethod(entity.getMethod());
         vo.setRequestUrl(entity.getRequestUrl()); vo.setRequestParams(entity.getRequestParams());
@@ -87,6 +89,11 @@ public class LogServiceImpl implements LogService {
     public int cleanOperLogs(int beforeDays) {
         LocalDateTime cutoff = LocalDateTime.now().minusDays(beforeDays);
         return operLogMapper.deleteBeforeTime(cutoff);
+    }
+
+    @Override
+    public List<String> listOperLogModules() {
+        return operLogMapper.selectDistinctModules();
     }
 
     @Override
