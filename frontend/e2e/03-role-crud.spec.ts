@@ -31,7 +31,7 @@ test.describe.serial('角色管理 CRUD', () => {
 
     await page.locator('.ant-modal .ant-btn-primary').click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(1000);
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('R-003 编辑角色', async () => {
@@ -44,7 +44,9 @@ test.describe.serial('角色管理 CRUD', () => {
 
     await page.locator('.ant-modal .ant-btn-primary').click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(1000);
+    // 弹窗必须等其关闭才能进入下一个 test，否则遗留的 .ant-modal-wrap 会拦截
+    // 下一步（R-007）对表格行操作按钮的点击（连坐失败的根因）
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('R-007 绑定用户（穿梭框）', async () => {
@@ -69,7 +71,7 @@ test.describe.serial('角色管理 CRUD', () => {
 
     await modal.getByRole('button', { name: /确\s*定/ }).click();
     await expect(page.locator('.ant-message').getByText('绑定用户成功')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(800);
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('R-007 重开弹窗能回显已绑定用户', async () => {
@@ -89,7 +91,7 @@ test.describe.serial('角色管理 CRUD', () => {
 
     await modal.getByRole('button', { name: /确\s*定/ }).click();
     await expect(page.locator('.ant-message').getByText('绑定用户成功')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(800);
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('R-006 删除角色', async () => {

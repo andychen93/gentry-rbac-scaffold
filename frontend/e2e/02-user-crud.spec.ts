@@ -66,7 +66,9 @@ test.describe.serial('用户管理 CRUD', () => {
 
     await page.locator('.ant-modal').getByRole('button', { name: '确 定' }).click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(1000);
+    // 弹窗必须等其关闭才能进入下一个 test，否则遗留的 .ant-modal-wrap 会拦截
+    // 下一步（U-004）对表格行操作按钮的点击（连坐失败的根因）
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('U-004 重置密码', async () => {
@@ -82,7 +84,7 @@ test.describe.serial('用户管理 CRUD', () => {
     }
     await page.locator('.ant-modal').getByRole('button', { name: '确 定' }).click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(1000);
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('U-006 停用账号需二次确认，取消则状态不变', async () => {

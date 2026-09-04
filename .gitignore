@@ -72,3 +72,5 @@ __pycache__/
 
 # 本地起 redis-server 时落在工作目录的快照文件
 dump.rdb
+# 本地 SQLite 对拍/调试产物（如 frontend/gentry.db，跑 Go 版后端时生成）
+*.db
