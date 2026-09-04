@@ -36,7 +36,7 @@ test.describe.serial('部门管理 CRUD', () => {
 
     await page.locator('.ant-modal .ant-btn-primary').click();
     await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-    await page.waitForTimeout(1000);
+    await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
   });
 
   test('D-003 编辑部门', async () => {
@@ -50,7 +50,7 @@ test.describe.serial('部门管理 CRUD', () => {
 
       await page.locator('.ant-modal .ant-btn-primary').click();
       await expect(page.locator('.ant-message')).toBeVisible({ timeout: 5000 });
-      await page.waitForTimeout(1000);
+      await expect(page.locator('.ant-modal')).not.toBeVisible({ timeout: 3000 });
     }
   });
 

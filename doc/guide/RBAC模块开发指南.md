@@ -1,7 +1,7 @@
 # RBAC 模块开发指南
 
-> **版本**：v1.1.0
-> **日期**：2026-04-25
+> **版本**：v1.3.0
+> **日期**：2026-09-01
 > **适用对象**：后端开发、前端开发、AI 编程
 
 ---
@@ -12,29 +12,29 @@
 
 | 模块 | 完成内容 | 代码位置 |
 |------|---------|---------|
-| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/gentry-core/` |
-| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/user/` |
-| **RBAC 后端 - 租户管理** | Controller/Entity/Mapper/VO | `backend/gentry-business/src/main/java/com/gentry/rbac/tenant/` |
-| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/gentry-business/src/main/java/com/gentry/rbac/role/` + `menu/` |
-| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/gentry-business/src/main/java/com/gentry/rbac/security/` |
+| **全局基础设施** | 10 个组件全部实现并编译通过 | `backend/gentry-core-spring-boot-starter/` |
+| **RBAC 后端 - 用户管理** | Controller/Service/Mapper/Entity/DTO/VO | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/user/` |
+| **RBAC 后端 - 角色/菜单** | Entity/Mapper（基础设施骨架） | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/role/` + `menu/` |
+| **RBAC 后端 - 权限接口** | StpInterfaceImpl（SaSession 缓存） | `backend/gentry-rbac-spring-boot-starter/src/main/java/com/gentry/rbac/security/` |
 | **前端 - 登录页面** | LoginPage | `frontend/src/pages/login/` |
 | **前端 - 用户管理页面** | UserPage + 弹窗组件 | `frontend/src/pages/user/` |
 
 ### 1.2 待开发的 RBAC 功能
 
+> 下表是 2026-04 的历史开发路线图，早已全部完成，仅作存档参考。
+> 原表中的「租户管理」「租户登录模式」「默认租户与登录模式」三个子模块已随
+> 去多租户化改造（2026-09）整体删除，不再是本平台的功能范围。
+
 | 序号 | 子模块 | 后端详细设计 | 前端详细设计 | 后端状态 | 前端状态 |
 |------|--------|-------------|-------------|---------|---------|
-| 1 | 租户管理 | `modules/租户管理/后端详细设计.md` | `modules/租户管理/前端详细设计.md` | 部分（Entity/Mapper 已有，缺 Service/完整 CRUD） | 未开始 |
-| 2 | 租户登录模式 | `modules/租户管理/默认租户与登录模式-详细设计.md` | `modules/租户管理/默认租户与登录模式-前端详细设计.md` | 未开始 | 未开始 |
-| 3 | 用户管理 | `modules/用户管理/后端详细设计.md` | `modules/用户管理/前端详细设计.md` | 已有基础框架（需测试和补全） | 已有基础页面（需补全） |
-| 4 | 角色管理 | `modules/角色管理/后端详细设计.md` | `modules/角色管理/前端详细设计.md` | 仅 Entity/Mapper | 未开始 |
-| 5 | 菜单管理 | `modules/菜单管理/后端详细设计.md` | `modules/菜单管理/前端详细设计.md` | 仅 Entity/Mapper | 未开始 |
-| 6 | 部门管理 | `modules/部门管理/后端详细设计.md` | `modules/部门管理/前端详细设计.md` | 未开始 | 未开始 |
-| 7 | 字典管理 | `modules/字典管理/后端详细设计.md` | `modules/字典管理/前端详细设计.md` | 未开始 | 未开始 |
-| 8 | 日志管理 | `modules/日志管理/后端详细设计.md` | `modules/日志管理/前端详细设计.md` | 未开始 | 未开始 |
-| 9 | 公共基础设施 | `doc/design/modules/core/`（P0~P2 共 10 组件） | - | 已实现 | - |
-| 10 | 默认租户与登录模式 | `modules/租户管理/默认租户与登录模式-详细设计.md` | `modules/租户管理/默认租户与登录模式-前端详细设计.md` | 未开始 | 未开始 |
-| 11 | 登录菜单动态渲染 | - | `modules/用户管理/登录菜单动态渲染-前端详细设计.md` | - | 未开始 |
+| 1 | 用户管理 | `modules/用户管理/后端详细设计.md` | `modules/用户管理/前端详细设计.md` | 已完成 | 已完成 |
+| 2 | 角色管理 | `modules/角色管理/后端详细设计.md` | `modules/角色管理/前端详细设计.md` | 已完成 | 已完成 |
+| 3 | 菜单管理 | `modules/菜单管理/后端详细设计.md` | `modules/菜单管理/前端详细设计.md` | 已完成 | 已完成 |
+| 4 | 部门管理 | `modules/部门管理/后端详细设计.md` | `modules/部门管理/前端详细设计.md` | 已完成 | 已完成 |
+| 5 | 字典管理 | `modules/字典管理/后端详细设计.md` | `modules/字典管理/前端详细设计.md` | 已完成 | 已完成 |
+| 6 | 日志管理 | `modules/日志管理/后端详细设计.md` | `modules/日志管理/前端详细设计.md` | 已完成 | 已完成 |
+| 7 | 公共基础设施 | `doc/design/modules/core/`（P0~P2 共 9 组件） | - | 已实现 | - |
+| 8 | 登录菜单动态渲染 | - | `modules/用户管理/登录菜单动态渲染-前端详细设计.md` | - | 已完成 |
 
 > **设计文档路径**：`doc/design/modules/rbac/modules/{模块名}/`
 
@@ -65,7 +65,7 @@
 |----|---------|---------|
 | ORM | **MyBatis-Flex 1.11.6** | 不是 MyBatis-Plus，注解 API 不同 |
 | 认证 | **Sa-Token 1.38.0** | StpUtil 校验权限/角色 |
-| 实体基类 | **BaseEntity / TenantEntity** | 公共字段自动填充，无需手动赋值 |
+| 实体基类 | **BaseEntity** | 公共字段自动填充，无需手动赋值 |
 | 统一响应 | **R\<T\>** | 所有 API 必须用 R.ok() / R.fail() 包装 |
 | 错误码 | **ErrorCode 枚举** | 业务异常用 `throw new BizException(ErrorCode.XXX)` |
 | 前端 | **React 18 + Ant Design 5** | 参考已有 LoginPage/UserPage 风格 |
@@ -80,34 +80,28 @@
 | 主键注解 | `@TableId(type = IdType.AUTO)` | `@Id(keyType = KeyType.Auto)` |
 | 列注解 | `@TableField` | `@Column` |
 | 逻辑删除 | `@TableLogic` | `@Column(isLogicDelete = true)` |
-| 租户字段 | `@TableField(fill = ...)` | `@Column(tenantId = true)` |
 | 查询构建 | `LambdaQueryWrapper` | `QueryChain.of(Entity.class).where(...)` |
 
 ---
 
 ## 三、推荐开发顺序
 
-按依赖关系，建议按以下顺序开发后端（前端可并行）：
+> 以下是 2026-04 制定的历史开发顺序，现已全部完成，仅作参考（新增业务模块
+> 不必照抄这个顺序，直接照抄 `com.gentry.rbac.dept` 起步即可）：
 
 ```
-Phase 1: 租户管理（后端 CRUD 完善 + 前端页面）
+Phase 1: 部门管理（后端 + 前端）— 其他模块依赖 deptId
     ↓
-Phase 2: 部门管理（后端 + 前端）— 其他模块依赖 deptId
+Phase 2: 菜单管理（后端 + 前端）— 角色管理依赖菜单数据
     ↓
-Phase 3: 菜单管理（后端 + 前端）— 角色管理依赖菜单数据
+Phase 3: 角色管理（后端 + 前端）— 依赖菜单 + 部门
     ↓
-Phase 4: 角色管理（后端 + 前端）— 依赖菜单 + 部门
+Phase 4: 用户管理完善（后端补全 + 前端完善）— 依赖角色
     ↓
-Phase 5: 用户管理完善（后端补全 + 前端完善）— 依赖角色
+Phase 5: 字典管理（后端 + 前端）— 独立模块
     ↓
-Phase 6: 字典管理（后端 + 前端）— 独立模块
-    ↓
-Phase 7: 日志管理（后端 + 前端）— 独立模块
-    ↓
-Phase 8: 默认租户与登录模式（联调）
+Phase 6: 日志管理（后端 + 前端）— 独立模块
 ```
-
-> **注意**：Phase 1（租户管理）的创建租户功能需要调用 DeptService、RoleService、UserService，而这些 Service 分别在 Phase 2、4、5 才开发。建议 Phase 1a 先实现 TenantService 基础 CRUD（不含自动初始化），Phase 8 再补充创建租户自动初始化编排逻辑。
 
 ---
 
@@ -117,7 +111,7 @@ Phase 8: 默认租户与登录模式（联调）
 
 ```
 1. 阅读后端详细设计文档
-2. 按设计文档的 ER 模型创建/确认 Entity（继承 BaseEntity 或 TenantEntity）
+2. 按设计文档的 ER 模型创建/确认 Entity（继承 BaseEntity）
 3. 编写 Mapper 接口
 4. 编写 Service 接口和实现类的单元测试（TDD 红灯）
 5. 实现 Service 逻辑
@@ -165,7 +159,6 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 |------|---------|---------|
 | 全局异常处理 | `doc/design/modules/core/P0-全局异常处理-概要设计.md` | `P0-全局异常处理-详细设计.md` |
 | 自动填充处理器 | `doc/design/modules/core/P0-自动填充处理器-概要设计.md` | `P0-自动填充处理器-详细设计.md` |
-| 多租户拦截器 | `doc/design/modules/core/P0-多租户拦截器-概要设计.md` | `P0-多租户拦截器-详细设计.md` |
 | StpInterface 权限接口 | `doc/design/modules/core/P0-StpInterface权限接口-概要设计.md` | `P0-StpInterface权限接口-详细设计.md` |
 | Jackson 全局配置 | `doc/design/modules/core/P1-Jackson全局配置-概要设计.md` | `P1-Jackson全局配置-详细设计.md` |
 | 请求日志过滤器 | `doc/design/modules/core/P1-请求日志过滤器-概要设计.md` | `P1-请求日志过滤器-详细设计.md` |
@@ -178,8 +171,6 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 
 | 子模块 | 后端详细设计 | 前端详细设计 |
 |--------|-------------|-------------|
-| 租户管理 | `doc/design/modules/rbac/modules/租户管理/后端详细设计.md` | `modules/租户管理/前端详细设计.md` |
-| 默认租户登录 | `modules/租户管理/默认租户与登录模式-详细设计.md` | `modules/租户管理/默认租户与登录模式-前端详细设计.md` |
 | 用户管理 | `modules/用户管理/后端详细设计.md` | `modules/用户管理/前端详细设计.md` |
 | 角色管理 | `modules/角色管理/后端详细设计.md` | `modules/角色管理/前端详细设计.md` |
 | 菜单管理 | `modules/菜单管理/后端详细设计.md` | `modules/菜单管理/前端详细设计.md` |
@@ -191,12 +182,12 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 
 ## 六、注意事项
 
-1. **全局基础设施已实现**：异常处理、多租户、自动填充、追踪、限流等已全部就绪，开发业务代码时直接使用即可，不需要重复实现
-2. **Entity 继承基类**：所有租户表继承 `TenantEntity`，全局表继承 `BaseEntity`，公共字段无需手动赋值
+1. **全局基础设施已实现**：异常处理、自动填充、追踪、限流等已全部就绪，开发业务代码时直接使用即可，不需要重复实现
+2. **Entity 继承基类**：所有业务表继承 `BaseEntity`，公共字段无需手动赋值
 3. **错误处理**：Service 层抛 `BizException(ErrorCode.XXX)`，GlobalExceptionHandler 自动处理，Controller 不需要 try-catch
-4. **租户隔离**：所有 SQL 自动追加 `tenant_id` 条件，全局表通过 `ignoreTables()` 配置，跨租户查询用 `@IgnoreTenant`
-5. **权限缓存**：`StpInterfaceImpl` 已实现，角色/权限变更时需调用 `clearUserCache()` 清除缓存
-6. **SQL 脚本**：位于 `sql/rbac/` 目录，使用 Flyway 管理，新表需创建新版本迁移脚本
+4. **权限缓存**：`StpInterfaceImpl` 已实现，角色/权限变更时需调用 `clearUserCache()` 清除缓存
+5. **SQL 脚本**：数据库结构权威在 Flyway 双流迁移（平台流在 rbac-starter 的 `db/migration/gentry-rbac/`，V1–V999；项目流在 `gentry-start` 的 `db/migration/`，自 V1000 起；`sql/reference/` 只是历史快照），新表需创建新版本迁移脚本
+6. **业务域开发位置**（starter 化后）：狗粮演示业务放 `gentry-start` 的 `com.gentry.start` 下；真实项目业务放消费项目自己仓库；**不要往 starter 里加业务域** —— starter 只装平台能力，`com.gentry.rbac.dept` 等既有样例留在 rbac-starter 内仅供照抄
 
 ---
 
@@ -206,3 +197,5 @@ git commit -m "test(rbac): 补充角色管理单元测试"
 |------|------|--------|---------|
 | v1.0.0 | 2026-04-12 | Claude | 初始版本 |
 | v1.1.0 | 2026-04-25 | Claude | 补充遗漏子模块（公共基础设施、默认租户与登录模式、登录菜单动态渲染）；补充 Phase 1 开发顺序注意事项 |
+| v1.2.0 | 2026-08-30 | Claude | 平台化改造文档收口：模块路径更新为 starter 名，补充 Flyway 双流与业务域开发位置 |
+| v1.3.0 | 2026-09-01 | Claude | 去多租户化：删除租户管理子模块与相关路线图/技术选型描述，历史开发路线图标注为已全部完成 |

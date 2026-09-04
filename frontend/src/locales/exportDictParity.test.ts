@@ -26,7 +26,7 @@ const PROPERTIES_DIR = path.join(
   process.cwd(),
   '..',
   'backend',
-  'gentry-core',
+  'gentry-core-spring-boot-starter',
   'src',
   'main',
   'resources',
@@ -99,7 +99,7 @@ describe('后端导出译文与前端字典语言包对账', () => {
     expect(
       mismatches,
       '导出的 Excel 与界面上的职务名会不一致。改译文要同时改 '
-        + `backend/gentry-core/src/main/resources/i18n/export_*.properties 与 `
+        + `backend/gentry-core-spring-boot-starter/src/main/resources/i18n/export_*.properties 与 `
         + 'frontend/src/locales/*/dict.json\n'
         + mismatches.join('\n'),
     ).toEqual([]);

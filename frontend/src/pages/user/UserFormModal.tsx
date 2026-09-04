@@ -5,6 +5,7 @@ import { roleApi } from '../../services/roleApi';
 import { useTranslation } from 'react-i18next';
 import DeptTreeSelect from '../../components/common/DeptTreeSelect';
 import { DICT_TYPES, dictOptions } from '../../locales/dictEnum';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 interface Props {
   open: boolean;
@@ -36,18 +37,19 @@ function RoleTransfer({ value, onChange, dataSource }: {
 }
 
 export default function UserFormModal({ open, userId, onSuccess, onCancel }: Props) {
-  const { t } = useTranslation(['user', 'common', 'dict']);
+  const { t } = useTranslation(['user', 'common', 'dict', 'role']);
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [roleOptions, setRoleOptions] = useState<{ key: string; title: string }[]>([]);
   const isEdit = userId !== null;
+  const roleLabel = makeRoleLabel(t);
 
   // 加载角色列表
   useEffect(() => {
     if (open) {
       roleApi.options()
         .then((res) => {
-          setRoleOptions((res.data || []).map((r) => ({ key: String(r.id), title: r.roleName })));
+          setRoleOptions((res.data || []).map((r) => ({ key: String(r.id), title: roleLabel(r) })));
         })
         .catch(() => setRoleOptions([]));
     }

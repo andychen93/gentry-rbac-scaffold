@@ -2,8 +2,19 @@ import request, { rawFetchHeaders } from './request';
 import i18n from '../locales';
 
 export interface OperLogListVO {
-  id: number; module: string; type: string; title: string; operator: string;
-  operatorIp: string; location: string; status: number; costTime: number; operateTime: string;
+  id: number;
+  module: string;
+  /** 后端按当前语言把 module 当 key 译好的展示值；语言包 miss 时等于 module */
+  moduleLabel?: string;
+  type: string;
+  typeLabel?: string;
+  title: string;
+  operator: string;
+  operatorIp: string;
+  location: string;
+  status: number;
+  costTime: number;
+  operateTime: string;
 }
 export interface OperLogDetailVO extends OperLogListVO {
   operatorId: number; method: string; requestUrl: string; requestParams: string;
@@ -24,6 +35,8 @@ interface PageResult<T> { list: T[]; total: number; pageNum: number; pageSize: n
 
 export const logApi = {
   listOperLogs: (params: any) => request.get<any, { code: number; data: PageResult<OperLogListVO> }>('/api/v1/logs/operation', { params }),
+  /** DISTINCT module，筛选项的 value 是库里的中文 key */
+  listOperLogModules: () => request.get<any, { code: number; data: string[] }>('/api/v1/logs/operation/modules'),
   getOperLogDetail: (id: number) => request.get<any, { code: number; data: OperLogDetailVO }>(`/api/v1/logs/operation/${id}`),
   exportOperLogs: (params: any) => downloadCsv('/api/v1/logs/operation/export', params, 'oper_logs.csv'),
   cleanOperLogs: (data: { beforeDays: number }) => request.delete('/api/v1/logs/operation', { data }),

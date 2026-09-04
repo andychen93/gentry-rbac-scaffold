@@ -4,7 +4,7 @@ import { PlusOutlined, EditOutlined, DeleteOutlined, ReloadOutlined } from '@ant
 import type { ColumnsType } from 'antd/es/table';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ProTable, RowActions } from '../../components/pro';
+import { ProTable, RowActions } from '@gentry/kit';
 import { configApi } from '../../services/configApi';
 import type { ConfigVO } from '../../services/configApi';
 import { useUserStore } from '../../stores/userStore';

@@ -34,16 +34,20 @@ fileMatchPattern: 'frontend/**/*.{ts,tsx}'
   其余属「业务系统」。新业务页面用非系统前缀
 - 权限渲染用 `useUserStore().hasPermission('xxx:yyy:zzz')`；整页无权限用 `AccessDenied`
 - 服务端数据用 TanStack Query，别塞进 Zustand。Zustand 只放 `userStore` / `layoutStore` 这类全局状态
-- 字典值展示用 `DictTag`，字典下拉用 `DictSelect`，部门树选择用 `DeptTreeSelect`
-- **改配色只动 `theme/argonColors.ts`**（唯一源头）。antd 侧由 `theme/argonTheme.ts`
-  灌进 token；`styles/argon.less` 侧由 `vite.config.ts` + `theme/argonLessVars.ts`
+- 字典值展示用 `DictTag`，部门树选择用 `DeptTreeSelect`；字典下拉 `DictSelect` 已删（Pro 表单/查询组件的 dict 分支是死代码一并移除，需要字典选项时在页面层用 dictApi 拉取塞给 select）
+- **改配色只动 `@gentry/kit` 的 `theme/argonColors.ts`**（唯一源头，
+  `frontend/packages/gentry-kit/src/theme/`）。antd 侧由 kit 的 `theme/argonTheme.ts`
+  灌进 token；`styles/argon.less` 侧由 `vite.config.ts` + kit 的 `theme/argonLessVars.ts`
   注入成 `@ps-*` Less 变量。token 覆盖不到的样式才写 `argon.less`，且颜色一律用
   `@ps-*` / `fade(@ps-*, N%)`。对照页 `/dev/style`
 - **不要写死颜色**：组件里要色值用 `theme.useToken()` 取语义 token
   （`colorPrimary` / `colorSuccess` / `colorError` / `colorTextSecondary`…），
   纯文字灰阶优先 `<Typography.Text type="secondary">`。
-  新增颜色请往 `argonColors.ts` 加键，别就地写 hex
-  —— `theme/argonLessVars.test.ts` 会拦住 `argon.less` 里的裸 hex/rgba
+  新增颜色请往 kit 的 `theme/argonColors.ts` 加键，别就地写 hex
+  —— 应用侧 `src/theme/argonLessVars.test.ts` 会拦住 `argon.less` 里的裸 hex/rgba
+- **共享层 `@gentry/kit`**：Pro 组件 / theme / `usePagedList` / `types/api` 统一
+  `import … from '@gentry/kit'`（workspace 包 `frontend/packages/gentry-kit/`，
+  源码直引）；页面注册 `menuMapper` 仍在应用层
 
 ## i18n（详见 `doc/design/modules/core/P2-国际化i18n-前端详细设计.md`）
 

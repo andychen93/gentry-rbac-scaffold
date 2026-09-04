@@ -1,4 +1,6 @@
 {
+  "role.admin": "管理员",
+  "role.user": "普通用户",
   "action.bindUser": "绑定用户",
   "action.create": "新增角色",
   "action.perm": "权限",

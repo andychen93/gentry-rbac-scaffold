@@ -9,10 +9,11 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** 日志 API 集成测试（8 端点：操作日志 list/detail/export/clean + 登录日志 list/detail/export/clean）。 */
+/** 日志 API 集成测试（操作日志 list/modules/detail/export/clean + 登录日志 list/detail/export/clean）。 */
 @DisplayName("日志 API - /api/v1/logs")
 class LogApiIT extends BaseApiIT {
 
@@ -112,5 +113,48 @@ class LogApiIT extends BaseApiIT {
     void list_unauthorized() throws Exception {
         mockMvc.perform(bareGet("/api/v1/logs/operation?pageNum=1&pageSize=10"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("操作日志模块下拉：admin → 200，数组")
+    void listOperLogModules() throws Exception {
+        mockMvc.perform(authedGet("/api/v1/logs/operation/modules"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data").isArray());
+    }
+
+    @Test
+    @DisplayName("操作日志模块下拉：无角色用户 → 403")
+    void listOperLogModules_forbidden() throws Exception {
+        mockMvc.perform(bareGet("/api/v1/logs/operation/modules").header("Authorization", forbiddenAuth()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @DisplayName("操作日志筛选：module 精确匹配，子串不再命中")
+    void listOperLogs_moduleExactMatch() throws Exception {
+        Map<String, Object> dept = new HashMap<>();
+        dept.put("parentId", 100L);
+        dept.put("name", "IT精确匹配部门");
+        dept.put("sort", 1);
+        dept.put("status", 1);
+        mockMvc.perform(authedPost("/api/v1/depts").content(json(dept)))
+                .andExpect(jsonPath("$.code").value(0));
+
+        MvcResult matched = mockMvc.perform(authedGet("/api/v1/logs/operation?pageNum=1&pageSize=50&module=部门管理"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andReturn();
+        JsonNode rows = parse(matched).at("/data/list");
+        assertThat(rows.isArray() && rows.size() > 0).as("应至少有一条部门管理日志").isTrue();
+        for (JsonNode row : rows) {
+            assertThat(row.path("module").asText()).isEqualTo("部门管理");
+        }
+
+        mockMvc.perform(authedGet("/api/v1/logs/operation?pageNum=1&pageSize=10&module=部门"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.code").value(0))
+                .andExpect(jsonPath("$.data.total").value(0));
     }
 }

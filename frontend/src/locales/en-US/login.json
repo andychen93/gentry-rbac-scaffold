@@ -2,14 +2,9 @@
     "captcha": "Captcha",
     "captcha.placeholder": "Enter the captcha",
     "captcha.refresh": "Click to refresh",
-    "defaultTenant": "Default tenant",
     "msg.pwdExpired": "Your password has expired. Please change it soon.",
     "msg.success": "Signed in",
     "submit": "Sign in",
     "subtitle": "RBAC administration console",
-    "tab.default": "Default",
-    "tab.tenant": "Tenant",
-    "tenant": "Tenant",
-    "tenant.placeholder": "Select a tenant",
     "testAccount": "Test account: admin / Abc@123456"
 }

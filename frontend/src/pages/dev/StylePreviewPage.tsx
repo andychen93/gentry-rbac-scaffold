@@ -12,8 +12,8 @@ import {
   PlusOutlined, SearchOutlined, BellOutlined, UserOutlined, DownOutlined,
   InboxOutlined, UploadOutlined, HomeOutlined,
 } from '@ant-design/icons';
-import { PageSelect, SweetAlert, type SweetAlertType } from '../../components/pro';
-import type { ApiResult, PageResult, PageQuery } from '../../types/api';
+import { PageSelect, SweetAlert, type SweetAlertType } from '@gentry/kit';
+import type { ApiResult, PageResult, PageQuery } from '@gentry/kit';
 
 const { Title, Text } = Typography;
 const { Dragger } = Upload;

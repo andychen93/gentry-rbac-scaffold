@@ -3,7 +3,6 @@ import i18n from '../locales';
 import type { MenuNavItem } from '../types/menu';
 
 export interface LoginDTO {
-  tenantCode?: string;
   username: string;
   password: string;
   uuid?: string;      // 验证码标识
@@ -57,7 +56,7 @@ export interface UserListVO {
   deptName: string;
   status: number;
   createTime: string;
-  roles: { id: number; roleName: string; roleCode: string }[];
+  roles: { id: number; roleName: string; roleCode: string; i18nKey?: string | null }[];
 }
 
 export interface UserDetailVO {
@@ -74,7 +73,7 @@ export interface UserDetailVO {
   status: number;
   remark: string;
   roleIds: number[];
-  roles: { id: number; roleName: string; roleCode: string }[];
+  roles: { id: number; roleName: string; roleCode: string; i18nKey?: string | null }[];
   loginIp: string;
   loginDate: string;
   pwdUpdateTime: string;
@@ -92,7 +91,7 @@ export interface LoginVO {
     avatar: string;
     deptId: number;
     deptName: string;
-    roles: { id: number; roleCode: string; roleName: string; dataScope: number }[];
+    roles: { id: number; roleCode: string; roleName: string; i18nKey?: string | null; dataScope: number }[];
     permissions: string[];
     menus: MenuNavItem[];
     /**
@@ -126,9 +125,9 @@ export const authApi = {
   updatePassword: (data: { oldPassword: string; newPassword: string }) =>
     request.put('/api/v1/auth/password', data),
 
-  // 获取登录验证码（公开接口，返回 data URI 图片 + uuid）
+  // 获取登录验证码（公开接口，返回 data URI 图片 + uuid；验证码开关关闭时 data 为 null）
   getCaptcha: () =>
-    request.get<any, { code: number; data: { uuid: string; img: string } }>('/api/v1/auth/captcha'),
+    request.get<any, { code: number; data: { uuid: string; img: string } | null }>('/api/v1/auth/captcha'),
 
   // 获取当前用户完整资料（含手机/邮箱/职务等，仅需登录）
   getProfile: () =>
@@ -186,7 +185,7 @@ export const userApi = {
   // 导入用户（Excel），返回成功/失败统计与错误明细
   importUsers: (file: File) =>
     uploadFile<UserImportResult>('/api/v1/users/import', file),
-  /** 用户下拉选项（租户内启用用户），供「角色→绑定用户」穿梭框取候选 */
+  /** 用户下拉选项（启用用户），供「角色→绑定用户」穿梭框取候选 */
   options: () =>
     request.get<any, { code: number; data: UserOptionVO[] }>('/api/v1/users/options'),
 };
@@ -205,17 +204,6 @@ export interface UserImportResult {
   fail: number;
   errors: { row: number; username: string; msg: string }[];
 }
-
-// 租户选项接口（公开，登录页下拉框）
-export interface TenantOptionVO {
-  code: string;
-  name: string;
-}
-
-export const tenantApi = {
-  options: () =>
-    request.get<any, { code: number; data: TenantOptionVO[] }>('/api/v1/tenants/options'),
-};
 
 /** 下载二进制（Excel），绕过 axios 拦截器（拦截器会把响应解包成 JSON） */
 async function downloadExcel(url: string, params: Record<string, unknown>, filename: string) {

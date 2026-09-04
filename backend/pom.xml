@@ -19,10 +19,11 @@
     <description>多租户 RBAC 权限脚手架（Spring Boot 3 + MyBatis-Flex + Sa-Token + PostgreSQL）</description>
 
     <modules>
-        <module>gentry-core</module>
-        <module>gentry-business</module>
-        <module>gentry-monitor</module>
+        <module>gentry-core-spring-boot-starter</module>
+        <module>gentry-rbac-spring-boot-starter</module>
+        <module>gentry-monitor-spring-boot-starter</module>
         <module>gentry-start</module>
+        <module>gentry-bom</module>
     </modules>
 
     <properties>
@@ -44,17 +45,17 @@
         <dependencies>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-core</artifactId>
+                <artifactId>gentry-core-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-business</artifactId>
+                <artifactId>gentry-rbac-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.gentry</groupId>
-                <artifactId>gentry-monitor</artifactId>
+                <artifactId>gentry-monitor-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
@@ -86,6 +87,25 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <!--
+              Lombok 注解处理器显式声明：JDK 21 起 javac 对「无显式 -proc 参数」的隐式
+              注解处理持续收紧（部分 JDK 小版本直接跳过），一旦跳过所有 @Data getter
+              消失、全量编译报「找不到符号」。spring-boot-parent 不传
+              annotationProcessorPaths，这里显式钉住，行为不再随 JDK 小版本漂移。
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
             </plugin>
         </plugins>
     </build>

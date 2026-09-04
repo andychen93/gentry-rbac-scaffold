@@ -7,8 +7,8 @@ async function gotoRedisMonitor(page: Page) {
 }
 
 test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
-  test('MON-REDIS-001 监控信息 Tab 加载（SUPER_ADMIN）', async ({ page }) => {
-    await login(page, 'chenli', 'Chenli@2026');
+  test('MON-REDIS-001 监控信息 Tab 加载', async ({ page }) => {
+    await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
     await expect(page.getByRole('heading', { name: 'Redis 监控' })).toBeVisible({
@@ -20,8 +20,8 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
     await expect(page.getByText('jwt_blacklist').first()).toBeVisible();
   });
 
-  test('MON-REDIS-002 Key 管理 Tab 搜索与表格（SUPER_ADMIN）', async ({ page }) => {
-    await login(page, 'chenli', 'Chenli@2026');
+  test('MON-REDIS-002 Key 管理 Tab 搜索与表格', async ({ page }) => {
+    await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
     await page.getByRole('tab', { name: 'Key 管理' }).click();
@@ -30,14 +30,14 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
     await input.fill('Authorization:*');
     await page.getByRole('button', { name: '搜索' }).click();
     await page.waitForLoadState('networkidle');
-    // 当前 session 至少会有 chenli 自己，断言结果区出现 Authorization:login:token: 前缀
+    // 当前 session 至少会有 admin 自己，断言结果区出现 Authorization:login:token: 前缀
     await expect(
       page.locator('.ant-tabs-tabpane-active').getByText(/Authorization:login:(token|session):/).first()
     ).toBeVisible({ timeout: 10000 });
   });
 
   test('MON-REDIS-003 Key 定义快捷查询跳转 Key 管理 Tab', async ({ page }) => {
-    await login(page, 'chenli', 'Chenli@2026');
+    await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
     await page
@@ -49,7 +49,7 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
     await expect(input).toHaveValue('blacklist:*');
   });
 
-  test('MON-REDIS-004 ADMIN 只能查看、不可删除 Key', async ({ page }) => {
+  test('MON-REDIS-004 ADMIN 可以删除 Key（去多租户化后 ADMIN 是唯一角色，持有全部权限）', async ({ page }) => {
     await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
@@ -65,14 +65,13 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
     ).toBeVisible({ timeout: 10000 });
 
     // 操作列已改为纯图标 + Tooltip，按 aria-label 定位（不再是带文字的 button）
-    // 当前面板内不应出现"删除"（权限缺失）
-    await expect(activePane.getByLabel('删除')).toHaveCount(0);
-    // "查看"应存在
+    // ADMIN 持有 monitor:redis:key:delete，"删除"与"查看"均应存在
+    expect(await activePane.getByLabel('删除').count()).toBeGreaterThan(0);
     expect(await activePane.getByLabel('查看').count()).toBeGreaterThan(0);
   });
 
   test('MON-REDIS-005 慢查询日志 Tab 加载', async ({ page }) => {
-    await login(page, 'chenli', 'Chenli@2026');
+    await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
     await page.getByRole('tab', { name: '慢查询日志' }).click();
@@ -80,22 +79,12 @@ test.describe('Redis 监控页面（MON-REDIS-001 ~ MON-REDIS-007）', () => {
 
     // 刷新按钮可见
     await expect(page.getByRole('button', { name: /刷新/ }).last()).toBeVisible();
-    // SUPER_ADMIN 可见"清空慢日志"按钮
+    // ADMIN 持有 monitor:redis:slowlog:reset，可见"清空慢日志"按钮
     await expect(page.getByRole('button', { name: '清空慢日志' })).toBeVisible();
   });
 
-  test('MON-REDIS-006 ADMIN 看不到清空慢日志按钮', async ({ page }) => {
-    await login(page, 'admin', 'Abc@123456');
-    await gotoRedisMonitor(page);
-
-    await page.getByRole('tab', { name: '慢查询日志' }).click();
-    await page.waitForLoadState('networkidle');
-
-    await expect(page.getByRole('button', { name: '清空慢日志' })).toHaveCount(0);
-  });
-
   test('MON-REDIS-007 自动刷新开关切换', async ({ page }) => {
-    await login(page, 'chenli', 'Chenli@2026');
+    await login(page, 'admin', 'Abc@123456');
     await gotoRedisMonitor(page);
 
     // 页面工具栏内的 Switch（"自动刷新" 文本旁）

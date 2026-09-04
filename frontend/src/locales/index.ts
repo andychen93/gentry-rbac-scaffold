@@ -40,7 +40,6 @@ export const NAMESPACES = [
   'dict',
   'user',
   'role',
-  'tenant',
   'dept',
   'menuMgmt',
   'dictMgmt',

@@ -11,9 +11,9 @@ import type { TFunction } from 'i18next';
  * （`dict.{dictType}.{dictValue}`，见 `DictI18nKeyResolver`）。于是：
  * - 硬编码的中文消失，i18n 免费获得
  * - 字典内容只有一份译文来源，漂移由构造消除
- * - 不引入 API 依赖（`DictSelect` 会走接口，这里是纯静态枚举）
+ * - 不引入 API 依赖（`DictTag` 走接口，这里是纯静态枚举）
  *
- * 需要「租户可自行增删的字典」时用 `DictSelect` / `DictTag`；
+ * 需要「租户可自行增删的字典」时用 `DictTag`；
  * 这里只服务**系统枚举**（代码里也在依赖其取值，如 status 的 0/1）。
  */
 

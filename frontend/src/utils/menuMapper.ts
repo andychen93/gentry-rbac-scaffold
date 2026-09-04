@@ -13,7 +13,6 @@ export interface RouteConfig {
  */
 const COMPONENT_MAP: Record<string, () => Promise<{ default: React.ComponentType }>> = {
   'pages/home/HomePage': () => import('../pages/home/HomePage'),
-  'pages/tenant/TenantPage': () => import('../pages/tenant/TenantPage'),
   'pages/user/UserPage': () => import('../pages/user/UserPage'),
   'pages/role/RolePage': () => import('../pages/role/RolePage'),
   'pages/menu/MenuPage': () => import('../pages/menu/MenuPage'),
@@ -31,7 +30,6 @@ const COMPONENT_MAP: Record<string, () => Promise<{ default: React.ComponentType
   'system/menu/index': () => import('../pages/menu/MenuPage'),
   'system/dept/index': () => import('../pages/dept/DeptPage'),
   'system/dict/index': () => import('../pages/dict/DictPage'),
-  'system/tenant/index': () => import('../pages/tenant/TenantPage'),
   'monitor/log/operation/index': () => import('../pages/log/OperLogPage'),
   'monitor/log/login/index': () => import('../pages/log/LoginLogPage'),
   'monitor/online/index': () => import('../pages/log/OnlineUserPage'),

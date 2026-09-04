@@ -45,22 +45,11 @@ export function readCaptchaAnswer(uuid: string): string {
 }
 
 /**
- * ADMIN 按设计不该有的权限（租户管理属 SUPER_ADMIN；Redis 删除/清慢日志见 V3/V4 迁移）。
- * 多个用例（08 T-003、09 MON-REDIS-004/006、10 H-002）都建立在这个前提上。
- */
-const ADMIN_FORBIDDEN = [
-  'system:tenant:list',
-  'system:tenant:config',
-  'monitor:redis:key:delete',
-  'monitor:redis:slowlog:reset',
-];
-
-/**
- * 前置校验：ADMIN 的权限没被改坏。
+ * 前置校验：ADMIN 的权限没被改坏（去多租户化后 ADMIN 是唯一角色，应持有全部菜单权限）。
  *
- * 在「角色管理→权限」页面给 ADMIN 保存一次全选，就会让它拿到租户等越权权限，
- * 进而让上述用例莫名失败。这里提前拦住并给出可执行的修复指引，
- * 而不是让人去追 4 个看不懂的断言错误。
+ * 在「角色管理→权限」页面给 ADMIN 保存一次不完整的勾选，会让它掉权限，
+ * 进而让依赖「ADMIN 拥有全部权限」这个前提的用例莫名失败。这里提前拦住并给出
+ * 可执行的修复指引，而不是让人去追一堆看不懂的断言错误。
  */
 async function assertAdminBaseline(
   ctx: Awaited<ReturnType<typeof request.newContext>>,
@@ -70,11 +59,10 @@ async function assertAdminBaseline(
     headers: { Authorization: `Bearer ${adminToken}` },
   });
   const perms: string[] = (await res.json())?.data?.permissions ?? [];
-  const leaked = ADMIN_FORBIDDEN.filter((p) => perms.includes(p));
-  if (leaked.length > 0) {
+  if (perms.length < 60) {
     throw new Error(
-      `ADMIN 权限已被改坏，越权持有：${leaked.join(', ')}\n` +
-        '多半是在「角色管理→权限」里给 ADMIN 保存过全选。\n' +
+      `ADMIN 权限已被改坏，仅持有 ${perms.length} 个权限点（应有全部约 63 个）。\n` +
+        '多半是在「角色管理→权限」里给 ADMIN 保存过不完整的勾选。\n' +
         '修复：bash scripts/db_reset.sh 重建库（Flyway 会按迁移重新灌种子数据），然后重启后端。',
     );
   }

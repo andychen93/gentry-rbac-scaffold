@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { deptApi } from '../../services/deptApi';
 import type { DeptTreeVO, DeptQueryParams } from '../../services/deptApi';
 import { useUserStore } from '../../stores/userStore';
-import { RowActions } from '../../components/pro';
+import { RowActions } from '@gentry/kit';
 import DeptFormModal from './DeptFormModal';
 import type { ColumnsType } from 'antd/es/table';
 import { DICT_TYPES, dictLabel, dictOptions } from '../../locales/dictEnum';

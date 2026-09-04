@@ -8,6 +8,7 @@ import { userApi } from '../../services/userApi';
 import { roleApi } from '../../services/roleApi';
 import { menuApi } from '../../services/menuApi';
 import { deptApi } from '../../services/deptApi';
+import { makeRoleLabel } from '../../locales/navLabel';
 
 const { Paragraph, Text } = Typography;
 
@@ -27,12 +28,11 @@ const countDepts = async () => countTree((await deptApi.tree()).data ?? []);
 /**
  * 系统管理快捷入口。工作台属「业务系统」Layout，侧栏看不到系统菜单，这里给直达链接。
  *
- * **label 不再写死中文** —— 原来这 10 条 label 就是菜单名，是 sys_menu.name 的第三份
+ * **label 不再写死中文** —— 原来这些 label 就是菜单名，是 sys_menu.name 的第三份
  * 拷贝（前两份：sys_menu 本身、AppHeader 的 BREADCRUMB_MAP）。现在复用 nav namespace 的
  * key，key 由 permission 去掉最后一段动作派生，与后端 MenuI18nKeyResolver 同规则。
  */
 const ADMIN_LINKS: { to: string; navKey: string; permission?: string }[] = [
-  { to: '/system/tenants', navKey: 'menu.system.tenant', permission: 'system:tenant:list' },
   { to: '/system/users', navKey: 'menu.system.user', permission: 'system:user:list' },
   { to: '/system/roles', navKey: 'menu.system.role', permission: 'system:role:list' },
   { to: '/system/menu', navKey: 'menu.system.menu', permission: 'system:menu:list' },
@@ -52,9 +52,10 @@ const ADMIN_LINKS: { to: string; navKey: string; permission?: string }[] = [
  *      再写一条迁移改掉 sys_menu 里首页那条的 component。
  */
 const HomePage: React.FC = () => {
-  const { t } = useTranslation('home');
+  const { t } = useTranslation(['home', 'role']);
   const userInfo = useUserStore((s) => s.userInfo);
   const hasPermission = useUserStore((s) => s.hasPermission);
+  const roleLabel = makeRoleLabel(t);
 
   const links = ADMIN_LINKS.filter((l) => !l.permission || hasPermission(l.permission));
 
@@ -85,7 +86,7 @@ const HomePage: React.FC = () => {
               <Descriptions.Item label={t('role', { ns: 'common' })}>
                 {(userInfo?.roles ?? []).map((r) => (
                   <Tag color="blue" key={r.id}>
-                    {r.roleName}（{r.roleCode}）
+                    {roleLabel(r)}（{r.roleCode}）
                   </Tag>
                 ))}
               </Descriptions.Item>

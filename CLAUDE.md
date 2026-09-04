@@ -10,26 +10,25 @@
 |-------|------|
 | 加一个业务模块（后端） | `doc/guide/RBAC模块开发指南.md`，照抄 `com.gentry.rbac.dept` |
 | 用横切组件（限流/数据权限/日志…） | `doc/guide/Core组件开发指南.md` |
-| 加一个页面（前端） | `frontend/src/pages/dept/` 是最简样例；页面必须在 `utils/menuMapper.ts` 登记 |
+| 加一个页面（前端） | `frontend/src/pages/dept/` 是最简样例；页面必须在 `utils/menuMapper.ts` 登记。Pro 组件 / theme / `usePagedList` / `types/api` 一律 `import … from '@gentry/kit'`（workspace 包 `frontend/packages/gentry-kit/`，源码直引不构建），菜单注册 `menuMapper` 仍在应用层 |
 | 加权限点 | 写 Flyway 迁移插 `sys_menu` + `sys_role_menu`，权限串与 `@SaCheckPermission` 一致 |
-| 改数据库结构 | 只能新增 `backend/gentry-start/src/main/resources/db/migration/common/V{n}__xxx.sql`（三库通用），方言差异才分 `mysql/postgresql/sqlite` 子目录 |
+| 改数据库结构 | 双流：平台迁移（V≤999）只能新增 `backend/gentry-rbac-spring-boot-starter/src/main/resources/db/migration/gentry-rbac/common/V{n}__xxx.sql`；项目迁移（V≥1000，狗粮自用）在 `backend/gentry-start/src/main/resources/db/migration/common/V{n}__xxx.sql`。三库通用放 `common/`，方言差异才分 `mysql/postgresql/sqlite` 子目录 |
 | 换用的数据库（mysql/postgresql/sqlite） | `bash scripts/dev_up.sh --db=postgresql`，见 `.kiro/steering/database-migration.md` |
-| 改配色 / 主题 | `frontend/src/theme/argonColors.ts`（唯一源头），见下「样式与按钮规范」，对照页 `/dev/style` |
-| 加表格行内操作按钮 | `components/pro/RowActions.tsx`，见下「样式与按钮规范」 |
+| 改配色 / 主题 | `frontend/packages/gentry-kit/src/theme/argonColors.ts`（唯一源头），见下「样式与按钮规范」，对照页 `/dev/style` |
+| 加表格行内操作按钮 | `@gentry/kit` 的 `RowActions`（`frontend/packages/gentry-kit/src/components/pro/`），见下「样式与按钮规范」 |
 | 起本地环境 | `bash scripts/deps_up.sh && bash scripts/dev_up.sh`（默认 MySQL） |
 
 ## 硬约束（违反即 Review 打回）
 
-1. 不写死 `tenant_id`，一律 `UserContext.getTenantId()`
-2. 不 `throw new RuntimeException`，一律 `BizException(ErrorCode.XXX)`
-3. Controller 不直接调 Mapper
-4. 不修改已发布的 Flyway 迁移文件
-5. 无详细设计文档不编码
-6. **不在 `.tsx` / `.less` 里写死颜色**（hex、`rgb()`、`rgba()`），取色方式见下
-7. **表格行内操作一律用 `RowActions`**，纯图标 + Tooltip，不写文字
-8. **启用/停用开关必须二次确认**（`StatusSwitch` 的 `confirmText`）
-9. **查询/重置按钮一律靠右**，多个工具栏按钮必须用 `<Space>` 包
-10. 提交前 `mvn test` + `npm test` + `npx tsc -b` 全绿
+1. 不 `throw new RuntimeException`，一律 `BizException(ErrorCode.XXX)`
+2. Controller 不直接调 Mapper
+3. 不修改已发布的 Flyway 迁移文件
+4. 无详细设计文档不编码
+5. **不在 `.tsx` / `.less` 里写死颜色**（hex、`rgb()`、`rgba()`），取色方式见下
+6. **表格行内操作一律用 `RowActions`**，纯图标 + Tooltip，不写文字
+7. **启用/停用开关必须二次确认**（`StatusSwitch` 的 `confirmText`）
+8. **查询/重置按钮一律靠右**，多个工具栏按钮必须用 `<Space>` 包
+9. 提交前 `mvn test` + `npm test` + `npx tsc -b` 全绿
     （`mvn test` 需 `-Dspring.datasource.password=<真实密码>`）
 
 ---
@@ -38,14 +37,14 @@
 
 ### 一、颜色只有一个源头
 
-`frontend/src/theme/argonColors.ts` 是全站配色的**唯一**出处，两条下游自动跟随，
-**改配色只动这个文件**：
+`frontend/packages/gentry-kit/src/theme/argonColors.ts`（`@gentry/kit` 的 `theme/argonColors`）
+是全站配色的**唯一**出处，两条下游自动跟随，**改配色只动这个文件**：
 
 ```
-argonColors.ts ──→ argonTheme.ts ────────────→ antd 组件（ConfigProvider token）
-               └─→ argonLessVars.ts ─┬──────→ styles/argon.less（@ps-* Less 变量）
-                                     └ 注入点：vite.config.ts 的
-                                       css.preprocessorOptions.less.additionalData
+@gentry/kit theme/argonColors.ts ──→ argonTheme.ts ──────→ antd 组件（ConfigProvider token）
+                                 └─→ argonLessVars.ts ─┬─→ styles/argon.less（@ps-* Less 变量）
+                                                       └ 注入点：vite.config.ts 的
+                                                         css.preprocessorOptions.less.additionalData
 ```
 
 Less 侧的 `@ps-*` 变量是**编译期**注入的，不落盘生成文件，所以不存在「忘了重新生成」。
@@ -64,12 +63,12 @@ CSS 变量写错只会让那条声明作废、颜色悄悄退回继承值，线�
 | 语义化文字（危险、成功） | `<Text type="danger">` / `type="success"` | `style={{ color: '#ff4d4f' }}` |
 | 组件里确实要色值（inline style 背景、ECharts option） | `const { token } = theme.useToken()` 取 `colorPrimary` / `colorSuccess` / `colorWarning` / `colorError` / `colorTextSecondary` / `colorBgContainer` … | 写死 hex |
 | `.less` 文件里 | `@ps-primary`、`fade(@ps-danger, 8%)` | `#5e72e4`、`rgba(245,54,92,.08)` |
-| 渐变（token 表达不了，唯一可 import 的情况） | `import { argonGradients } from 'theme/argonColors'`，`.less` 里用 `@ps-gradient-*` | 手写 `linear-gradient(...)` |
+| 渐变（token 表达不了，唯一可 import 的情况） | `import { argonGradients } from '@gentry/kit'`，`.less` 里用 `@ps-gradient-*` | 手写 `linear-gradient(...)` |
 
 补充规则：
 
 - **不要在页面里 `import { argonColors }`**。那会绕开 antd token，往
-  `ConfigProvider` 叠覆盖（暗色/租户换肤）时这条硬连线不跟着变，配色会裂。
+  `ConfigProvider` 叠覆盖（未来做暗色模式）时这条硬连线不跟着变，配色会裂。
   渐变是唯一例外（antd 没有渐变 token）。
 - **需要新颜色**：往 `argonColors.ts` 加一个键，`@ps-{键名}` 和 antd token 自动可用。
   别就地写死，也别引第二套色板 —— 历史上这里混过 antd 默认色（`#1677ff`/`#ff4d4f`）
@@ -79,8 +78,9 @@ CSS 变量写错只会让那条声明作废、颜色悄悄退回继承值，线�
   抄的是 Argon 编译产物），推导会悄悄改掉观感。
 - `/dev/style` 对照页**允许**写死 hex —— 它的用途就是跟 Argon 原版逐项比对。
 
-守卫：`theme/argonLessVars.test.ts` 会拦住 `argon.less` 里的裸 hex 与非黑白 `rgba()`。
-`argon.less` 的 `//` 注释里刻意保留 Argon 原值作为文档，不算违规。
+守卫：应用侧 `src/theme/argonLessVars.test.ts` 会拦住 `argon.less` 里的裸 hex 与非黑白
+`rgba()`（色板与 `buildArgonLessVars` 本体已迁 `@gentry/kit`，守卫测试留在应用侧守
+`argon.less`）。`argon.less` 的 `//` 注释里刻意保留 Argon 原值作为文档，不算违规。
 
 ### 三、表格行内操作：`RowActions`
 

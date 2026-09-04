@@ -1,8 +1,8 @@
 import React from 'react';
-import { PageSelect } from '../pro/PageSelect';
+import { PageSelect } from '@gentry/kit';
 import { userApi } from '../../services/userApi';
 import type { UserListVO } from '../../services/userApi';
-import type { ApiResult, PageQuery, PageResult } from '../../types/api';
+import type { ApiResult, PageQuery, PageResult } from '@gentry/kit';
 import { useTranslation } from 'react-i18next';
 
 interface Props {

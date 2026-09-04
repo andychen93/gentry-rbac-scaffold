@@ -1,4 +1,6 @@
 {
+  "role.admin": "Administrator",
+  "role.user": "Standard user",
   "action.bindUser": "Assign users",
   "action.create": "New role",
   "action.perm": "Permissions",

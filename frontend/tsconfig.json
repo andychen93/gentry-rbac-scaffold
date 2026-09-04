@@ -17,8 +17,10 @@
     "noFallthroughCasesInSwitch": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["src/*"],
+      "@gentry/kit": ["packages/gentry-kit/src/index.ts"],
+      "@gentry/kit/*": ["packages/gentry-kit/src/*"]
     }
   },
-  "include": ["src"]
+  "include": ["src", "packages/gentry-kit/src"]
 }

@@ -1,21 +1,21 @@
 # Core 组件开发指南
 
-> **版本**：v1.0.0
-> **更新日期**：2026-05-05
-> **面向**：所有在 `gentry-business` 及后续业务模块（vehicle / device / alarm / playback / report）上开发的工程师与 AI。
+> **版本**：v1.2.0
+> **更新日期**：2026-09-01
+> **面向**：所有在业务模块上开发的工程师与 AI —— 狗粮业务在 `gentry-start` 的 `com.gentry.start` 下，真实项目业务在消费项目自己仓库（starter 化后的位置约定，见 AGENTS.md 第三章）。
 > **阅读前提**：已熟悉 `CLAUDE.md` §4 全局基础设施章节。
 
 ---
 
 ## 0. 为什么有这份文档
 
-`gentry-core` 承载了 10 个 P0/P1/P2 级别的横切关注（异常处理、多租户、自动填充、认证、数据权限、链路追踪、限流、防重复、请求日志、Jackson）。它们的作用就是让业务开发者"**专注写业务**"。
+`gentry-core-spring-boot-starter` 承载了 9 个 P0/P1/P2 级别的横切关注（异常处理、自动填充、认证、数据权限、链路追踪、限流、防重复、请求日志、Jackson），以 starter jar 分发、自动装配。它们的作用就是让业务开发者"**专注写业务**"。
 
 但实际落地里最常见的反模式是：
 
 - 自己 `try/catch` 吞异常
 - Controller 里 `if (xxx) return R.fail("xxx")`
-- Service 里 `new Date()` 或硬编码 `tenant_id = 1`
+- Service 里 `new Date()`
 - 异步任务里日志没 traceId
 - 登录接口没加限流，被暴破
 - Mapper 写死 SQL 忽略数据权限
@@ -29,8 +29,8 @@
 任何一个新的业务模块（比如「车辆管理」），按以下顺序铺设代码框架：
 
 ```
-1. Entity 继承 BaseEntity / TenantEntity        → 自动填充 + 多租户
-2. Mapper 继承 BaseMapper + QueryChain          → 多租户 SQL 自动追加
+1. Entity 继承 BaseEntity                       → 自动填充
+2. Mapper 继承 BaseMapper + QueryChain          →
 3. Service 方法加 @DataScope                    → 数据权限自动追加
 4. Controller 写操作加 @Log + @RepeatSubmit      → 操作日志 + 防连点
                      权限点加 @SaCheckPermission  → 鉴权
@@ -81,10 +81,8 @@ public class VehicleController {
 | 参数校验 | `@Valid` + `@NotBlank @Size @Pattern` | DTO |
 | 认证检查 | Sa-Token 全局拦截器自动做 | - |
 | 权限校验 | `@SaCheckPermission("biz:vehicle:add")` | Controller 方法 |
-| 多租户自动隔离 | Entity 继承 `TenantEntity` | Entity |
 | 自动填充 create_by / create_time | `AutoFillHandler`（已全局注册） | - |
 | 行级数据权限（按部门过滤） | `@DataScope` + Mapper XML 读 `DataScopeContext` | Service 方法 |
-| 跳过租户过滤（管理员特殊查询） | `@IgnoreTenant("原因")` | Service 方法 |
 | traceId 链路追踪 | 全局自动，MDC 里 `%X{traceId}` 已配置 | - |
 | 异步任务保持 traceId | `TraceUtils.wrap(runnable)` | 提交任务处 |
 | 接口限流（防刷、防暴破） | `@RateLimit(keyType, count, period)` | Controller 方法 |
@@ -103,7 +101,7 @@ public class VehicleController {
 | 分段 | 模块 |
 |---|---|
 | 10001-10099 | 系统错误（已占满前 5 个） |
-| 20001-20099 | RBAC 业务（用户/角色/菜单/租户/部门） |
+| 20001-20099 | RBAC 业务（用户/角色/菜单/部门） |
 | 30001-30099 | 认证 / 数据（Token、权限、数据存在性） |
 | 40001-40099 | 安全控制（限流、防重复） |
 | 50001-50099 | 设备 |
@@ -138,15 +136,14 @@ public class VehicleServiceImpl implements VehicleService {
 
     @Transactional
     public VehicleDetailVO create(VehicleCreateDTO dto) {
-        Long tenantId = UserContext.getTenantId();
         // ✅ 业务校验，遇到问题直接抛
-        if (vehicleMapper.countByPlate(tenantId, dto.getPlateNumber()) > 0) {
+        if (vehicleMapper.countByPlate(dto.getPlateNumber()) > 0) {
             throw new BizException(ErrorCode.DATA_EXISTS, "车牌号已存在");
         }
         Vehicle v = new Vehicle();
         BeanUtils.copyProperties(dto, v);
         v.setId(IdGenerator.nextId());
-        // tenantId / createBy / createTime 不用手工 set，AutoFillHandler 会填
+        // createBy / createTime 不用手工 set，AutoFillHandler 会填
         vehicleMapper.insert(v);
         return toDetailVO(v);
     }
@@ -199,8 +196,6 @@ Mapper XML：
     </if>
 </sql>
 ```
-
-注意：`GentryTenantManager` 会自动追加 `tenant_id = ?`，不要手动写。
 
 ### 3.3 场景 C：登录 / 认证
 
@@ -260,29 +255,13 @@ Spring `@Async` 场景同理：配置自定义 `TaskDecorator`，调用 `TraceUt
 
 ### 3.7 场景 G：定时任务（@Scheduled）
 
-`UserContext` 在定时任务线程里为空，不能直接用。有两种写法：
+`UserContext` 在定时任务线程里为空，读取用户相关信息（如 `getUserId()`）会拿到 `null`，
+写业务逻辑时要么不依赖它，要么在任务开始时显式设置好所需上下文：
 
-**写法 1 — 用 @IgnoreTenant 跳过多租户：**
 ```java
 @Scheduled(cron = "0 0 2 * * *")
-@IgnoreTenant("归档任务跨所有租户")
 public void archiveOldData() {
     vehicleMapper.deleteOlderThan(LocalDate.now().minusDays(90));
-}
-```
-
-**写法 2 — 手动设置 UserContext：**
-```java
-@Scheduled(fixedDelay = 60_000)
-public void syncEachTenant() {
-    for (Long tenantId : tenantService.listAllIds()) {
-        UserContext.setTenantId(tenantId);
-        try {
-            doSyncForTenant(tenantId);
-        } finally {
-            UserContext.clear();
-        }
-    }
 }
 ```
 
@@ -294,12 +273,11 @@ public void syncEachTenant() {
 |---|---|---|
 | `throw new RuntimeException("xxx")` | 500 错误 / 无业务码 | `throw new BizException(ErrorCode.XX)` |
 | Controller 写 `return R.fail("xxx")` | 绕过 GlobalExceptionHandler | 抛 BizException |
-| 硬编码 `tenant_id = 1L` | 多租户失效 | `UserContext.getTenantId()` |
 | 异步任务 `executor.submit(task)` | 日志丢 traceId | `TraceUtils.wrap(task)` |
 | 列表接口没加 `@RateLimit` | 可能被扫描打崩 | 至少加 `@RateLimit(IP, 120, 60)` |
 | 登录接口没加 `@RateLimit(IP)` | 被暴力破解 | 必须加，且 count ≤ 10 |
 | 改密码后原 JWT 仍可用 | 安全漏洞 | 改密码后调 `TokenBlacklistService.blacklistAllTokensOfUser(userId)` |
-| 实体不继承基类，自己写 5 个字段 | AutoFillHandler 不生效 | 继承 `TenantEntity` / `BaseEntity` |
+| 实体不继承基类，自己写字段 | AutoFillHandler 不生效 | 继承 `BaseEntity` |
 | Service 方法里 `new SimpleDateFormat(...)` | 时区/格式不统一 | `JacksonConfig.dateTimeFormat()` 或直接用 LocalDateTime |
 | 敏感字段日志打印出来 | 密码泄露到日志 | 新敏感路径加入 `RequestLogFilter.SENSITIVE_PATHS` |
 | Mapper 里忘带 `deleted = 0` | 查到已删数据 | 保证所有查询都加 `AND deleted = 0` |
@@ -325,10 +303,10 @@ private static final Map<String, List<String>> SENSITIVE_PATHS = Map.of(
 
 ## 6. 加新 Redis 监控 Key 模板
 
-所有用 Redis 的组件要把自己的 Key 模板登记到 `RedisKeyDefines`（在 `gentry-monitor`），便于运维在 `/monitor-center/redis` 页面看清楚：
+所有用 Redis 的组件要把自己的 Key 模板登记到 `RedisKeyDefines`（在 `gentry-monitor-spring-boot-starter`），便于运维在 `/monitor-center/redis` 页面看清楚：
 
 ```java
-// backend/gentry-monitor/.../RedisKeyDefines.java
+// backend/gentry-monitor-spring-boot-starter/.../RedisKeyDefines.java
 private static final List<RedisKeyDefineVO> DEFINES = List.of(
     new RedisKeyDefineVO("token_mapping",  "Authorization:login:token:*",   "...", 1800L),
     new RedisKeyDefineVO("user_session",   "Authorization:login:session:*", "...", 1800L),
@@ -343,13 +321,13 @@ private static final List<RedisKeyDefineVO> DEFINES = List.of(
 
 ## 7. Core 模块修改守则
 
-- 修改 `gentry-core` 任意类都视为"影响全平台"，提 PR 时必须：
+- 修改 `gentry-core-spring-boot-starter` 任意类都视为"影响全平台"（jar 分发给所有消费项目），提 PR 时必须：
   1. 补充单元测试
-  2. 跑通 `mvn -pl gentry-core test`（54 个基线测试不能退）
-  3. 跑通 `mvn -pl gentry-business test`（业务 48 个集成测试不能退）
+  2. 跑通 `mvn -pl gentry-core-spring-boot-starter test`（core 基线 127 个测试不能退）
+  3. 跑通 `mvn -pl gentry-rbac-spring-boot-starter test`（RBAC 基线 75 个测试不能退）
   4. 更新对应 `doc/design/modules/core/P*-*.md` 设计文档
 - 新增 Core 公共能力的两条路径：
-  - **确定通用**：写在 `gentry-core` 里（如新拦截器、新工具类）
+  - **确定通用**：写在 `gentry-core-spring-boot-starter` 里（如新拦截器、新工具类）
   - **仅当前业务用**：写在业务模块自己的 `xxx/common` 包下，不污染 core
 
 ---
@@ -373,3 +351,5 @@ private static final List<RedisKeyDefineVO> DEFINES = List.of(
 | 版本 | 日期 | 修改人 | 变更描述 |
 |---|---|---|---|
 | v1.0.0 | 2026-05-05 | Claude | 初版，配合 Core 全部 10 组件落地编写 |
+| v1.1.0 | 2026-08-30 | Claude | 平台化改造文档收口：模块名更新为 starter 名，测试基线更新（core 133 / rbac 72），业务域开发位置改写 |
+| v1.2.0 | 2026-09-01 | Claude | 去多租户化：删除多租户相关组件与示例（`TenantEntity`、`GentryTenantManager`、`@IgnoreTenant`），测试基线更新（core 127 / rbac 75） |

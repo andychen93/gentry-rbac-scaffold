@@ -22,10 +22,9 @@ test.describe('工作台首页', () => {
     await expect(page.getByText('当前登录身份')).toBeVisible();
     await expect(page.getByText('ADMIN', { exact: false }).first()).toBeVisible();
 
-    // 快捷入口：ADMIN 能看到用户管理，看不到租户管理（无 system:tenant:list）
+    // 快捷入口：ADMIN 能看到用户管理
     const quickLinks = page.locator('.ant-card', { hasText: '系统管理快捷入口' });
     await expect(quickLinks.getByText('用户管理')).toBeVisible();
-    await expect(quickLinks.getByText('租户管理')).toHaveCount(0);
   });
 
   test('H-003 快捷入口可跳转到系统管理页面', async ({ page }) => {
@@ -35,13 +34,5 @@ test.describe('工作台首页', () => {
     await page.locator('.ant-card', { hasText: '系统管理快捷入口' }).getByText('用户管理').click();
     await expect(page).toHaveURL(/\/system\/users$/);
     await expect(page.locator('.ant-table').first()).toBeVisible({ timeout: 10000 });
-  });
-
-  test('H-004 SUPER_ADMIN 快捷入口包含租户管理', async ({ page }) => {
-    await login(page, 'chenli');
-    await gotoPage(page, '/home');
-
-    const quickLinks = page.locator('.ant-card', { hasText: '系统管理快捷入口' });
-    await expect(quickLinks.getByText('租户管理')).toBeVisible();
   });
 });

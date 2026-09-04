@@ -17,7 +17,7 @@ class AuthApiIT extends BaseApiIT {
     private static final AtomicInteger NODPT = new AtomicInteger();
 
     private Map<String, Object> loginBody(String username, String password) {
-        return Map.of("tenantCode", DEFAULT_TENANT, "username", username, "password", password);
+        return Map.of("username", username, "password", password);
     }
 
     @Test
@@ -107,13 +107,15 @@ class AuthApiIT extends BaseApiIT {
     }
 
     @Test
-    @DisplayName("验证码：GET /auth/captcha → 200 + uuid + img（公开，无需登录）")
+    @DisplayName("验证码：GET /auth/captcha 公开可达；test profile 关了验证码，data 应缺席")
     void captcha_public() throws Exception {
         mockMvc.perform(bareGet("/api/v1/auth/captcha"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.code").value(0))
-                .andExpect(jsonPath("$.data.uuid").isNotEmpty())
-                .andExpect(jsonPath("$.data.img").isNotEmpty());
+                // application-test.yml：gentry.captcha.enabled=false 且 db-override=false，
+                // generate() 依开关返回 null（R 序列化省略空 data），前端据此不渲染验证码框。
+                // 开关开启时的 uuid+img 断言由 CaptchaServiceImplTest.generate_* 覆盖。
+                .andExpect(jsonPath("$.data").doesNotExist());
     }
 
     @Test

@@ -13,14 +13,6 @@ interface UserInfo {
   deptId: number;
   deptName: string;
   roles: { id: number; roleCode: string; roleName: string; dataScope: number }[];
-  /**
-   * 是否平台超管，**由后端下发**（判据：角色含 SUPER_ADMIN）。
-   *
-   * 不在前端从 roles 里自己推：那会把「谁是平台超管」这条规则复制一份到 TS 里，
-   * 判据一变就有两处要改，而漏改的那处是安全判断。
-   * 用途：权限分配树里隐藏平台级权限点（`pages/role/PermissionPage.tsx`）。
-   */
-  platformAdmin?: boolean;
   permissions: string[];
   menus: MenuNavItem[];
   /** 语言偏好。缺失 = 从未选过 = 跟随浏览器（后端 Jackson NON_NULL 会省略 null） */

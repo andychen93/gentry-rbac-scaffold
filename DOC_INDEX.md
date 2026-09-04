@@ -13,17 +13,18 @@
 | 文档 | 说明 |
 |------|------|
 | [doc/guide/RBAC模块开发指南.md](./doc/guide/RBAC模块开发指南.md) | 业务模块从零到一：分层、命名、权限点、测试 |
-| [doc/guide/Core组件开发指南.md](./doc/guide/Core组件开发指南.md) | 横切组件用法：多租户、数据权限、限流、防重、日志、TraceId |
+| [doc/guide/Core组件开发指南.md](./doc/guide/Core组件开发指南.md) | 横切组件用法：数据权限、限流、防重、日志、TraceId |
 
 ## 架构与横切基础设施
 
 | 文档 | 说明 |
 |------|------|
-| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | gentry-core 整体设计 |
+| [doc/design/architecture/平台化改造概要设计.md](./doc/design/architecture/平台化改造概要设计.md) | starter 化总体设计：模块划分、自动装配、Flyway 双流、BOM、前端共享包 |
+| [doc/design/architecture/全局基础设施架构设计.md](./doc/design/architecture/全局基础设施架构设计.md) | core-starter 整体设计（历史设计文档，内文沿用旧模块名） |
 | `doc/design/architecture/全局基础设施架构图.drawio` | 架构图（drawio 打开） |
-| `doc/design/modules/core/P0-*.md` | 全局异常、多租户拦截、自动填充、StpInterface 权限接口 |
+| `doc/design/modules/core/P0-*.md` | 全局异常、自动填充、StpInterface 权限接口 |
 | `doc/design/modules/core/P1-*.md` | Jackson 全局配置、请求日志过滤器、数据权限拦截器 |
-| `doc/design/modules/core/P2-*.md` | 全链路追踪、接口限流、重复提交防护、国际化 i18n（概要 + 前后端详细，**待实现**） |
+| `doc/design/modules/core/P2-*.md` | 全链路追踪、接口限流、重复提交防护、国际化 i18n（概要 + 前后端详细；主链路已落地。内置角色名见概要 §4.3；操作日志 module 列见 §4.8.1，title 仍中文） |
 
 每个组件都有「概要设计 + 详细设计」两份。
 
@@ -39,7 +40,6 @@
 
 | 功能 | 目录 |
 |------|------|
-| 租户管理 | `doc/design/modules/rbac/modules/租户管理/`（含「默认租户与登录模式」） |
 | 用户管理 | `doc/design/modules/rbac/modules/用户管理/`（含「登录菜单动态渲染」） |
 | 角色管理 | `doc/design/modules/rbac/modules/角色管理/` |
 | 菜单管理 | `doc/design/modules/rbac/modules/菜单管理/` |
@@ -61,7 +61,7 @@
 | 文档 | 说明 |
 |------|------|
 | [doc/requirements/rbac/PRD-RBAC模块功能清单.md](./doc/requirements/rbac/PRD-RBAC模块功能清单.md) | 功能总清单（先读这个） |
-| `doc/requirements/rbac/PRD-{租户,用户,角色,菜单,部门,字典,日志}管理.md` | 各功能需求 |
+| `doc/requirements/rbac/PRD-{用户,角色,菜单,部门,字典,日志}管理.md` | 各功能需求 |
 | `doc/requirements/figma-make-prompt.md` | 产品用 Figma Make 出静态页的提示词模板 |
 
 ## 测试

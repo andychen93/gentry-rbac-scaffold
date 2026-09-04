@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Button, Space, Tag, message, Drawer, Descriptions, Modal } from 'antd';
 import { DownloadOutlined, EyeOutlined, DeleteOutlined } from '@ant-design/icons';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import type { ColumnsType } from 'antd/es/table';
-import { ProTable, RowActions } from '../../components/pro';
+import { ProTable, RowActions } from '@gentry/kit';
 import UserTableSelect from '../../components/common/UserTableSelect';
-import MenuTableSelect from '../../components/common/MenuTableSelect';
 import { logApi } from '../../services/logApi';
 import type { OperLogListVO, OperLogDetailVO } from '../../services/logApi';
 
@@ -18,6 +17,16 @@ export default function OperLogPage() {
   const [detail, setDetail] = useState<OperLogDetailVO | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const refresh = () => qc.invalidateQueries({ queryKey: ['oper-logs'] });
+
+  const { data: modules = [] } = useQuery({
+    queryKey: ['oper-log-modules'],
+    queryFn: async () => (await logApi.listOperLogModules()).data ?? [],
+    staleTime: 30_000,
+  });
+  const moduleOptions = modules.map((m) => ({
+    value: m,
+    label: t(m, { defaultValue: m }),
+  }));
 
   const handleViewDetail = async (id: number) => {
     setDetailOpen(true);
@@ -57,11 +66,10 @@ export default function OperLogPage() {
     { title: t('oper.table.id'), dataIndex: 'id', key: 'id', width: 190 },
     { title: t('oper.table.operator'), dataIndex: 'operator', key: 'operator', width: 120 },
     /*
-     * module / type 列的**值**来自 @Log(module="订单", type="INSERT") 注解字面量，
-     * 库里存的就是中文。这一版 @Log 不做 i18n（见设计 §9.4），所以值仍是中文，
-     * 只有表头翻译。下个版本给注解加 key 后这里一并改成 t()。
+     * 列绑 moduleLabel：后端把 @Log(module=...) 的中文字面量当 i18n key 译好再下发。
+     * 筛选 value 仍是库里的中文（精确匹配），见概要 §4.8.1。
      */
-    { title: t('oper.table.module'), dataIndex: 'module', key: 'module', width: 120 },
+    { title: t('oper.table.module'), dataIndex: 'moduleLabel', key: 'module', width: 140 },
     { title: t('oper.table.type'), dataIndex: 'type', key: 'type', width: 100 },
     { title: t('common:ip'), dataIndex: 'operatorIp', key: 'operatorIp', width: 150 },
     {
@@ -95,7 +103,7 @@ export default function OperLogPage() {
         scroll={{ x: 1300 }}
         querySchema={[
           { name: 'operator', label: t('oper.table.operator'), type: 'node', node: <UserTableSelect /> },
-          { name: 'module', label: t('oper.query.module'), type: 'node', node: <MenuTableSelect /> },
+          { name: 'module', label: t('oper.query.module'), type: 'select', options: moduleOptions },
           {
             name: 'status', label: t('oper.query.result'), type: 'select',
             options: [
@@ -121,7 +129,7 @@ export default function OperLogPage() {
       >
         {detail && (
           <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label={t('oper.detail.module')}>{detail.module}</Descriptions.Item>
+            <Descriptions.Item label={t('oper.detail.module')}>{detail.moduleLabel ?? detail.module}</Descriptions.Item>
             <Descriptions.Item label={t('common:type')}>{detail.type}</Descriptions.Item>
             <Descriptions.Item label={t('oper.detail.desc')}>{detail.title}</Descriptions.Item>
             <Descriptions.Item label={t('oper.detail.operator')}>{detail.operator}</Descriptions.Item>

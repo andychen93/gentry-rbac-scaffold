@@ -25,7 +25,7 @@ import {
   type RedisMonitorVO,
 } from '../../services/monitorApi';
 import { useUserStore } from '../../stores/userStore';
-import { RowActions } from '../../components/pro';
+import { RowActions } from '@gentry/kit';
 import { formatTtl } from '../../utils/format';
 import CommandStatsChart from './components/CommandStatsChart';
 import KeyDefineTable from './components/KeyDefineTable';

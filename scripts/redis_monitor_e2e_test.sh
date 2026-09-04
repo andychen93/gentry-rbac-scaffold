@@ -10,12 +10,12 @@ EXIT_CODE=0
 
 echo "========== Redis 监控 E2E 测试 =========="
 
-# 超管登录（拥有全部权限）
+# chenli 登录（ADMIN，拥有全部权限）
 TOKEN=$(curl -sS -X POST $BASE/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"chenli","password":"Chenli@2026"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
-info "超管 Token: ${TOKEN:0:30}..."
+info "chenli Token: ${TOKEN:0:30}..."
 echo ""
 
 # 准备一些测试数据
@@ -83,23 +83,23 @@ info "HTTP $CODE: $(cat /tmp/r.json)"
 [[ "$CODE" == "401" ]] && pass "未登录返回 401" || fail "期望 401 实际 $CODE"
 echo ""
 
-echo "【场景 7】普通用户（ADMIN）删除 Key 返回 403"
+echo "【场景 7】ADMIN 也能查看 info 与删除 Key（唯一角色，拥有全部权限）"
 ADMIN_TOKEN=$(curl -sS -X POST $BASE/auth/login \
   -H "Content-Type: application/json" \
   -d '{"username":"admin","password":"Abc@123456"}' \
   | python3 -c "import sys,json; print(json.load(sys.stdin)['data']['token'])")
 info "ADMIN Token: ${ADMIN_TOKEN:0:30}..."
 
-# 普通 ADMIN 查询 info 应当可以
+# ADMIN 查询 info
 CODE_I=$(curl -sS -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $ADMIN_TOKEN" $BASE/monitor/redis/info)
 info "ADMIN 查 info: HTTP $CODE_I"
 [[ "$CODE_I" == "200" ]] && pass "ADMIN 可以查看 info" || fail "ADMIN 查看 info 失败"
 
-# ADMIN 删除 Key 应返回 403
+# ADMIN 删除 Key（去多租户化后 ADMIN 持有全部权限，应成功）
 CODE_D=$(curl -sS -o /tmp/r2.json -w "%{http_code}" -X DELETE \
   -H "Authorization: Bearer $ADMIN_TOKEN" "$BASE/monitor/redis/keys/test:list:1")
 info "ADMIN 删除: HTTP $CODE_D: $(cat /tmp/r2.json)"
-[[ "$CODE_D" == "403" ]] && pass "ADMIN 删除 Key 返回 403" || fail "期望 403 实际 $CODE_D"
+[[ "$CODE_D" == "200" ]] && pass "ADMIN 删除 Key 成功" || fail "期望 200 实际 $CODE_D"
 echo ""
 
 # 清理
@@ -118,16 +118,14 @@ info "慢日志条数: $CNT"
 [[ "$CNT" -gt "0" ]] && pass "慢日志可查询" || fail "慢日志为空"
 echo ""
 
-echo "【场景 9】DELETE /monitor/redis/slowlog - 权限矩阵"
-# SUPER_ADMIN 应能清空
+echo "【场景 9】DELETE /monitor/redis/slowlog - chenli 与 admin 都能清空（唯一角色，拥有全部权限）"
 CODE_S=$(curl -sS -o /tmp/s.json -w "%{http_code}" -X DELETE -H "Authorization: Bearer $TOKEN" $BASE/monitor/redis/slowlog)
-info "SUPER_ADMIN 清空: HTTP $CODE_S"
-[[ "$CODE_S" == "200" ]] && pass "SUPER_ADMIN 可清空慢日志" || fail "SUPER_ADMIN 清空失败"
+info "chenli 清空: HTTP $CODE_S"
+[[ "$CODE_S" == "200" ]] && pass "chenli 可清空慢日志" || fail "chenli 清空失败"
 
-# ADMIN 应 403
 CODE_A=$(curl -sS -o /tmp/a.json -w "%{http_code}" -X DELETE -H "Authorization: Bearer $ADMIN_TOKEN" $BASE/monitor/redis/slowlog)
-info "ADMIN 清空: HTTP $CODE_A: $(cat /tmp/a.json)"
-[[ "$CODE_A" == "403" ]] && pass "ADMIN 清空慢日志返回 403" || fail "期望 403 实际 $CODE_A"
+info "admin 清空: HTTP $CODE_A: $(cat /tmp/a.json)"
+[[ "$CODE_A" == "200" ]] && pass "admin 可清空慢日志" || fail "期望 200 实际 $CODE_A"
 echo ""
 
 echo "========== 验证结束 =========="

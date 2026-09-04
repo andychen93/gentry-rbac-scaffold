@@ -37,3 +37,15 @@ export function makeDictLabel(t: TFunction) {
   return (node: { dictLabel: string; i18nKey?: string | null }): string =>
     node.i18nKey ? t(node.i18nKey, { ns: 'dict', defaultValue: node.dictLabel }) : node.dictLabel;
 }
+
+/**
+ * 角色名同理，namespace 换成 role、兜底字段是 roleName。
+ *
+ * 只对内置角色（ADMIN/USER）真正命中：`RoleI18nKeyResolver` 对任意 roleCode 都会
+ * 派生出 key，但自建角色的译文语言包里必然没有，`defaultValue` 会兜底显示 roleName——
+ * 这是有意的降级，不是 bug。
+ */
+export function makeRoleLabel(t: TFunction) {
+  return (node: { roleName: string; i18nKey?: string | null }): string =>
+    node.i18nKey ? t(node.i18nKey, { ns: 'role', defaultValue: node.roleName }) : node.roleName;
+}
