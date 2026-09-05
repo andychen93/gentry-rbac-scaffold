@@ -46,7 +46,17 @@
 | 部门管理 | `doc/design/modules/rbac/modules/部门管理/` |
 | 字典管理 | `doc/design/modules/rbac/modules/字典管理/` |
 | 日志管理 | `doc/design/modules/rbac/modules/日志管理/` |
-| 公共基础设施 | `doc/design/modules/rbac/modules/公共基础设施/`（**双 Layout 布局前端详细设计**在这里） |
+| 公共基础设施 | `doc/design/modules/rbac/modules/公共基础设施/`（双 Layout 布局、**前端权限体系**、前端国际化） |
+
+### 公共基础设施详情
+
+| 文档 | 说明 |
+|------|------|
+| `双Layout布局-前端详细设计.md` | 业务系统与系统管理两套 Layout 切换 |
+| `前端权限体系-概要设计.md` | 权限体系总体思路（必读） |
+| `前端权限体系-详细设计.md` | 权限实现规范、API 设计、最佳实践 |
+| `前端权限体系-实现指南.md` | 逐步教程、代码示例、测试清单 |
+| `前端权限体系-快速参考.md` | 一页纸查询表 |
 
 ## 运维监控
 
