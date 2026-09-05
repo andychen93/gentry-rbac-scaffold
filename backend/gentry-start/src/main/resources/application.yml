@@ -87,6 +87,11 @@ management:
       probes:
         enabled: true
   metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true    # 输出 _bucket 序列，供 monitoring-center P95 计算
+      percentiles:
+        http.server.requests: 0.5, 0.95, 0.99
     tags:
       application: gentry-platform
 
@@ -117,3 +122,23 @@ gentry:
   # 日志保留
   log:
     keep-days: 90           # 操作/登录日志保留天数，定时清理超出部分
+  # SSO / OIDC（Keycloak）开关，默认关闭：不影响现有 Sa-Token 本地认证。
+  # 需要 gentry-oidc-spring-boot-starter 依赖 + Keycloak 已部署（见 sso/01-LOCAL-DEV.md）
+  # 才能启用；启用后需自行提供 ExternalIdentityRepository 实现 Bean 供 JIT 用户同步使用。
+  oidc:
+    enabled: false           # true 开启 SSO，false（默认）保持本地认证
+    mode: keycloak           # keycloak | local，local 模式不装配 OAuth2 Resource Server
+    auto-create-user: true   # 首次 SSO 登录是否自动创建本地用户
+    default-role: USER       # JIT 创建用户时赋予的默认角色编码
+    protected-path-patterns:
+      - /api/sso/**          # Keycloak Resource Server 保护的路径，需同步排除 Sa-Token 拦截（见下方 gentry.security）
+    keycloak:
+      server-url: http://localhost:8080
+      realm: precision
+      client-id: rbac-service
+      client-secret: ${KC_CLIENT_SECRET:}
+  # gentry.oidc.enabled=true 时必须同步声明，否则 Sa-Token 拦截器会在
+  # OAuth2 Resource Server 验证通过后再次拦截同一路径并返回 401（双重拦截冲突）
+  security:
+    sa-token-exclude-paths:
+      - /api/sso/**

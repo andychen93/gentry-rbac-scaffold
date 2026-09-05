@@ -21,7 +21,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3030,
+    port: 3031,
     /*
      * 监听所有网卡，使前端可用局域网地址访问（如 http://172.20.10.3:3030）。
      * 这是「日志里能看到真实 IP」的前提：用 localhost 访问时，浏览器到 dev server
@@ -32,7 +32,7 @@ export default defineConfig({
     proxy: {
       // 后端 API 统一前缀，后端默认端口 9090（见 backend/gentry-start/src/main/resources/application.yml）
       '/api': {
-        target: 'http://127.0.0.1:9090',
+        target: 'http://127.0.0.1:19090',
         changeOrigin: true,
         /*
          * 转发客户端真实 IP。不开这个的话，后端 request.getRemoteAddr() 拿到的是

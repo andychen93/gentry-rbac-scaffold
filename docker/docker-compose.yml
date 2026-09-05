@@ -30,6 +30,9 @@ services:
       --default-authentication-plugin=mysql_native_password
     ports:
       - "3306:3306"
+      # 3316 备用映射：宿主机若另有本地 mysqld 占用 3306，应用改连 127.0.0.1:3316
+      # （Spring: SPRING_DATASOURCE_URL 覆盖；密码同 MYSQL_ROOT_PASSWORD）
+      - "3316:3306"
     volumes:
       - mysqldata:/var/lib/mysql
     healthcheck:

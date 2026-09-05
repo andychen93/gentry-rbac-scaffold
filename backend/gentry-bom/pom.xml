@@ -28,6 +28,11 @@
                 <artifactId>gentry-monitor-spring-boot-starter</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.gentry</groupId>
+                <artifactId>gentry-oidc-spring-boot-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 </project>

@@ -23,13 +23,45 @@ public class SaTokenConfig implements WebMvcConfigurer {
     /** gentry.i18n.enabled=false 时该 bean 不存在，故用 ObjectProvider 可选注入 */
     private final ObjectProvider<GentryLocaleResolver> localeResolverProvider;
 
-    public SaTokenConfig(ObjectProvider<GentryLocaleResolver> localeResolverProvider) {
+    /** 由消费方或其它 starter（如 gentry-oidc）声明的额外免 Sa-Token 校验路径 */
+    private final GentrySecurityProperties securityProperties;
+
+    public SaTokenConfig(ObjectProvider<GentryLocaleResolver> localeResolverProvider,
+                          GentrySecurityProperties securityProperties) {
         this.localeResolverProvider = localeResolverProvider;
+        this.securityProperties = securityProperties;
     }
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 1. Sa-Token 登录校验 + JWT 黑名单校验
+        java.util.List<String> excludePaths = new java.util.ArrayList<>(java.util.List.of(
+                "/api/v1/auth/login",
+                "/api/v1/auth/captcha",
+                // 邮箱自助认证流（注册→验证→登录 / 找回→重置）：匿名语义，
+                // 防刷靠端点上的 @RateLimit(IP) + @RepeatSubmit，不靠登录态
+                "/api/v1/auth/register",
+                "/api/v1/auth/verify-email",
+                "/api/v1/auth/resend-verification",
+                "/api/v1/auth/password/forgot",
+                "/api/v1/auth/password/reset",
+                // 语言列表：登录页就要渲染语言选择器，必须放行。
+                // 只加 @RestController 不放行是不够的 —— 本拦截器覆盖 /api/**，
+                // 未登录访问会拿到 401（实测踩过）。
+                "/api/v1/i18n/locales",
+                /*
+                 * SSE 通知流：浏览器 EventSource 不能自定义请求头，token 只能走 query 参数，
+                 * 拦截器读不到头会直接 401。故在此放行，改由
+                 * NotificationSseController 自己用 StpUtil.getLoginIdByToken 手动校验。
+                 */
+                "/api/v1/notifications/stream",
+                "/actuator/**"
+        ));
+        // 由 gentry.security.sa-token-exclude-paths 追加：
+        // 已由其它认证机制（如 gentry-oidc 的 OAuth2 Resource Server）保护的路径，
+        // 见 GentrySecurityProperties 的类注释。
+        excludePaths.addAll(securityProperties.getSaTokenExcludePaths());
+
         registry.addInterceptor(new SaInterceptor(handle -> {
             StpUtil.checkLogin();
             // JWT 模式下：额外检查 Token 是否已加入黑名单（登出/改密码/强制下线）
@@ -45,28 +77,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
             }
         }))
                 .addPathPatterns("/api/**")
-                .excludePathPatterns(
-                        "/api/v1/auth/login",
-                        "/api/v1/auth/captcha",
-                        // 邮箱自助认证流（注册→验证→登录 / 找回→重置）：匿名语义，
-                        // 防刷靠端点上的 @RateLimit(IP) + @RepeatSubmit，不靠登录态
-                        "/api/v1/auth/register",
-                        "/api/v1/auth/verify-email",
-                        "/api/v1/auth/resend-verification",
-                        "/api/v1/auth/password/forgot",
-                        "/api/v1/auth/password/reset",
-                        // 语言列表：登录页就要渲染语言选择器，必须放行。
-                        // 只加 @RestController 不放行是不够的 —— 本拦截器覆盖 /api/**，
-                        // 未登录访问会拿到 401（实测踩过）。
-                        "/api/v1/i18n/locales",
-                        /*
-                         * SSE 通知流：浏览器 EventSource 不能自定义请求头，token 只能走 query 参数，
-                         * 拦截器读不到头会直接 401。故在此放行，改由
-                         * NotificationSseController 自己用 StpUtil.getLoginIdByToken 手动校验。
-                         */
-                        "/api/v1/notifications/stream",
-                        "/actuator/**"
-                );
+                .excludePathPatterns(excludePaths);
 
         // 2. 从 Sa-Token Session 恢复 UserContext（登录校验通过后执行）+ 定稿请求语言
         registry.addInterceptor(new HandlerInterceptor() {

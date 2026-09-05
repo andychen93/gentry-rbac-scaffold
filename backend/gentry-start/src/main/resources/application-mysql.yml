@@ -4,7 +4,10 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/gentry?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
     username: root
-    password: 123456
+    # 仓库默认 123456 与 docker/docker-compose.yml 的 MYSQL_ROOT_PASSWORD 一致；
+    # 连本地自建 MySQL 时用环境变量注入真实密码（同 dev_up.sh 的 DB_PASSWORD 约定），
+    # 不要把真实密码写回本文件（测试用 -Dspring.datasource.password=<真实密码>）
+    password: ${DB_PASSWORD:123456}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   flyway:
